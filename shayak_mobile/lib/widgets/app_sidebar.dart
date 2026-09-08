@@ -13,7 +13,6 @@ class AppSidebar extends StatelessWidget {
   final VoidCallback? onResetData;
   final VoidCallback? onHelp;
   final VoidCallback? onAccessibility;
-  final VoidCallback? onSwitchMode;
 
   const AppSidebar({
     super.key,
@@ -23,7 +22,6 @@ class AppSidebar extends StatelessWidget {
     this.onResetData,
     this.onHelp,
     this.onAccessibility,
-    this.onSwitchMode,
   });
 
   @override
@@ -48,6 +46,8 @@ class AppSidebar extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
 
+
+
                   // Primary Navigation Menu Items
                   if (!isCaregiver) ...[
                     _buildNavItem(context, 0, Icons.home_outlined, LocalizationService.tr('home', lang)),
@@ -62,57 +62,6 @@ class AppSidebar extends StatelessWidget {
                   const SizedBox(height: 24),
                   const Divider(color: AppTheme.surfaceBorder, height: 1),
                   const SizedBox(height: 14),
-
-                  // Mode Switcher Action
-                  if (onSwitchMode != null) ...[
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      decoration: BoxDecoration(
-                        color: isCaregiver ? AppTheme.sageLight : AppTheme.warmPeach.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppTheme.surfaceBorder),
-                      ),
-                      child: InkWell(
-                        onTap: () {
-                          if (Scaffold.maybeOf(context)?.isDrawerOpen ?? false) {
-                            Navigator.of(context).pop();
-                          }
-                          onSwitchMode!();
-                        },
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          child: Row(
-                            children: [
-                              Icon(
-                                isCaregiver ? Icons.person_rounded : Icons.health_and_safety_rounded,
-                                size: 18,
-                                color: isCaregiver ? AppTheme.forestGreen : const Color(0xFFC05621),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  isCaregiver
-                                      ? LocalizationService.tr('patient_app', lang)
-                                      : LocalizationService.tr('caregiver_workspace', lang),
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: isCaregiver ? AppTheme.forestGreen : const Color(0xFFC05621),
-                                  ),
-                                ),
-                              ),
-                              Icon(
-                                Icons.arrow_forward_rounded,
-                                size: 14,
-                                color: isCaregiver ? AppTheme.forestGreen : const Color(0xFFC05621),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
 
                   // Bottom Action Links
                   _buildActionItem(

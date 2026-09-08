@@ -241,7 +241,6 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                       setState(() => _sidebarIndex = idx);
                     },
                     onResetData: _resetData,
-                    onSwitchMode: () => widget.onNavigate(AppViewMode.caregiver),
                   ),
                 )
               : null,
@@ -311,7 +310,6 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                             setState(() => _sidebarIndex = idx);
                           },
                           onResetData: _resetData,
-                          onSwitchMode: () => widget.onNavigate(AppViewMode.caregiver),
                         ),
 
                       // Main Content Area
