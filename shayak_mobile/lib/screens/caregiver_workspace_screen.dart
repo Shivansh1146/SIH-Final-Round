@@ -294,7 +294,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 ),
               ),
               child: NavigationBar(
-                selectedIndex: _sidebarIndex.clamp(0, 3),
+                selectedIndex: _sidebarIndex.clamp(0, 1),
                 onDestinationSelected: (idx) {
                   setState(() => _sidebarIndex = idx);
                 },
@@ -310,19 +310,9 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                     label: 'Overview',
                   ),
                   NavigationDestination(
-                    icon: Icon(Icons.auto_awesome_outlined),
-                    selectedIcon: Icon(Icons.auto_awesome_rounded, color: AppTheme.forestGreen),
-                    label: 'Decisions',
-                  ),
-                  NavigationDestination(
                     icon: Icon(Icons.calendar_today_outlined),
                     selectedIcon: Icon(Icons.calendar_today_rounded, color: AppTheme.forestGreen),
                     label: 'Care Plan',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.sensors_rounded),
-                    selectedIcon: Icon(Icons.sensors_rounded, color: AppTheme.forestGreen),
-                    label: 'ESP32',
                   ),
                 ],
               ),
@@ -385,11 +375,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
   Widget _buildSelectedCaregiverView(BuildContext context) {
     switch (_sidebarIndex) {
       case 1:
-        return _buildAiDecisionsView();
-      case 2:
         return _buildCarePlanView(context);
-      case 3:
-        return _buildEsp32DeviceView(context);
       case 0:
       default:
         return _buildCaregiverOverview(context);

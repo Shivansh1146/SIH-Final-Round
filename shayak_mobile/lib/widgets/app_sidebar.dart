@@ -99,9 +99,7 @@ class AppSidebar extends StatelessWidget {
                 _buildNavItem(context, 3, Icons.bar_chart_rounded, 'Progress'),
               ] else ...[
                 _buildNavItem(context, 0, Icons.dashboard_outlined, 'Overview'),
-                _buildNavItem(context, 1, Icons.auto_awesome_outlined, 'AI decisions'),
-                _buildNavItem(context, 2, Icons.calendar_today_outlined, 'Care plan'),
-                _buildNavItem(context, 3, Icons.sensors_rounded, 'ESP32 Device'),
+                _buildNavItem(context, 1, Icons.calendar_today_outlined, 'Care plan'),
               ],
 
               const SizedBox(height: 24),
