@@ -345,114 +345,119 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 850;
 
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: AppTheme.background,
-      drawer: isMobile
-          ? Drawer(
-              backgroundColor: AppTheme.background,
-              child: AppSidebar(
-                isCaregiver: true,
-                selectedIndex: _sidebarIndex,
-                onSelectIndex: (idx) {
-                  setState(() => _sidebarIndex = idx);
-                },
-                onResetData: _handleResetDemoData,
-              ),
-            )
-          : null,
-      bottomNavigationBar: isMobile
-          ? Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  top: BorderSide(color: AppTheme.surfaceBorder, width: 1.0),
-                ),
-              ),
-              child: NavigationBar(
-                selectedIndex: _sidebarIndex.clamp(0, 1),
-                onDestinationSelected: (idx) {
-                  setState(() => _sidebarIndex = idx);
-                },
-                backgroundColor: Colors.white,
-                indicatorColor: AppTheme.sageLight,
-                elevation: 3,
-                height: 64,
-                labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-                destinations: const [
-                  NavigationDestination(
-                    icon: Icon(Icons.dashboard_outlined),
-                    selectedIcon: Icon(Icons.dashboard_rounded, color: AppTheme.forestGreen),
-                    label: 'Overview',
+    return ValueListenableBuilder<AppLanguage>(
+      valueListenable: LocalizationService.languageNotifier,
+      builder: (context, lang, _) {
+        return Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: AppTheme.background,
+          drawer: isMobile
+              ? Drawer(
+                  backgroundColor: AppTheme.background,
+                  child: AppSidebar(
+                    isCaregiver: true,
+                    selectedIndex: _sidebarIndex,
+                    onSelectIndex: (idx) {
+                      setState(() => _sidebarIndex = idx);
+                    },
+                    onResetData: _handleResetDemoData,
                   ),
-                  NavigationDestination(
-                    icon: Icon(Icons.calendar_today_outlined),
-                    selectedIcon: Icon(Icons.calendar_today_rounded, color: AppTheme.forestGreen),
-                    label: 'Care Plan',
-                  ),
-                ],
-              ),
-            )
-          : null,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Top Bar
-            AppTopBar(
-              currentMode: AppViewMode.caregiver,
-              onModeChanged: widget.onNavigate,
-              onMenuPressed: isMobile ? () => _scaffoldKey.currentState?.openDrawer() : null,
-            ),
-
-            // Sidebar + Main Workspace
-            Expanded(
-              child: Row(
-                children: [
-                  if (!isMobile)
-                    AppSidebar(
-                      isCaregiver: true,
-                      selectedIndex: _sidebarIndex,
-                      onSelectIndex: (idx) {
-                        setState(() => _sidebarIndex = idx);
-                      },
-                      onResetData: _handleResetDemoData,
+                )
+              : null,
+          bottomNavigationBar: isMobile
+              ? Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    border: Border(
+                      top: BorderSide(color: AppTheme.surfaceBorder, width: 1.0),
                     ),
-
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isMobile ? 18.0 : 36.0,
-                        vertical: isMobile ? 16.0 : 24.0,
+                  ),
+                  child: NavigationBar(
+                    selectedIndex: _sidebarIndex.clamp(0, 1),
+                    onDestinationSelected: (idx) {
+                      setState(() => _sidebarIndex = idx);
+                    },
+                    backgroundColor: Colors.white,
+                    indicatorColor: AppTheme.sageLight,
+                    elevation: 3,
+                    height: 64,
+                    labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+                    destinations: [
+                      NavigationDestination(
+                        icon: const Icon(Icons.dashboard_outlined),
+                        selectedIcon: const Icon(Icons.dashboard_rounded, color: AppTheme.forestGreen),
+                        label: LocalizationService.tr('overview', lang),
                       ),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 960),
-                          child: _buildSelectedCaregiverView(context),
+                      NavigationDestination(
+                        icon: const Icon(Icons.calendar_today_outlined),
+                        selectedIcon: const Icon(Icons.calendar_today_rounded, color: AppTheme.forestGreen),
+                        label: LocalizationService.tr('care_plan', lang),
+                      ),
+                    ],
+                  ),
+                )
+              : null,
+          body: SafeArea(
+            child: Column(
+              children: [
+                // Top Bar
+                AppTopBar(
+                  currentMode: AppViewMode.caregiver,
+                  onModeChanged: widget.onNavigate,
+                  onMenuPressed: isMobile ? () => _scaffoldKey.currentState?.openDrawer() : null,
+                ),
+
+                // Sidebar + Main Workspace
+                Expanded(
+                  child: Row(
+                    children: [
+                      if (!isMobile)
+                        AppSidebar(
+                          isCaregiver: true,
+                          selectedIndex: _sidebarIndex,
+                          onSelectIndex: (idx) {
+                            setState(() => _sidebarIndex = idx);
+                          },
+                          onResetData: _handleResetDemoData,
+                        ),
+
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 18.0 : 36.0,
+                            vertical: isMobile ? 16.0 : 24.0,
+                          ),
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 960),
+                              child: _buildSelectedCaregiverView(context, lang),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildSelectedCaregiverView(BuildContext context) {
+  Widget _buildSelectedCaregiverView(BuildContext context, AppLanguage lang) {
     switch (_sidebarIndex) {
       case 1:
-        return _buildCarePlanView(context);
+        return _buildCarePlanView(context, lang);
       case 0:
       default:
-        return _buildCaregiverOverview(context);
+        return _buildCaregiverOverview(context, lang);
     }
   }
 
-  String _getGreeting() {
-    return LocalizationService.getTimeGreeting().replaceAll(',', '').trim();
+  String _getGreeting(AppLanguage lang) {
+    return LocalizationService.getTimeGreeting(lang).replaceAll(',', '').trim();
   }
 
   String _getFormattedSyncTime() {
@@ -490,7 +495,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     return '${latest.day} ${months[latest.month - 1]}, $hour12:$minStr $ampm';
   }
 
-  Widget _buildCaregiverOverview(BuildContext context) {
+  Widget _buildCaregiverOverview(BuildContext context, AppLanguage lang) {
     final activePatient = PatientProfile.loadFromHive();
     final patientId = activePatient?.id ?? 'patient-ramesh';
     final patientName = activePatient?.fullName ?? 'Ramesh Kumar';
@@ -521,7 +526,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                       const Icon(Icons.favorite_border_rounded, size: 14, color: AppTheme.forestGreen),
                       const SizedBox(width: 6),
                       Text(
-                        'Caregiver workspace',
+                        LocalizationService.tr('caregiver_workspace', lang),
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 12.0,
                           fontWeight: FontWeight.w700,
@@ -532,7 +537,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _getGreeting(),
+                    _getGreeting(lang),
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 34.0,
                       fontWeight: FontWeight.w800,
@@ -542,7 +547,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'A clear view of support, without clinical assumptions.',
+                    LocalizationService.tr('caregiver_sub', lang),
                     style: GoogleFonts.inter(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w400,
@@ -589,333 +594,335 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                               width: 30,
                               height: 30,
                               decoration: BoxDecoration(
-                                color: isCurrent ? AppTheme.forestGreen : AppTheme.sageLight,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  p.fullName.isNotEmpty ? p.fullName[0] : 'P',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: isCurrent ? Colors.white : AppTheme.forestGreen,
-                                  ),
+                              color: isCurrent ? AppTheme.forestGreen : AppTheme.sageLight,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                p.fullName.isNotEmpty ? p.fullName[0] : 'P',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: isCurrent ? Colors.white : AppTheme.forestGreen,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    p.fullName,
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 13.5,
-                                      fontWeight: isCurrent ? FontWeight.w800 : FontWeight.w600,
-                                      color: isCurrent ? AppTheme.forestGreen : AppTheme.textPrimary,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Age ${p.age} · ${p.diagnosis ?? "Cognitive Monitoring"}',
-                                    style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textSecondary),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (isCurrent)
-                              const Icon(Icons.check_rounded, color: AppTheme.forestGreen, size: 18),
-                          ],
-                        ),
-                      );
-                    }).toList();
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(100),
-                      border: Border.all(color: AppTheme.surfaceBorder),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.02),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          patientName,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.textPrimary,
                           ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  p.fullName,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13.5,
+                                    fontWeight: isCurrent ? FontWeight.w800 : FontWeight.w600,
+                                    color: isCurrent ? AppTheme.forestGreen : AppTheme.textPrimary,
+                                  ),
+                                ),
+                                Text(
+                                  'Age ${p.age} · ${p.diagnosis ?? "Cognitive Monitoring"}',
+                                  style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textSecondary),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (isCurrent)
+                            const Icon(Icons.check_rounded, color: AppTheme.forestGreen, size: 18),
+                        ],
+                      ),
+                    );
+                  }).toList();
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(100),
+                    border: Border.all(color: AppTheme.surfaceBorder),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        patientName,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textPrimary,
                         ),
-                        const SizedBox(width: 6),
-                        const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppTheme.textSecondary),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppTheme.textSecondary),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: _simulateSync,
-                  icon: _isSyncing
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.forestGreen),
-                        )
-                      : const Icon(Icons.sync_rounded, size: 15, color: AppTheme.textPrimary),
-                  label: Text(
-                    'Simulate sync',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13.0,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    side: const BorderSide(color: AppTheme.surfaceBorder),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 18),
-
-        // Status Sync Banner
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(100),
-            border: Border.all(color: AppTheme.surfaceBorder),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 7,
-                height: 7,
-                decoration: const BoxDecoration(
-                  color: AppTheme.statusGreen,
-                  shape: BoxShape.circle,
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                _getFormattedSyncTime(),
-                style: GoogleFonts.inter(
-                  fontSize: 12.0,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.textSecondary,
+              OutlinedButton.icon(
+                onPressed: _simulateSync,
+                icon: _isSyncing
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.forestGreen),
+                      )
+                    : const Icon(Icons.sync_rounded, size: 15, color: AppTheme.textPrimary),
+                label: Text(
+                  LocalizationService.tr('simulate_sync', lang),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13.0,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
                 ),
-              ),
-              const Spacer(),
-              Text(
-                'LIVE AUTO-SYNC (2s)',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.forestGreen,
-                  letterSpacing: 0.8,
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  side: const BorderSide(color: AppTheme.surfaceBorder),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 ),
               ),
             ],
           ),
+        ],
+      ),
+
+      const SizedBox(height: 18),
+
+      // Status Sync Banner
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(color: AppTheme.surfaceBorder),
         ),
+        child: Row(
+          children: [
+            Container(
+              width: 7,
+              height: 7,
+              decoration: const BoxDecoration(
+                color: AppTheme.statusGreen,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              _getFormattedSyncTime(),
+              style: GoogleFonts.inter(
+                fontSize: 12.0,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              LocalizationService.tr('live_auto_sync', lang),
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.forestGreen,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ],
+        ),
+      ),
 
-        const SizedBox(height: 18),
+      const SizedBox(height: 18),
 
-        // Selected Patient Card
-        Container(
-          padding: const EdgeInsets.all(20.0),
-          decoration: BoxDecoration(
-            color: AppTheme.sageLight.withOpacity(0.6),
-            borderRadius: BorderRadius.circular(20.0),
-            border: Border.all(color: AppTheme.sageBorder),
-          ),
-          child: Row(
-            children: [
-              // Avatar
-              Container(
-                width: 48,
-                height: 48,
-                decoration: const BoxDecoration(
-                  color: AppTheme.forestGreen,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    patientInitials.isNotEmpty ? patientInitials : 'PT',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
+      // Selected Patient Card
+      Container(
+        padding: const EdgeInsets.all(20.0),
+        decoration: BoxDecoration(
+          color: AppTheme.sageLight.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(20.0),
+          border: Border.all(color: AppTheme.sageBorder),
+        ),
+        child: Row(
+          children: [
+            // Avatar
+            Container(
+              width: 48,
+              height: 48,
+              decoration: const BoxDecoration(
+                color: AppTheme.forestGreen,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  patientInitials.isNotEmpty ? patientInitials : 'PT',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'SELECTED PATIENT',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10.0,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.forestGreen,
-                        letterSpacing: 0.6,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      patientName,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Age ${activePatient?.age ?? 68} · Caregiver Anita Kumar · Preferred language English',
-                      style: GoogleFonts.inter(
-                        fontSize: 12.5,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Last Activity Badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppTheme.surfaceBorder),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Last activity',
-                      style: GoogleFonts.inter(fontSize: 10.5, color: AppTheme.textLight),
-                    ),
-                    Text(
-                      lastActivityStr,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12.0,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 18),
-
-        // 4 Stat Metric Cards Grid
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth > 700;
-            return GridView.count(
-              crossAxisCount: isWide ? 4 : 2,
-              crossAxisSpacing: 14,
-              mainAxisSpacing: 14,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              childAspectRatio: isWide ? 1.35 : 1.25,
-              children: [
-                _buildStatCard(
-                  title: 'GAMES COMPLETED',
-                  value: '$totalSessionsCount',
-                  subtitle: 'Across recent sessions',
-                  badgeIcon: Icons.check_circle_outline_rounded,
-                  badgeColor: AppTheme.statusGreen,
-                  badgeBg: AppTheme.sageLight,
-                ),
-                _buildStatCard(
-                  title: 'AVERAGE ACCURACY',
-                  value: avgAccStr,
-                  subtitle: 'Gameplay performance',
-                  badgeIcon: Icons.north_east_rounded,
-                  badgeColor: AppTheme.warmTerracotta,
-                  badgeBg: AppTheme.warmPeach,
-                ),
-                _buildStatCard(
-                  title: 'AVERAGE RESPONSE',
-                  value: avgRespStr,
-                  subtitle: 'Per interaction',
-                  badgeIcon: Icons.access_time_rounded,
-                  badgeColor: AppTheme.warmOchre,
-                  badgeBg: AppTheme.pastelYellow,
-                ),
-                _buildStatCard(
-                  title: 'CURRENT DIFFICULTY',
-                  value: _caregiverDifficulty.split(' ').take(2).join(' '),
-                  subtitle: _caregiverAdaptiveMode ? '🤖 AI-Adaptive Auto' : '⚙️ Fixed Manual Mode',
-                  badgeIcon: Icons.psychology_outlined,
-                  badgeColor: AppTheme.forestGreen,
-                  badgeBg: AppTheme.pastelBlue,
-                ),
-              ],
-            );
-          },
-        ),
-
-        const SizedBox(height: 20),
-
-        // Cognitive Difficulty & AI Pacing Controller Card
-        _buildDifficultyControllerCard(context),
-
-        const SizedBox(height: 20),
-
-        // Lower Dashboard: 7-Session Performance & Support Notes
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth > 640;
-            if (isWide) {
-              return Row(
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(flex: 6, child: _buildCognitivePerformanceCard()),
-                  const SizedBox(width: 18),
-                  Expanded(flex: 4, child: _buildSupportNotesCard(totalSessionsCount, patientName, latestScore)),
+                  Text(
+                    LocalizationService.tr('selected_patient', lang),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 10.0,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.forestGreen,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    patientName,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Age ${activePatient?.age ?? 68} · Caregiver Anita Kumar · Preferred language ${lang.displayName}',
+                    style: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
                 ],
-              );
-            } else {
-              return Column(
+              ),
+            ),
+            // Last Activity Badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppTheme.surfaceBorder),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  _buildCognitivePerformanceCard(),
-                  const SizedBox(height: 18),
-                  _buildSupportNotesCard(totalSessionsCount, patientName, latestScore),
+                  Text(
+                    LocalizationService.tr('last_activity', lang),
+                    style: GoogleFonts.inter(fontSize: 10.5, color: AppTheme.textLight),
+                  ),
+                  Text(
+                    lastActivityStr,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
                 ],
-              );
-            }
-          },
+              ),
+            ),
+          ],
         ),
-      ],
-    );
-  }
+      ),
 
-  Widget _buildDifficultyControllerCard(BuildContext context) {
+      const SizedBox(height: 18),
+
+      // 4 Stat Metric Cards Grid
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth > 700;
+          return GridView.count(
+            crossAxisCount: isWide ? 4 : 2,
+            crossAxisSpacing: 14,
+            mainAxisSpacing: 14,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            childAspectRatio: isWide ? 1.35 : 1.25,
+            children: [
+              _buildStatCard(
+                title: LocalizationService.tr('games_completed', lang),
+                value: '$totalSessionsCount',
+                subtitle: LocalizationService.tr('across_recent_sessions', lang),
+                badgeIcon: Icons.check_circle_outline_rounded,
+                badgeColor: AppTheme.statusGreen,
+                badgeBg: AppTheme.sageLight,
+              ),
+              _buildStatCard(
+                title: LocalizationService.tr('avg_accuracy', lang),
+                value: avgAccStr,
+                subtitle: LocalizationService.tr('gameplay_performance', lang),
+                badgeIcon: Icons.north_east_rounded,
+                badgeColor: AppTheme.warmTerracotta,
+                badgeBg: AppTheme.warmPeach,
+              ),
+              _buildStatCard(
+                title: LocalizationService.tr('avg_response', lang),
+                value: avgRespStr,
+                subtitle: LocalizationService.tr('per_interaction', lang),
+                badgeIcon: Icons.access_time_rounded,
+                badgeColor: AppTheme.warmOchre,
+                badgeBg: AppTheme.pastelYellow,
+              ),
+              _buildStatCard(
+                title: LocalizationService.tr('current_difficulty', lang),
+                value: _caregiverDifficulty.split(' ').take(2).join(' '),
+                subtitle: _caregiverAdaptiveMode
+                    ? LocalizationService.tr('ai_adaptive_auto', lang)
+                    : LocalizationService.tr('fixed_manual_mode', lang),
+                badgeIcon: Icons.psychology_outlined,
+                badgeColor: AppTheme.forestGreen,
+                badgeBg: AppTheme.pastelBlue,
+              ),
+            ],
+          );
+        },
+      ),
+
+      const SizedBox(height: 20),
+
+      // Cognitive Difficulty & AI Pacing Controller Card
+      _buildDifficultyControllerCard(context, lang),
+
+      const SizedBox(height: 20),
+
+      // Lower Dashboard: 7-Session Performance & Support Notes
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth > 640;
+          if (isWide) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 6, child: _buildCognitivePerformanceCard()),
+                const SizedBox(width: 18),
+                Expanded(flex: 4, child: _buildSupportNotesCard(totalSessionsCount, patientName, latestScore)),
+              ],
+            );
+          } else {
+            return Column(
+              children: [
+                _buildCognitivePerformanceCard(),
+                const SizedBox(height: 18),
+                _buildSupportNotesCard(totalSessionsCount, patientName, latestScore),
+              ],
+            );
+          }
+        },
+      ),
+    ],
+  );
+}
+
+  Widget _buildDifficultyControllerCard(BuildContext context, AppLanguage lang) {
     const tiers = [
       'Level 1 (Gentle)',
       'Level 2 (Moderate)',
@@ -961,7 +968,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Cognitive Difficulty & AI Pacing Controller',
+                        LocalizationService.tr('diff_controller_title', lang),
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 16.0,
                           fontWeight: FontWeight.w800,
@@ -969,7 +976,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                         ),
                       ),
                       Text(
-                        'Manage auto-adaptive progression or set fixed challenge levels for the patient.',
+                        LocalizationService.tr('diff_controller_sub', lang),
                         style: GoogleFonts.inter(
                           fontSize: 12.5,
                           color: AppTheme.textSecondary,
@@ -999,7 +1006,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                           borderRadius: BorderRadius.circular(100),
                         ),
                         child: Text(
-                          '🤖 AI-Adaptive',
+                          '🤖 ${LocalizationService.tr('ai_adaptive', lang)}',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w700,
@@ -1018,7 +1025,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                           borderRadius: BorderRadius.circular(100),
                         ),
                         child: Text(
-                          '⚙️ Manual Lock',
+                          '⚙️ ${LocalizationService.tr('manual_lock', lang)}',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w700,
@@ -1645,7 +1652,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     );
   }
 
-  Widget _buildCarePlanView(BuildContext context) {
+  Widget _buildCarePlanView(BuildContext context, AppLanguage lang) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1656,7 +1663,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'CARE MANAGEMENT',
+                  LocalizationService.tr('care_team', lang),
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 11.0,
                     fontWeight: FontWeight.w800,
@@ -1666,7 +1673,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Care Plan & Medication Schedule',
+                  LocalizationService.tr('care_plan', lang),
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 32.0,
                     fontWeight: FontWeight.w800,
@@ -1676,7 +1683,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Organize daily therapies, medication alerts, and active kinematic assistance schedules.',
+                  LocalizationService.tr('patient_care_team_sub', lang),
                   style: GoogleFonts.inter(fontSize: 14.5, color: AppTheme.textSecondary),
                 ),
               ],
@@ -1686,7 +1693,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 OutlinedButton.icon(
                   onPressed: _showAddCarePlanItemDialog,
                   icon: const Icon(Icons.add_rounded, size: 16),
-                  label: const Text('Add Item'),
+                  label: Text(LocalizationService.tr('add_activity', lang)),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppTheme.surfaceBorder),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
@@ -1697,7 +1704,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 ElevatedButton.icon(
                   onPressed: _saveCarePlan,
                   icon: const Icon(Icons.check_rounded, size: 16),
-                  label: const Text('Save Care Plan'),
+                  label: Text(LocalizationService.tr('save_plan', lang)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.forestGreen,
                     foregroundColor: Colors.white,

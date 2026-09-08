@@ -29,160 +29,160 @@ class AppSidebar extends StatelessWidget {
     final activeProfile = PatientProfile.loadFromHive();
     final patientName = activeProfile?.fullName ?? (isCaregiver ? 'Care Team' : 'Ramesh Kumar');
 
-    return Container(
-      width: 270,
-      decoration: const BoxDecoration(
-        color: AppTheme.background,
-        border: Border(
-          right: BorderSide(color: AppTheme.surfaceBorder, width: 1.0),
-        ),
-      ),
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(left: 20, right: 16, top: 18, bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Signature Brand Logo
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 18, top: 4),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(7.5),
-                      decoration: BoxDecoration(
-                        color: AppTheme.forestGreen,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.spa_rounded, color: Colors.white, size: 18),
-                    ),
-                    const SizedBox(width: 10),
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'SAHAYAK',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: AppTheme.forestGreen,
-                              letterSpacing: 0.5,
-                            ),
+    return ValueListenableBuilder<AppLanguage>(
+      valueListenable: LocalizationService.languageNotifier,
+      builder: (context, lang, _) {
+        return Container(
+          width: 270,
+          decoration: const BoxDecoration(
+            color: AppTheme.background,
+            border: Border(
+              right: BorderSide(color: AppTheme.surfaceBorder, width: 1.0),
+            ),
+          ),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(left: 20, right: 16, top: 18, bottom: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Signature Brand Logo
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4, bottom: 18, top: 4),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(7.5),
+                          decoration: BoxDecoration(
+                            color: AppTheme.forestGreen,
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          TextSpan(
-                            text: '—AI',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: AppTheme.warmTerracotta,
-                              letterSpacing: 0.5,
-                            ),
+                          child: const Icon(Icons.spa_rounded, color: Colors.white, size: 18),
+                        ),
+                        const SizedBox(width: 10),
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: 'SAHAYAK',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppTheme.forestGreen,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              TextSpan(
+                                text: '—AI',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppTheme.warmTerracotta,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
+                  ),
+
+                  // Header Card (PATIENT APP / CARE TEAM)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14.0),
+                    decoration: BoxDecoration(
+                      color: AppTheme.sageLight.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(16.0),
+                      border: Border.all(color: AppTheme.sageBorder.withOpacity(0.6)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isCaregiver ? LocalizationService.tr('care_team', lang) : LocalizationService.tr('patient_app', lang),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.forestGreen,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          patientName,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          isCaregiver
+                              ? LocalizationService.tr('patient_care_team_sub', lang)
+                              : LocalizationService.tr('patient_space_sub', lang),
+                          style: GoogleFonts.inter(
+                            fontSize: 12.0,
+                            fontWeight: FontWeight.w400,
+                            color: AppTheme.textSecondary,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Primary Navigation Menu Items
+                  if (!isCaregiver) ...[
+                    _buildNavItem(context, 0, Icons.home_outlined, LocalizationService.tr('home', lang)),
+                    _buildNavItem(context, 1, Icons.psychology_outlined, LocalizationService.tr('games', lang)),
+                    _buildNavItem(context, 2, Icons.alarm_outlined, LocalizationService.tr('reminders', lang)),
+                    _buildNavItem(context, 3, Icons.bar_chart_rounded, LocalizationService.tr('progress', lang)),
+                  ] else ...[
+                    _buildNavItem(context, 0, Icons.dashboard_outlined, LocalizationService.tr('overview', lang)),
+                    _buildNavItem(context, 1, Icons.calendar_today_outlined, LocalizationService.tr('care_plan', lang)),
                   ],
-                ),
-              ),
 
-              // Header Card (PATIENT APP / CARE TEAM)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14.0),
-                decoration: BoxDecoration(
-                  color: AppTheme.sageLight.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(16.0),
-                  border: Border.all(color: AppTheme.sageBorder.withOpacity(0.6)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isCaregiver ? 'CARE TEAM' : 'PATIENT APP',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.forestGreen,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      patientName,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15.5,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      isCaregiver
-                          ? 'Understand patterns, support with confidence.'
-                          : 'A gentle space for daily activities.',
-                      style: GoogleFonts.inter(
-                        fontSize: 12.0,
-                        fontWeight: FontWeight.w400,
-                        color: AppTheme.textSecondary,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                  const SizedBox(height: 24),
+                  const Divider(color: AppTheme.surfaceBorder, height: 1),
+                  const SizedBox(height: 14),
 
-              const SizedBox(height: 20),
-
-              // Primary Navigation Menu Items
-              if (!isCaregiver) ...[
-                _buildNavItem(context, 0, Icons.home_outlined, 'Home'),
-                _buildNavItem(context, 1, Icons.psychology_outlined, 'Games'),
-                _buildNavItem(context, 2, Icons.alarm_outlined, 'Reminders'),
-                _buildNavItem(context, 3, Icons.bar_chart_rounded, 'Progress'),
-              ] else ...[
-                _buildNavItem(context, 0, Icons.dashboard_outlined, 'Overview'),
-                _buildNavItem(context, 1, Icons.calendar_today_outlined, 'Care plan'),
-              ],
-
-              const SizedBox(height: 24),
-              const Divider(color: AppTheme.surfaceBorder, height: 1),
-              const SizedBox(height: 14),
-
-              // Bottom Action Links
-              ValueListenableBuilder<AppLanguage>(
-                valueListenable: LocalizationService.languageNotifier,
-                builder: (context, lang, _) {
-                  return _buildActionItem(
+                  // Bottom Action Links
+                  _buildActionItem(
                     context,
                     Icons.translate_rounded,
                     'Language: ${lang.flag} ${lang.displayName.split(' ').first}',
                     onTap: () => _showLanguageModal(context),
-                  );
-                },
+                  ),
+                  const SizedBox(height: 6),
+                  _buildActionItem(
+                    context,
+                    Icons.help_outline_rounded,
+                    LocalizationService.tr('help', lang),
+                    onTap: onHelp ?? () => _showHelpDialog(context),
+                  ),
+                  if (!isCaregiver) ...[
+                    const SizedBox(height: 6),
+                    _buildActionItem(
+                      context,
+                      Icons.tune_rounded,
+                      LocalizationService.tr('accessibility', lang),
+                      onTap: onAccessibility ?? () => _showAccessibilityDialog(context),
+                    ),
+                  ],
+                ],
               ),
-              const SizedBox(height: 6),
-              _buildActionItem(
-                context,
-                Icons.help_outline_rounded,
-                'Help',
-                onTap: onHelp ?? () => _showHelpDialog(context),
-              ),
-              if (!isCaregiver) ...[
-                const SizedBox(height: 6),
-                _buildActionItem(
-                  context,
-                  Icons.tune_rounded,
-                  'Accessibility',
-                  onTap: onAccessibility ?? () => _showAccessibilityDialog(context),
-                ),
-              ],
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

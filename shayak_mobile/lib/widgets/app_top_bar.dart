@@ -47,7 +47,7 @@ class AppTopBar extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'PREFERRED LANGUAGE',
+                              LocalizationService.tr('preferred_language', currentLang),
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
@@ -57,7 +57,7 @@ class AppTopBar extends StatelessWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Choose Interface Language',
+                              LocalizationService.tr('choose_interface_lang', currentLang),
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w800,
@@ -74,7 +74,7 @@ class AppTopBar extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
                     Text(
-                      'All reminders, instructions, audio speech, and games adapt to your selected language.',
+                      LocalizationService.tr('choose_lang_desc', currentLang),
                       style: GoogleFonts.inter(fontSize: 12.5, color: AppTheme.textSecondary, height: 1.3),
                     ),
                     const SizedBox(height: 16),
@@ -592,7 +592,7 @@ class AppTopBar extends StatelessWidget {
                     onPressed: () => onModeChanged(AppViewMode.caregiver),
                     icon: const Icon(Icons.person_outline_rounded, size: 14, color: AppTheme.textPrimary),
                     label: Text(
-                      'Caregiver',
+                      LocalizationService.tr('caregiver'),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: isMobile ? 11.5 : 13.0,
                         fontWeight: FontWeight.w700,
@@ -613,7 +613,7 @@ class AppTopBar extends StatelessWidget {
                     onPressed: () => onModeChanged(AppViewMode.patient),
                     icon: const Icon(Icons.person_outline_rounded, size: 14, color: AppTheme.textPrimary),
                     label: Text(
-                      'Patient',
+                      LocalizationService.tr('patient'),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: isMobile ? 11.5 : 13.0,
                         fontWeight: FontWeight.w700,
