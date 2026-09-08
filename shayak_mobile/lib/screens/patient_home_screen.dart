@@ -11,8 +11,6 @@ import '../services/reminder_service.dart';
 import 'reminders_screen.dart';
 import 'memory_match_screen.dart';
 import 'clock_canvas_screen.dart';
-import 'category_sort_screen.dart';
-import 'pattern_sequence_screen.dart';
 import 'routine_sequencer_screen.dart';
 
 class PatientHomeScreen extends StatefulWidget {
@@ -164,33 +162,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     );
   }
 
-  void _startCategorySort() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (ctx) => CategorySortScreen(
-          onFinish: () {
-            Navigator.pop(ctx);
-            _fetchBackendPatientData();
-          },
-        ),
-      ),
-    );
-  }
 
-  void _startPatternSequence() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (ctx) => PatternSequenceScreen(
-          onFinish: () {
-            Navigator.pop(ctx);
-            _fetchBackendPatientData();
-          },
-        ),
-      ),
-    );
-  }
 
   void _startRoutineSequencer() {
     Navigator.push(
@@ -1187,36 +1159,6 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           buttonColor: AppTheme.forestGreen,
           buttonText: 'Play Memory Match',
           onPlay: _startMemoryMatch,
-        ),
-
-        const SizedBox(height: 18),
-
-        // Activity Card 2: Category Sort & Logic
-        _buildActivityItemCard(
-          emoji: '🗂️',
-          tag: 'SEMANTIC REASONING & LOGIC',
-          title: 'Category Sort & Logic',
-          description: 'Group household items, fruits, seasons, and animals into their matching baskets.',
-          duration: '4 minutes',
-          difficulty: 'AI-Adaptive (4 Tiers)',
-          buttonColor: const Color(0xFF2E7D32),
-          buttonText: 'Play Category Sort',
-          onPlay: _startCategorySort,
-        ),
-
-        const SizedBox(height: 18),
-
-        // Activity Card 3: Pattern Sequence & Logic Trail
-        _buildActivityItemCard(
-          emoji: '🧩',
-          tag: 'INDUCTIVE & SEQUENTIAL LOGIC',
-          title: 'Pattern Sequence & Logic Trail',
-          description: 'Discover the rhythm of shapes, symbols, and colors to complete the missing trail token.',
-          duration: '4 minutes',
-          difficulty: 'AI-Adaptive (5 Rounds)',
-          buttonColor: const Color(0xFF1565C0),
-          buttonText: 'Play Pattern Sequence',
-          onPlay: _startPatternSequence,
         ),
       ],
     );
