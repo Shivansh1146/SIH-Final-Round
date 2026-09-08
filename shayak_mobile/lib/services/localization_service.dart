@@ -623,6 +623,28 @@ class LocalizationService {
         case AppLanguage.mizo: return 'Kut khur vawnfimkhurna';
         case AppLanguage.english: default: return 'Tremor Dampening & Kinematic Calm';
       }
+    } else if (n.contains('reminiscence') || n.contains('memory lane') || n.contains('emotional memory')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'पुनःस्मरण और परिचित यादें (Memory Lane)';
+        case AppLanguage.assamese: return 'পৰিচিত স্মৃতি আৰু সোঁৱৰণ (Memory Lane)';
+        case AppLanguage.bengali: return 'স্মৃতিচারণ ও পরিচিত স্মৃতি (Memory Lane)';
+        case AppLanguage.manipuri: return 'মমল য়াম্বা নিংশিংবা (Memory Lane)';
+        case AppLanguage.bodo: return 'गोसोखांथि आरो सिनायथि (Memory Lane)';
+        case AppLanguage.nepali: return 'स्मृति संस्मरण र परिचित वस्तुहरू (Memory Lane)';
+        case AppLanguage.mizo: return 'Hriatrengna hlui (Memory Lane)';
+        case AppLanguage.english: default: return 'Reminiscence & Emotional Recall (Memory Lane)';
+      }
+    } else if (n.contains('language') || n.contains('semantic') || n.contains('naming')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'स्थानीय भाषा नामकरण और अर्थ स्मृति (Naming)';
+        case AppLanguage.assamese: return 'স্থানীয় ভাষা নামকৰণ আৰু অৰ্থ স্মৃতি (Naming)';
+        case AppLanguage.bengali: return 'স্থানীয় ভাষা নামকরণ ও অর্থ স্মৃতি (Naming)';
+        case AppLanguage.manipuri: return 'লোকেল লোনগী মিং থোনবা (Naming)';
+        case AppLanguage.bodo: return 'गावनि राव मुं दोननाय (Naming)';
+        case AppLanguage.nepali: return 'स्थानीय भाषा नामकरण र अर्थ स्मृति (Naming)';
+        case AppLanguage.mizo: return 'Mahni ṭawnga hming sawina (Naming)';
+        case AppLanguage.english: default: return 'Language & Semantic Naming (Local Language)';
+      }
     } else if (n.contains('adherence') || n.contains('reminder')) {
       switch (l) {
         case AppLanguage.hindi: return 'दैनिक अनुस्मारक अनुपालन';
@@ -805,6 +827,28 @@ class LocalizationService {
   static String trMilestoneFilter(String filter, [AppLanguage? lang]) {
     final l = lang ?? instance.currentLanguage;
     switch (filter) {
+      case 'Language Naming':
+        switch (l) {
+          case AppLanguage.hindi: return 'स्थानीय भाषा नाम';
+          case AppLanguage.assamese: return 'ভাষা নামকৰণ';
+          case AppLanguage.bengali: return 'ভাষা নামকরণ';
+          case AppLanguage.manipuri: return 'লোনগী মিং';
+          case AppLanguage.bodo: return 'राव मुं';
+          case AppLanguage.nepali: return 'भाषा नामकरण';
+          case AppLanguage.mizo: return 'Language Naming';
+          case AppLanguage.english: default: return 'Language Naming';
+        }
+      case 'Memory Lane':
+        switch (l) {
+          case AppLanguage.hindi: return 'स्मृति संस्मरण';
+          case AppLanguage.assamese: return 'স্মৃতি সোঁৱৰণ';
+          case AppLanguage.bengali: return 'মেমোরি লেন';
+          case AppLanguage.manipuri: return 'নিংশিংবা লেন';
+          case AppLanguage.bodo: return 'गोसोखांथि लेन';
+          case AppLanguage.nepali: return 'स्मृति संस्मरण';
+          case AppLanguage.mizo: return 'Memory Lane';
+          case AppLanguage.english: default: return 'Memory Lane';
+        }
       case 'Memory Match':
         switch (l) {
           case AppLanguage.hindi: return 'स्मृति मिलान';
@@ -1095,6 +1139,15 @@ class LocalizationService {
       'routine_sequencer': 'Daily Routine & Life Sequencer',
       'routine_sub': 'Rebuild step-by-step memory for familiar everyday activities (Chai, Plants, Getting Ready).',
       'play_routine': 'Play Routine Sequencer',
+      'spot_difference': 'Spot the Difference (What Changed?)',
+      'spot_difference_sub': 'Notice what changed or disappeared between two visual scenes (Chair, Clock, Cup, Flower).',
+      'play_spot_difference': 'Play Spot the Difference',
+      'memory_lane': 'Memory Lane (Familiar Things)',
+      'memory_lane_sub': 'Relive nostalgic photographs, musical instruments, heirloom objects, and cultural memories.',
+      'play_memory_lane': 'Play Memory Lane',
+      'language_naming': 'Local Language Naming Game',
+      'language_naming_sub': 'Name familiar everyday objects in your mother tongue (Assamese, Khasi, Garo, Manipuri, Mizo, Nagamese, Bengali, Hindi, English).',
+      'play_language_naming': 'Play Language Naming',
       'play_memory_match': 'Play Memory Match',
       'clock_drawing': 'Clock Drawing Canvas',
       'clock_sub': 'Clinical spatial & executive function cognitive assessment.',
@@ -1220,6 +1273,15 @@ class LocalizationService {
       'routine_sequencer': 'दैनिक दिनचर्या अनुक्रमक',
       'routine_sub': 'चाय बनाना, पौधों को पानी देना आदि दैनिक कार्यों का अभ्यास करें।',
       'play_routine': 'दिनचर्या खेलें',
+      'spot_difference': 'अंतर पहचानें (क्या बदला?)',
+      'spot_difference_sub': 'दो दृश्यों में देखें कि कौन सी वस्तु बदल गई या गायब हो गई।',
+      'play_spot_difference': 'अंतर पहचानें खेलें',
+      'memory_lane': 'स्मृति संस्मरण (Memory Lane)',
+      'memory_lane_sub': 'पुरानी तस्वीरें, संगीत वाद्ययंत्र, पारिवारिक वस्तुएं और सुखद यादें ताजा करें।',
+      'play_memory_lane': 'स्मृति संस्मरण खेलें',
+      'language_naming': 'स्थानीय भाषा नामकरण (Language Naming)',
+      'language_naming_sub': 'अपनी मातृभाषा में परिचित दैनिक वस्तुओं के नाम बताएं (असमिया, खासी, गारो, मणिपुरी, मिजो, नागामीज, बांग्ला, हिंदी, अंग्रेजी)।',
+      'play_language_naming': 'भाषा नामकरण खेलें',
       'play_memory_match': 'स्मृति मिलान खेलें',
       'clock_drawing': 'घड़ी चित्रांकन मूल्यांकन',
       'clock_sub': 'स्थानिक और संज्ञानात्मक क्षमता का सरल परीक्षण।',
@@ -1345,6 +1407,9 @@ class LocalizationService {
       'routine_sequencer': 'দৈনন্দিন ৰুটিন অনুক্ৰমক',
       'routine_sub': 'চাহ বনোৱা, গছত পানী দিয়া আদি দৈনন্দিন অভ্যাস।',
       'play_routine': 'ৰুটিন খেলক',
+      'spot_difference': 'পাৰ্থক্য বিচাৰক (কি সলনি হ’ল?)',
+      'spot_difference_sub': 'দুটা ছবিৰ মাজত কি বস্তু আঁতৰিল বা সলনি হ’ল লক্ষ্য কৰক।',
+      'play_spot_difference': 'পাৰ্থক্য খেল আৰম্ভ কৰক',
       'play_memory_match': 'স্মৃতি খেল আৰম্ভ কৰক',
       'clock_drawing': 'ঘড়ী অঁকাৰ পৰীক্ষা',
       'clock_sub': 'মানসিক আৰু কাৰ্যনিৰ্বাহী ক্ষমতা পৰীক্ষা।',
@@ -1470,6 +1535,9 @@ class LocalizationService {
       'routine_sequencer': 'দৈনন্দিন কাজের ক্রম',
       'routine_sub': 'চা বানানো, গাছে জল দেওয়া ইত্যাদি প্রতিদিনের অভ্যাস।',
       'play_routine': 'রুটিন খেলা শুরু করুন',
+      'spot_difference': 'পার্থক্য চিহ্নিত করুন (কী পরিবর্তন হলো?)',
+      'spot_difference_sub': 'দুটি ছবির মধ্যে কোন জিনিসটি পরিবর্তন বা মুছে গেছে তা লক্ষ্য করুন।',
+      'play_spot_difference': 'পার্থক্য খেলা শুরু করুন',
       'play_memory_match': 'স্মৃতি মেলানো খেলুন',
       'clock_drawing': 'ঘড়ির ছবি আঁকার পরীক্ষা',
       'clock_sub': 'মানসিক ও স্থানিক ক্ষমতার ক্লিনিকাল মূল্যায়ন।',
@@ -1595,6 +1663,9 @@ class LocalizationService {
       'routine_sequencer': 'নুমিৎ খুদিংগী থবক মথং-মনাও',
       'routine_sub': 'চা শাবা, পাম্বীদা ঈশিং থাইবা অসিনচিংবা।',
       'play_routine': 'থবক মথং-মনাও শানবিয়ু',
+      'spot_difference': 'খেৎনবা থিবিয়ু (করি হোংখ্রে?)',
+      'spot_difference_sub': 'লাই অমগা অমগা য়েংদুনা করি পোৎ হোংখ্রে নত্ত্রগা মাংখ্রে খঙদোকপিয়ু।',
+      'play_spot_difference': 'খেৎনবা শানবিয়ু',
       'play_memory_match': 'নিংশিংবা শানবিয়ু',
       'clock_drawing': 'পুং চহী অনীৎ য়েংদুনা য়েকপা',
       'clock_sub': 'মচীন-মনাও নৈনবা চাংয়েং।',
@@ -1720,6 +1791,9 @@ class LocalizationService {
       'routine_sequencer': 'सानफ्रोमबोनि हाबा फारि',
       'routine_sub': 'सा बानायनाय, बिफांआव दै होनाय बायदि।',
       'play_routine': 'फारिखौ गेले',
+      'spot_difference': 'फाराग दिहुन (मा सोलायखो?)',
+      'spot_difference_sub': 'नैथि सावगारियाव मा बेसाद गैया जाखो नागिरना दिहुन।',
+      'play_spot_difference': 'फाराग दिहुन गेले',
       'play_memory_match': 'गोसोखांथिखौ गेले',
       'clock_drawing': 'घडी आखिनाय आनजाद',
       'clock_sub': 'गोसोनि बिबां आनजाद।',
@@ -1845,6 +1919,9 @@ class LocalizationService {
       'routine_sequencer': 'दैनिक दिनचर्या क्रम',
       'routine_sub': 'चिया बनाउने, बिरुवामा पानी हाल्ने आदि अभ्यास।',
       'play_routine': 'दिनचर्या खेल्नुहोस्',
+      'spot_difference': 'फरक पहिचान गर्नुहोस् (के परिवर्तन भयो?)',
+      'spot_difference_sub': 'दुई चित्रहरू बीच के वस्तु हट्यो वा परिवर्तन भयो ध्यान दिएर खोज्नुहोस्।',
+      'play_spot_difference': 'फरक पहिचान खेल्नुहोस्',
       'play_memory_match': 'स्मरण खेल खेल्नुहोस्',
       'clock_drawing': 'घडी चित्रकला परीक्षण',
       'clock_sub': 'संज्ञानात्मक क्षमता परीक्षण।',
@@ -1970,6 +2047,9 @@ class LocalizationService {
       'routine_sequencer': 'Nitinte Hnathawh Indawt',
       'routine_sub': 'Thingpui lum, thlai tui pek tih angte.',
       'play_routine': 'Khel tan rawh',
+      'spot_difference': 'Danglamna Zawng Chhuak (Eng nge danglam?)',
+      'spot_difference_sub': 'Thlalak pahnih inkarah eng thil nge bo ta tih zawng chhuak rawh.',
+      'play_spot_difference': 'Danglamna Khel rawh',
       'play_memory_match': 'Hriatrengna Khel rawh',
       'clock_drawing': 'Sana Ziak Entirna',
       'clock_sub': 'Rilru leh ngaihtuahna endikna.',

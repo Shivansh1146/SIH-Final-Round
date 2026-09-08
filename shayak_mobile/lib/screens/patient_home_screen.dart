@@ -17,6 +17,10 @@ import 'reminders_screen.dart';
 import 'memory_match_screen.dart';
 import 'clock_canvas_screen.dart';
 import 'routine_sequencer_screen.dart';
+import 'spot_the_difference_screen.dart';
+import 'memory_lane_screen.dart';
+import 'local_language_naming_screen.dart';
+import 'memory_story_screen.dart';
 import '../widgets/patient_progress_dashboard.dart';
 
 class PatientHomeScreen extends StatefulWidget {
@@ -211,6 +215,62 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       context,
       MaterialPageRoute(
         builder: (ctx) => RoutineSequencerScreen(
+          onFinish: () {
+            Navigator.pop(ctx);
+            _fetchBackendPatientData();
+          },
+        ),
+      ),
+    );
+  }
+
+  void _startSpotTheDifference() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => SpotTheDifferenceScreen(
+          onFinish: () {
+            Navigator.pop(ctx);
+            _fetchBackendPatientData();
+          },
+        ),
+      ),
+    );
+  }
+
+  void _startMemoryLane() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => MemoryLaneScreen(
+          onFinish: () {
+            Navigator.pop(ctx);
+            _fetchBackendPatientData();
+          },
+        ),
+      ),
+    );
+  }
+
+  void _startLocalLanguageNaming() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => LocalLanguageNamingScreen(
+          onFinish: () {
+            Navigator.pop(ctx);
+            _fetchBackendPatientData();
+          },
+        ),
+      ),
+    );
+  }
+
+  void _startMemoryStory() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => MemoryStoryScreen(
           onFinish: () {
             Navigator.pop(ctx);
             _fetchBackendPatientData();
@@ -1397,6 +1457,66 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           buttonText: LocalizationService.tr('play_memory_match'),
           onPlay: _startMemoryMatch,
         ),
+
+        const SizedBox(height: 18),
+
+        // Activity Card 2: Spot The Difference (What Changed?)
+        _buildActivityItemCard(
+          emoji: '🔍',
+          tag: 'VISUAL ATTENTION & SCENE RECALL',
+          title: LocalizationService.tr('spot_difference'),
+          description: LocalizationService.tr('spot_difference_sub'),
+          duration: '3–5 minutes',
+          difficulty: '$_currentDifficultyLevel (AI Paced)',
+          buttonColor: const Color(0xFF00897B),
+          buttonText: LocalizationService.tr('play_spot_difference'),
+          onPlay: _startSpotTheDifference,
+        ),
+
+        const SizedBox(height: 18),
+
+        // Activity Card 3: Memory Lane Games (Remember Through Familiar Things)
+        _buildActivityItemCard(
+          emoji: '❤️',
+          tag: 'REMINISCENCE & FAMILIAR OBJECTS (ERRORLESS)',
+          title: LocalizationService.tr('memory_lane'),
+          description: LocalizationService.tr('memory_lane_sub'),
+          duration: '4–6 minutes',
+          difficulty: 'Gentle to Master (4–16 Memories)',
+          buttonColor: const Color(0xFFC2410C),
+          buttonText: LocalizationService.tr('play_memory_lane'),
+          onPlay: _startMemoryLane,
+        ),
+
+        const SizedBox(height: 18),
+
+        // Activity Card 4: Local Language Naming Game (Semantic Recall & Mother Tongue)
+        _buildActivityItemCard(
+          emoji: '🗣️',
+          tag: 'REGIONAL SEMANTIC MEMORY & RECOGNITION',
+          title: LocalizationService.tr('language_naming'),
+          description: LocalizationService.tr('language_naming_sub'),
+          duration: '3–5 minutes',
+          difficulty: '4–16 Objects (9 Regional Languages)',
+          buttonColor: const Color(0xFF1D4ED8),
+          buttonText: LocalizationService.tr('play_language_naming'),
+          onPlay: _startLocalLanguageNaming,
+        ),
+
+        const SizedBox(height: 18),
+
+        // Activity Card 5: Memory Story (Personalized Story Comprehension)
+        _buildActivityItemCard(
+          emoji: '📖',
+          tag: 'NARRATIVE MEMORY & STORY COMPREHENSION',
+          title: 'Memory Story',
+          description: 'Listen to a short personalized story, then answer questions about it. Uses familiar people, places, and everyday moments.',
+          duration: '4–6 minutes',
+          difficulty: '2–5 Questions (4 Levels)',
+          buttonColor: const Color(0xFF7C3AED),
+          buttonText: 'Play Memory Story',
+          onPlay: _startMemoryStory,
+        ),
       ],
     );
   }
@@ -1578,6 +1698,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       recentSessions: _recentSessions,
       onStartMemoryMatch: _startMemoryMatch,
       onStartRoutineSequencer: _startRoutineSequencer,
+      onStartSpotTheDifference: _startSpotTheDifference,
     );
   }
 }
