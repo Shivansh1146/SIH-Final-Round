@@ -1002,80 +1002,97 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   }
 
   Widget _buildNeedHelpCard(BuildContext context, AppLanguage lang) {
-    return Container(
-      padding: const EdgeInsets.all(22.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20.0),
-        border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: const BoxDecoration(
-              color: AppTheme.pastelYellow,
-              shape: BoxShape.circle,
-            ),
-            child: const Center(
-              child: Text('?', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppTheme.warmTerracotta)),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            LocalizationService.tr('need_help', lang),
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 18.0,
-              fontWeight: FontWeight.w800,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            LocalizationService.tr('need_help_sub', lang),
-            style: GoogleFonts.inter(
-              fontSize: 13.0,
-              fontWeight: FontWeight.w400,
-              color: AppTheme.textSecondary,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () => _callCaregiverViaPhoneLink(context),
-            icon: const Icon(Icons.phone_in_talk_rounded, size: 16, color: Colors.white),
-            label: Text(
-              '${LocalizationService.tr('call_caregiver', lang)} Anita (Phone Link)',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
+    return ValueListenableBuilder<String?>(
+      valueListenable: PatientProfile.activeProfileNotifier,
+      builder: (context, _, __) {
+        final profile = PatientProfile.loadFromHive();
+        final caregiverName = (profile?.caregiverName?.trim().isNotEmpty ?? false)
+            ? profile!.caregiverName!
+            : 'Caregiver';
+        final caregiverPhone = (profile?.caregiverPhone?.trim().isNotEmpty ?? false)
+            ? profile!.caregiverPhone!
+            : '+919845012345';
+        final caregiverFirstName = caregiverName.split(' ').first;
+
+        return Container(
+          padding: const EdgeInsets.all(22.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20.0),
+            border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.forestGreen,
-              foregroundColor: Colors.white,
-              elevation: 2,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-            ),
+            ],
           ),
-        ],
-      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: const BoxDecoration(
+                  color: AppTheme.pastelYellow,
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: Text('?', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppTheme.warmTerracotta)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                LocalizationService.tr('need_help', lang),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                LocalizationService.tr('need_help_sub', lang),
+                style: GoogleFonts.inter(
+                  fontSize: 13.0,
+                  fontWeight: FontWeight.w400,
+                  color: AppTheme.textSecondary,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () => _callCaregiverViaPhoneLink(context, rawPhoneNumber: caregiverPhone, realCaregiverName: caregiverName),
+                icon: const Icon(Icons.phone_in_talk_rounded, size: 16, color: Colors.white),
+                label: Text(
+                  '${LocalizationService.tr('call_caregiver', lang)} $caregiverFirstName ($caregiverPhone)',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.forestGreen,
+                  foregroundColor: Colors.white,
+                  elevation: 2,
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Future<void> _callCaregiverViaPhoneLink(BuildContext context, [String rawPhoneNumber = '+919845012345']) async {
-    const caregiverName = 'Anita Kumar';
+  Future<void> _callCaregiverViaPhoneLink(
+    BuildContext context, {
+    String rawPhoneNumber = '+919845012345',
+    String realCaregiverName = 'Anita Kumar',
+  }) async {
     final cleanNumber = rawPhoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
     final telUri = Uri.parse('tel:$cleanNumber');
     final msPhoneUri = Uri.parse('ms-phone:call?PhoneNumber=$cleanNumber');
@@ -1150,7 +1167,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            caregiverName,
+                            realCaregiverName,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
@@ -1246,7 +1263,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                     style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700),
                   ),
                   subtitle: Text(
-                    'Send instant message to Anita',
+                    'Send instant message to $realCaregiverName',
                     style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
                   ),
                   trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppTheme.textSecondary),
