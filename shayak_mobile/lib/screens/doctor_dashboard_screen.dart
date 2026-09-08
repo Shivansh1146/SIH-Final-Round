@@ -861,6 +861,9 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                 const SizedBox(height: 14),
                 _buildDomainProgressBar('Kinematic Motor Tremor Neutralization', 0.84, '84 / 100', const Color(0xFF059669), 'ESP32 active stabilization filter'),
               ],
+            ],
+          ),
+        ),
 
         const SizedBox(height: 24),
 
