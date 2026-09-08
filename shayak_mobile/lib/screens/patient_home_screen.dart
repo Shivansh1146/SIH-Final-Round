@@ -13,6 +13,7 @@ import 'reminders_screen.dart';
 import 'memory_match_screen.dart';
 import 'clock_canvas_screen.dart';
 import 'routine_sequencer_screen.dart';
+import '../widgets/patient_progress_dashboard.dart';
 
 class PatientHomeScreen extends StatefulWidget {
   final ValueChanged<AppViewMode> onNavigate;
@@ -1463,178 +1464,15 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   }
 
   Widget _buildProgressView(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'YOUR JOURNEY',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 11.0,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.forestGreen,
-            letterSpacing: 0.8,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Progress & Wellness',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 32.0,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.forestGreen,
-            letterSpacing: -0.5,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Consistent gentle practice nurtures brain reserve and physical confidence.',
-          style: GoogleFonts.inter(fontSize: 14.5, color: AppTheme.textSecondary),
-        ),
-
-        const SizedBox(height: 24),
-
-        // 3 Highlight Stats Cards
-        Row(
-          children: [
-            Expanded(
-              child: _buildProgressStatCard('7 DAYS', 'Current Streak', '🔥 Daily consistency', AppTheme.warmPeach),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _buildProgressStatCard('$_totalSessions SESSIONS', 'Activities Completed', '${_avgAccuracy.toStringAsFixed(0)}% Avg Score', AppTheme.sageLight),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _buildProgressStatCard('${_stabilityScore.toStringAsFixed(0)}/100', 'Kinematic Stability', '⚖️ Motor balance score', AppTheme.pastelBlue),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 22),
-
-        // Recent Milestones Card
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(22.0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(22.0),
-            border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Recent Clinical Milestones',
-                    style: GoogleFonts.plusJakartaSans(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.sageLight,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: Text(
-                      'AI Engine Live',
-                      style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.forestGreen),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              if (_recentSessions.isNotEmpty) ...[
-                for (final s in _recentSessions.take(4))
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12.0),
-                    child: _buildMilestoneRow(
-                      '${s['session_type'] ?? "Activity"} (${s['difficulty_level'] ?? "Standard"})',
-                      'Score ${s['score']?.toStringAsFixed(1) ?? "80.0"}% · ${s['timestamp'] != null ? s['timestamp'].toString().substring(0, 10) : "Today"}',
-                      (s['session_type'] == 'Clock Contour Drawing') ? Icons.draw_rounded : Icons.psychology_rounded,
-                    ),
-                  ),
-              ] else ...[
-                _buildMilestoneRow('Clock Contour Drawing Completed', 'Score 8.5/10 · Today, 09:15 AM', Icons.draw_rounded),
-                const SizedBox(height: 12),
-                _buildMilestoneRow('Memory Match Pairs Solved', 'Turn accuracy 82% · Yesterday, 08:45 AM', Icons.psychology_rounded),
-                const SizedBox(height: 12),
-                _buildMilestoneRow('ESP32 Tremor Compensation Active', '4-12 Hz jitter stabilized · 6 Sep, 02:30 PM', Icons.sensors_rounded),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProgressStatCard(String val, String title, String subtitle, Color bgColor) {
-    return Container(
-      padding: const EdgeInsets.all(20.0),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(20.0),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            val,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 22.0,
-              fontWeight: FontWeight.w800,
-              color: AppTheme.forestGreen,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14.0,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: GoogleFonts.inter(fontSize: 12.0, color: AppTheme.textSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMilestoneRow(String title, String subtitle, IconData icon) {
-    return Row(
-      children: [
-        Container(
-          width: 38,
-          height: 38,
-          decoration: const BoxDecoration(
-            color: AppTheme.sageLight,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: AppTheme.forestGreen, size: 18),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.plusJakartaSans(fontSize: 14.0, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
-              ),
-              Text(
-                subtitle,
-                style: GoogleFonts.inter(fontSize: 12.0, color: AppTheme.textSecondary),
-              ),
-            ],
-          ),
-        ),
-      ],
+    return PatientProgressDashboard(
+      patientId: _patientId,
+      patientDisplayName: _patientDisplayName,
+      totalSessions: _totalSessions,
+      avgAccuracy: _avgAccuracy,
+      stabilityScore: _stabilityScore,
+      recentSessions: _recentSessions,
+      onStartMemoryMatch: _startMemoryMatch,
+      onStartRoutineSequencer: _startRoutineSequencer,
     );
   }
 }
