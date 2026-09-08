@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
@@ -550,162 +551,164 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               ),
             ],
           ),
-          child: Stack(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Positioned(
-                right: -20,
-                top: -30,
-                child: Opacity(
-                  opacity: 0.15,
-                  child: Container(
-                    width: 260,
-                    height: 260,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 28),
-                    ),
-                  ),
-                ),
-              ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.18),
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.auto_awesome_rounded, size: 12, color: Colors.white),
-                              const SizedBox(width: 6),
-                              Text(
-                                LocalizationService.tr('todays_activity', lang),
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                  letterSpacing: 0.8,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          LocalizationService.tr('memory_match', lang),
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: isCompact ? 24.0 : 30.0,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            letterSpacing: -0.4,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          LocalizationService.tr('memory_match_sub', lang),
-                          style: GoogleFonts.inter(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.white.withOpacity(0.9),
-                            height: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 6,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.access_time_rounded, size: 14, color: Colors.white70),
-                                const SizedBox(width: 6),
-                                Text(
-                                  LocalizationService.tr('about_5_mins', lang),
-                                  style: GoogleFonts.inter(fontSize: 12.0, color: Colors.white70, fontWeight: FontWeight.w500),
-                                ),
-                              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.18),
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.auto_awesome_rounded, size: 12, color: Colors.white),
+                          const SizedBox(width: 6),
+                          Text(
+                            LocalizationService.tr('todays_activity', lang),
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: 0.8,
                             ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      LocalizationService.tr('memory_match', lang),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: isCompact ? 24.0 : 30.0,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.4,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      LocalizationService.tr('memory_match_sub', lang),
+                      style: GoogleFonts.inter(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white.withOpacity(0.9),
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.access_time_rounded, size: 14, color: Colors.white70),
+                            const SizedBox(width: 6),
                             Text(
-                              '$_currentDifficultyLevel${_isAdaptiveMode ? " (AI-Adaptive)" : ""}',
-                              style: GoogleFonts.inter(fontSize: 12.0, color: Colors.white70, fontWeight: FontWeight.w600),
+                              LocalizationService.tr('about_5_mins', lang),
+                              style: GoogleFonts.inter(fontSize: 12.0, color: Colors.white70, fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 18),
-                        ElevatedButton(
-                          onPressed: _startMemoryMatch,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.warmPeach,
-                            foregroundColor: AppTheme.textPrimary,
-                            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                            elevation: 0,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                LocalizationService.tr('start_activity'),
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppTheme.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(Icons.arrow_forward_rounded, size: 16, color: AppTheme.textPrimary),
-                            ],
-                          ),
+                        Text(
+                          '$_currentDifficultyLevel${_isAdaptiveMode ? " (AI-Adaptive)" : ""}',
+                          style: GoogleFonts.inter(fontSize: 12.0, color: Colors.white70, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
-                  ),
-                  if (!isCompact) ...[
-                    const SizedBox(width: 20),
-                    Container(
-                      width: 110,
-                      height: 110,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(24),
+                    const SizedBox(height: 18),
+                    ElevatedButton(
+                      onPressed: _startMemoryMatch,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.warmPeach,
+                        foregroundColor: AppTheme.textPrimary,
+                        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                        elevation: 0,
                       ),
-                      child: Center(
-                        child: Container(
-                          width: 72,
-                          height: 72,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFFF94B8), Color(0xFFFF4081)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            LocalizationService.tr('start_activity'),
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.textPrimary,
                             ),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFFF4081).withOpacity(0.4),
-                                blurRadius: 18,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
                           ),
-                          child: const Center(
-                            child: Text('🧠', style: TextStyle(fontSize: 34)),
-                          ),
-                        ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward_rounded, size: 16, color: AppTheme.textPrimary),
+                        ],
                       ),
                     ),
                   ],
-                ],
+                ),
               ),
+              if (!isCompact) ...[
+                const SizedBox(width: 20),
+                SizedBox(
+                  width: 130,
+                  height: 130,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Concentric outer decorative ring centered on the brain
+                      Container(
+                        width: 130,
+                        height: 130,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.14),
+                            width: 14,
+                          ),
+                        ),
+                      ),
+                      // Middle translucent rounded backdrop
+                      Container(
+                        width: 96,
+                        height: 96,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                      // Pink Brain icon badge perfectly centered
+                      Container(
+                        width: 68,
+                        height: 68,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFF94B8), Color(0xFFFF4081)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFFF4081).withOpacity(0.4),
+                              blurRadius: 18,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Text('🧠', style: TextStyle(fontSize: 32)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         );
@@ -1072,42 +1075,226 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     final cleanNumber = rawPhoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
     final telUri = Uri.parse('tel:$cleanNumber');
     final msPhoneUri = Uri.parse('ms-phone:call?PhoneNumber=$cleanNumber');
+    final waUri = Uri.parse('https://wa.me/${cleanNumber.replaceAll('+', '')}');
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('📞 Opening Phone Link to call $caregiverName ($rawPhoneNumber)...', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-        backgroundColor: AppTheme.forestGreen,
-        duration: const Duration(seconds: 4),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-
-    // Directly trigger standard telephony / Phone Link URI with _self target
+    // 1. Immediately attempt launching telephony and Windows Phone Link
     try {
-      final launched = await launchUrl(
-        telUri,
-        mode: LaunchMode.externalApplication,
-        webOnlyWindowName: '_self',
-      );
-      if (!launched) {
-        await launchUrl(
-          msPhoneUri,
-          mode: LaunchMode.externalApplication,
-          webOnlyWindowName: '_self',
-        );
+      final telLaunched = await launchUrl(telUri, mode: LaunchMode.platformDefault);
+      if (!telLaunched) {
+        await launchUrl(msPhoneUri, mode: LaunchMode.platformDefault);
       }
     } catch (_) {
       try {
-        await launchUrl(
-          msPhoneUri,
-          mode: LaunchMode.externalApplication,
-          webOnlyWindowName: '_self',
-        );
+        await launchUrl(msPhoneUri, mode: LaunchMode.platformDefault);
       } catch (e) {
-        debugPrint('Error launching Phone Link call: $e');
+        debugPrint('Phone Link launch exception: $e');
       }
     }
+
+    if (!context.mounted) return;
+
+    // 2. Present an interactive Call Caregiver Action Sheet
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetCtx) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 20,
+                offset: Offset(0, -4),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: AppTheme.forestGreen.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(Icons.phone_in_talk_rounded, color: AppTheme.forestGreen, size: 28),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            caregiverName,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Primary Caregiver • $rawPhoneNumber',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: AppTheme.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Divider(height: 1),
+                const SizedBox(height: 16),
+                // Action 1: Windows Phone Link
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0078D4).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.phonelink_ring_rounded, color: Color(0xFF0078D4), size: 22),
+                  ),
+                  title: Text(
+                    'Open in Windows Phone Link',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700),
+                  ),
+                  subtitle: Text(
+                    'Directly connects to paired Windows Phone Link',
+                    style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppTheme.textSecondary),
+                  onTap: () async {
+                    Navigator.pop(sheetCtx);
+                    try {
+                      await launchUrl(msPhoneUri, mode: LaunchMode.platformDefault);
+                    } catch (_) {}
+                  },
+                ),
+                const SizedBox(height: 8),
+                // Action 2: Standard Dialer (tel:)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.forestGreen.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.phone_forwarded_rounded, color: AppTheme.forestGreen, size: 22),
+                  ),
+                  title: Text(
+                    'Call via Phone / Dialer',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700),
+                  ),
+                  subtitle: Text(
+                    'Triggers system telephony prompt (tel:$cleanNumber)',
+                    style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppTheme.textSecondary),
+                  onTap: () async {
+                    Navigator.pop(sheetCtx);
+                    try {
+                      await launchUrl(telUri, mode: LaunchMode.platformDefault);
+                    } catch (_) {}
+                  },
+                ),
+                const SizedBox(height: 8),
+                // Action 3: WhatsApp
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF25D366).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF25D366), size: 22),
+                  ),
+                  title: Text(
+                    'Chat on WhatsApp',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700),
+                  ),
+                  subtitle: Text(
+                    'Send instant message to Anita',
+                    style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppTheme.textSecondary),
+                  onTap: () async {
+                    Navigator.pop(sheetCtx);
+                    try {
+                      await launchUrl(waUri, mode: LaunchMode.externalApplication);
+                    } catch (_) {}
+                  },
+                ),
+                const SizedBox(height: 8),
+                // Action 4: Copy Phone Number
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(Icons.copy_rounded, color: Colors.amber.shade900, size: 22),
+                  ),
+                  title: Text(
+                    'Copy Phone Number',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700),
+                  ),
+                  subtitle: Text(
+                    rawPhoneNumber,
+                    style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
+                  ),
+                  trailing: const Icon(Icons.check_circle_outline_rounded, size: 16, color: AppTheme.forestGreen),
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: cleanNumber));
+                    Navigator.pop(sheetCtx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('📋 Copied $cleanNumber to clipboard!', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                        backgroundColor: AppTheme.forestGreen,
+                        duration: const Duration(seconds: 3),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildGamesHubView(BuildContext context) {
