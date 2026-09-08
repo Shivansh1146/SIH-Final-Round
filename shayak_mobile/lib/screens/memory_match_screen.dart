@@ -66,7 +66,8 @@ extension GameDifficultyTierExtension on GameDifficultyTier {
   }
 
   List<String> get availableEmojis {
-    const all = ['🍎', '🌸', '☕', '🌿', '📖', '🦚', '🎨', '🌟', '🕊️', '🍋'];
+    // Curated high-contrast culturally grounded everyday symbols
+    const all = ['🍎', '🌺', '☕', '📖', '🦚', '🔔', '🎨', '🌟', '🕊️', '🍋'];
     return all.sublist(0, pairCount);
   }
 }
@@ -457,48 +458,68 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
+            constraints: const BoxConstraints(maxWidth: 820),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 6.0),
               child: Column(
                 children: [
                   _buildDifficultyHeader(),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: AppTheme.surfaceBorder),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.02),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildStat('Turns', '$_moves'),
-                        Container(width: 1, height: 24, color: AppTheme.surfaceBorder),
-                        _buildStat('Matched', '$_matchesFound / ${_currentTier.pairCount}'),
-                        Container(width: 1, height: 24, color: AppTheme.surfaceBorder),
-                        _buildStat('Current Pace', _currentTier.shortTitle),
+                        _buildStat('Turns', '$_moves', Icons.touch_app_rounded),
+                        Container(width: 1, height: 26, color: AppTheme.surfaceBorder),
+                        _buildStat('Matched', '$_matchesFound / ${_currentTier.pairCount}', Icons.auto_awesome_rounded),
+                        Container(width: 1, height: 26, color: AppTheme.surfaceBorder),
+                        _buildStat('Current Pace', _currentTier.shortTitle, Icons.speed_rounded),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Expanded(
-                    child: GridView.builder(
-                      itemCount: _cards.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: _currentTier.gridCrossAxisCount,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: _currentTier == GameDifficultyTier.gentle ? 1.0 : 0.95,
-                      ),
-                      itemBuilder: (context, index) {
-                        final card = _cards[index];
-                        return _buildCardWidget(card, index);
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final crossAxis = _currentTier.gridCrossAxisCount;
+                        final rowCount = (_cards.length / crossAxis).ceil();
+                        final availableHeight = constraints.maxHeight - (rowCount - 1) * 10;
+                        final availableWidth = constraints.maxWidth - (crossAxis - 1) * 10;
+                        final cardWidth = availableWidth / crossAxis;
+                        final cardHeight = availableHeight / rowCount;
+                        final ratio = (cardWidth / (cardHeight > 0 ? cardHeight : 1)).clamp(0.85, 1.25);
+
+                        return GridView.builder(
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: _cards.length,
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxis,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                            childAspectRatio: ratio,
+                          ),
+                          itemBuilder: (context, index) {
+                            final card = _cards[index];
+                            return _buildCardWidget(card, index);
+                          },
+                        );
                       },
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -707,25 +728,42 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
     );
   }
 
-  Widget _buildStat(String label, String value) {
-    return Column(
+  Widget _buildStat(String label, String value, [IconData? icon]) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          value,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.forestGreen,
+        if (icon != null) ...[
+          Container(
+            width: 28,
+            height: 28,
+            decoration: const BoxDecoration(
+              color: AppTheme.sageLight,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 15, color: AppTheme.forestGreen),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 11.5,
-            fontWeight: FontWeight.w500,
-            color: AppTheme.textSecondary,
-          ),
+          const SizedBox(width: 8),
+        ],
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.forestGreen,
+              ),
+            ),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 11.0,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ],
         ),
       ],
     );
