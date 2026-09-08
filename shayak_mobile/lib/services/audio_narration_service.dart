@@ -19,7 +19,7 @@ class AudioNarrationService extends ChangeNotifier {
     _isInitialized = true;
 
     try {
-      await _flutterTts.setSpeechRate(0.45); // Gentle, easy-to-understand pace
+      await _flutterTts.setSpeechRate(0.58); // Natural, clear conversational pacing
       await _flutterTts.setVolume(1.0);
       await _flutterTts.setPitch(1.0);
 
@@ -79,8 +79,10 @@ class AudioNarrationService extends ChangeNotifier {
 
     try {
       await _flutterTts.setLanguage(localeTag);
+      await _flutterTts.setSpeechRate(0.58);
     } catch (_) {
       await _flutterTts.setLanguage('en-US');
+      await _flutterTts.setSpeechRate(0.58);
     }
 
     _isSpeaking = true;
