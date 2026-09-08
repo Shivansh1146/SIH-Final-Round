@@ -1066,7 +1066,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             onPressed: () => _showCaregiverCallDialog(context, lang),
             icon: const Icon(Icons.phone_in_talk_rounded, size: 16, color: Colors.white),
             label: Text(
-              '${LocalizationService.tr('call_caregiver', lang)} Anita',
+              '${LocalizationService.tr('call_caregiver', lang)} Anita (Phone Link)',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w700,
@@ -1088,15 +1088,45 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
   Future<void> _makeRealPhoneCall(String rawPhoneNumber) async {
     final cleanNumber = rawPhoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
-    final uri = Uri(scheme: 'tel', path: cleanNumber);
+    final telUri = Uri.parse('tel:$cleanNumber');
+    final msPhoneUri = Uri.parse('ms-phone:call?PhoneNumber=$cleanNumber');
+
     try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        await launchUrl(uri);
+      // Standard telephony URL (handled by Phone Link on Windows & native dialer on Android/iOS)
+      final launched = await launchUrl(telUri, mode: LaunchMode.externalApplication);
+      if (!launched) {
+        await launchUrl(msPhoneUri, mode: LaunchMode.externalApplication);
       }
-    } catch (e) {
-      debugPrint('Error launching real phone call: $e');
+    } catch (_) {
+      try {
+        await launchUrl(msPhoneUri, mode: LaunchMode.externalApplication);
+      } catch (_) {
+        try {
+          await launchUrl(telUri);
+        } catch (e) {
+          debugPrint('Error launching real phone call: $e');
+        }
+      }
+    }
+  }
+
+  Future<void> _makePhoneLinkCall(String rawPhoneNumber) async {
+    final cleanNumber = rawPhoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
+    final msPhoneUri = Uri.parse('ms-phone:call?PhoneNumber=$cleanNumber');
+    final telUri = Uri.parse('tel:$cleanNumber');
+
+    try {
+      if (await canLaunchUrl(msPhoneUri)) {
+        await launchUrl(msPhoneUri, mode: LaunchMode.externalApplication);
+      } else {
+        await launchUrl(telUri, mode: LaunchMode.externalApplication);
+      }
+    } catch (_) {
+      try {
+        await launchUrl(telUri);
+      } catch (e) {
+        debugPrint('Error launching Phone Link call: $e');
+      }
     }
   }
 
@@ -1114,7 +1144,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     const caregiverPhone = '+91 98450 12345';
     const caregiverName = 'Anita Kumar';
 
-    // 1. Immediately launch native cellular telephone dialer
+    // 1. Immediately launch native phone dialer / Windows Phone Link
     _makeRealPhoneCall(caregiverPhone);
 
     // 2. Play live spoken caregiver voice in the patient's selected language
@@ -1150,7 +1180,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
             insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
             child: Container(
-              width: 420,
+              width: 440,
               padding: const EdgeInsets.all(28),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1261,9 +1291,9 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Primary Caregiver · $caregiverPhone',
+                    'Primary Caregiver · $caregiverPhone (Phone Link)',
                     style: GoogleFonts.inter(
-                      fontSize: 14,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w500,
                       color: const Color(0xFF94A3B8),
                     ),
@@ -1301,14 +1331,23 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Telephony Direct Actions (Real Phone & WhatsApp)
+                  // Telephony Direct Actions (Phone Link Normal Call & WhatsApp)
                   Row(
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => _makeRealPhoneCall(caregiverPhone),
-                          icon: const Icon(Icons.phone_rounded, size: 16),
-                          label: const Text('Cellular Call'),
+                          onPressed: () {
+                            _makePhoneLinkCall(caregiverPhone);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('📞 Initiating Phone Link call to $caregiverName ($caregiverPhone)...', style: GoogleFonts.inter()),
+                                backgroundColor: AppTheme.forestGreen,
+                                duration: const Duration(seconds: 3),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.phone_enabled_rounded, size: 16),
+                          label: const Text('Phone Link Call'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF10B981),
                             foregroundColor: Colors.white,
@@ -1372,26 +1411,26 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                         },
                         borderRadius: BorderRadius.circular(100),
                         child: Container(
-                          width: 58,
-                          height: 58,
+                          width: 64,
+                          height: 64,
                           decoration: const BoxDecoration(
                             color: Color(0xFFEF4444),
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
                                 color: Color(0x66EF4444),
-                                blurRadius: 12,
+                                blurRadius: 16,
                                 offset: Offset(0, 4),
                               ),
                             ],
                           ),
                           child: const Center(
-                            child: Icon(Icons.call_end_rounded, color: Colors.white, size: 28),
+                            child: Icon(Icons.call_end_rounded, color: Colors.white, size: 30),
                           ),
                         ),
                       ),
 
-                      // Speakerphone Button
+                      // Speaker Button
                       IconButton(
                         onPressed: () {
                           setDialogState(() => isSpeakerOn = !isSpeakerOn);
