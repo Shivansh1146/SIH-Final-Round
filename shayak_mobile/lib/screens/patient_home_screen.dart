@@ -11,6 +11,8 @@ import '../services/reminder_service.dart';
 import 'reminders_screen.dart';
 import 'memory_match_screen.dart';
 import 'clock_canvas_screen.dart';
+import 'category_sort_screen.dart';
+import 'pattern_sequence_screen.dart';
 
 class PatientHomeScreen extends StatefulWidget {
   final ValueChanged<AppViewMode> onNavigate;
@@ -152,6 +154,34 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       context,
       MaterialPageRoute(
         builder: (ctx) => MemoryMatchScreen(
+          onFinish: () {
+            Navigator.pop(ctx);
+            _fetchBackendPatientData();
+          },
+        ),
+      ),
+    );
+  }
+
+  void _startCategorySort() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => CategorySortScreen(
+          onFinish: () {
+            Navigator.pop(ctx);
+            _fetchBackendPatientData();
+          },
+        ),
+      ),
+    );
+  }
+
+  void _startPatternSequence() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => PatternSequenceScreen(
           onFinish: () {
             Navigator.pop(ctx);
             _fetchBackendPatientData();
@@ -489,188 +519,184 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   }
 
   Widget _buildHeroActivityBanner(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(28.0),
-      decoration: BoxDecoration(
-        color: AppTheme.forestTealCard,
-        borderRadius: BorderRadius.circular(24.0),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.forestGreen.withOpacity(0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Background concentric decorative rings
-          Positioned(
-            right: -20,
-            top: -30,
-            child: Opacity(
-              opacity: 0.15,
-              child: Container(
-                width: 260,
-                height: 260,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 28),
-                ),
-              ),
-            ),
-          ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 560;
 
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(isCompact ? 20.0 : 28.0),
+          decoration: BoxDecoration(
+            color: AppTheme.forestTealCard,
+            borderRadius: BorderRadius.circular(24.0),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.forestGreen.withOpacity(0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Stack(
             children: [
-              // Left Activity Info
-              Expanded(
-                flex: 7,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Tag Pill
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.18),
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.auto_awesome_rounded, size: 12, color: Colors.white),
-                          const SizedBox(width: 6),
-                          Text(
-                            "TODAY'S ACTIVITY",
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              letterSpacing: 0.8,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    Text(
-                      'Memory Match',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 30.0,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: -0.4,
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    Text(
-                      'Find the matching pairs. Take your time — one card at a time.',
-                      style: GoogleFonts.inter(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.white.withOpacity(0.9),
-                        height: 1.4,
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    Row(
-                      children: [
-                        const Icon(Icons.access_time_rounded, size: 14, color: Colors.white70),
-                        const SizedBox(width: 6),
-                        Text(
-                          'About 5 minutes',
-                          style: GoogleFonts.inter(fontSize: 12.5, color: Colors.white70, fontWeight: FontWeight.w500),
-                        ),
-                        const SizedBox(width: 10),
-                        const Text('·', style: TextStyle(color: Colors.white70)),
-                        const SizedBox(width: 10),
-                        Text(
-                          '$_currentDifficultyLevel${_isAdaptiveMode ? " (AI-Adaptive)" : ""}',
-                          style: GoogleFonts.inter(fontSize: 12.5, color: Colors.white70, fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 22),
-
-                    // Start Activity Button
-                    ElevatedButton(
-                      onPressed: _startMemoryMatch,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.warmPeach,
-                        foregroundColor: AppTheme.textPrimary,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                        elevation: 0,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Start activity',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 15.0,
-                              fontWeight: FontWeight.w800,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.arrow_forward_rounded, size: 16, color: AppTheme.textPrimary),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 20),
-
-              // Right 3D Brain Visual
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Center(
+              Positioned(
+                right: -20,
+                top: -30,
+                child: Opacity(
+                  opacity: 0.15,
                   child: Container(
-                    width: 76,
-                    height: 76,
+                    width: 260,
+                    height: 260,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFF94B8), Color(0xFFFF4081)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFF4081).withOpacity(0.4),
-                          blurRadius: 18,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Text('🧠', style: TextStyle(fontSize: 38)),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 28),
                     ),
                   ),
                 ),
               ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.18),
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.auto_awesome_rounded, size: 12, color: Colors.white),
+                              const SizedBox(width: 6),
+                              Text(
+                                "TODAY'S ACTIVITY",
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Memory Match',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: isCompact ? 24.0 : 30.0,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: -0.4,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Find the matching pairs. Take your time — one card at a time.',
+                          style: GoogleFonts.inter(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withOpacity(0.9),
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 6,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.access_time_rounded, size: 14, color: Colors.white70),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'About 5 minutes',
+                                  style: GoogleFonts.inter(fontSize: 12.0, color: Colors.white70, fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              '$_currentDifficultyLevel${_isAdaptiveMode ? " (AI-Adaptive)" : ""}',
+                              style: GoogleFonts.inter(fontSize: 12.0, color: Colors.white70, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+                        ElevatedButton(
+                          onPressed: _startMemoryMatch,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.warmPeach,
+                            foregroundColor: AppTheme.textPrimary,
+                            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                            elevation: 0,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Start activity',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppTheme.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.arrow_forward_rounded, size: 16, color: AppTheme.textPrimary),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!isCompact) ...[
+                    const SizedBox(width: 20),
+                    Container(
+                      width: 110,
+                      height: 110,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Center(
+                        child: Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFFF94B8), Color(0xFFFF4081)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFFF4081).withOpacity(0.4),
+                                blurRadius: 18,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: const Center(
+                            child: Text('🧠', style: TextStyle(fontSize: 34)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -1120,7 +1146,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
         const SizedBox(height: 24),
 
-        // Activity Card: Memory Match Activity
+        // Activity Card 1: Memory Match Activity
         _buildActivityItemCard(
           emoji: '🧠',
           tag: 'WORKING MEMORY',
@@ -1131,6 +1157,36 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           buttonColor: AppTheme.forestGreen,
           buttonText: 'Play Memory Match',
           onPlay: _startMemoryMatch,
+        ),
+
+        const SizedBox(height: 18),
+
+        // Activity Card 2: Category Sort & Logic
+        _buildActivityItemCard(
+          emoji: '🗂️',
+          tag: 'SEMANTIC REASONING & LOGIC',
+          title: 'Category Sort & Logic',
+          description: 'Group household items, fruits, seasons, and animals into their matching baskets.',
+          duration: '4 minutes',
+          difficulty: 'AI-Adaptive (4 Tiers)',
+          buttonColor: const Color(0xFF2E7D32),
+          buttonText: 'Play Category Sort',
+          onPlay: _startCategorySort,
+        ),
+
+        const SizedBox(height: 18),
+
+        // Activity Card 3: Pattern Sequence & Logic Trail
+        _buildActivityItemCard(
+          emoji: '🧩',
+          tag: 'INDUCTIVE & SEQUENTIAL LOGIC',
+          title: 'Pattern Sequence & Logic Trail',
+          description: 'Discover the rhythm of shapes, symbols, and colors to complete the missing trail token.',
+          duration: '4 minutes',
+          difficulty: 'AI-Adaptive (5 Rounds)',
+          buttonColor: const Color(0xFF1565C0),
+          buttonText: 'Play Pattern Sequence',
+          onPlay: _startPatternSequence,
         ),
       ],
     );
@@ -1147,108 +1203,155 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     required String buttonText,
     required VoidCallback onPlay,
   }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22.0),
-        border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 560;
+
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(isCompact ? 18.0 : 24.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22.0),
+            border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: AppTheme.sageLight,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Center(
-              child: Text(emoji, style: const TextStyle(fontSize: 32)),
-            ),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppTheme.background,
-                    borderRadius: BorderRadius.circular(100),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: isCompact ? 52 : 64,
+                    height: isCompact ? 52 : 64,
+                    decoration: BoxDecoration(
+                      color: AppTheme.sageLight,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Center(
+                      child: Text(emoji, style: TextStyle(fontSize: isCompact ? 26 : 32)),
+                    ),
                   ),
-                  child: Text(
-                    tag,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.forestGreen,
-                      letterSpacing: 0.6,
+                  SizedBox(width: isCompact ? 14 : 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppTheme.background,
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: Text(
+                            tag,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.forestGreen,
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          title,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: isCompact ? 16.5 : 18.0,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          description,
+                          style: GoogleFonts.inter(
+                            fontSize: isCompact ? 12.5 : 13.5,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 4,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.access_time_rounded, size: 14, color: AppTheme.textSecondary),
+                                const SizedBox(width: 4),
+                                Text(duration, style: GoogleFonts.inter(fontSize: 11.5, color: AppTheme.textSecondary)),
+                              ],
+                            ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.tune_rounded, size: 14, color: AppTheme.textSecondary),
+                                const SizedBox(width: 4),
+                                Text(difficulty, style: GoogleFonts.inter(fontSize: 11.5, color: AppTheme.textSecondary)),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!isCompact) ...[
+                    const SizedBox(width: 16),
+                    ElevatedButton(
+                      onPressed: onPlay,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: buttonColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(buttonText, style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w700)),
+                          const SizedBox(width: 6),
+                          const Icon(Icons.arrow_forward_rounded, size: 15),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              if (isCompact) ...[
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: onPlay,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: buttonColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(buttonText, style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w700)),
+                        const SizedBox(width: 6),
+                        const Icon(Icons.arrow_forward_rounded, size: 15),
+                      ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: GoogleFonts.inter(
-                    fontSize: 13.5,
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    const Icon(Icons.access_time_rounded, size: 14, color: AppTheme.textSecondary),
-                    const SizedBox(width: 4),
-                    Text(duration, style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary)),
-                    const SizedBox(width: 12),
-                    const Icon(Icons.tune_rounded, size: 14, color: AppTheme.textSecondary),
-                    const SizedBox(width: 4),
-                    Text(difficulty, style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary)),
-                  ],
-                ),
               ],
-            ),
+            ],
           ),
-          const SizedBox(width: 16),
-          ElevatedButton(
-            onPressed: onPlay,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: buttonColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(buttonText, style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w700)),
-                const SizedBox(width: 6),
-                const Icon(Icons.arrow_forward_rounded, size: 15),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
