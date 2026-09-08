@@ -4,6 +4,7 @@ import 'dart:math' show max;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:hive_flutter/hive_flutter.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/app_sidebar.dart';
@@ -66,6 +67,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
   @override
   void initState() {
     super.initState();
+    _loadSavedCarePlan();
     _fetchAiDecisions();
     _fetchPatientDifficulty();
     // Re-render line graph whenever a game session is saved
@@ -103,6 +105,35 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     _autoSyncTimer?.cancel();
     SessionService.instance.removeListener(_onSessionUpdate);
     super.dispose();
+  }
+
+  void _loadSavedCarePlan() {
+    try {
+      final box = Hive.box('user_preferences');
+      final saved = box.get('care_plan_items');
+      if (saved != null && saved is List && saved.isNotEmpty) {
+        _carePlanItems.clear();
+        for (final item in saved) {
+          if (item is Map) {
+            _carePlanItems.add(Map<String, dynamic>.from(item));
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  void _saveCarePlan() {
+    try {
+      final box = Hive.box('user_preferences');
+      box.put('care_plan_items', _carePlanItems);
+    } catch (_) {}
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('✓ Care plan and medication schedules saved to local edge node.', style: GoogleFonts.inter()),
+        backgroundColor: AppTheme.forestGreen,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   Future<void> _fetchPatientDifficulty() async {
@@ -1652,22 +1683,31 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 ),
               ],
             ),
-            ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Care plan changes saved to local edge node.', style: GoogleFonts.inter()),
-                    backgroundColor: AppTheme.forestGreen,
+            Row(
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _showAddCarePlanItemDialog,
+                  icon: const Icon(Icons.add_rounded, size: 16),
+                  label: const Text('Add Item'),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppTheme.surfaceBorder),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   ),
-                );
-              },
-              icon: const Icon(Icons.check_rounded, size: 16),
-              label: const Text('Save Care Plan'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.forestGreen,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-              ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: _saveCarePlan,
+                  icon: const Icon(Icons.check_rounded, size: 16),
+                  label: const Text('Save Care Plan'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.forestGreen,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -1746,6 +1786,119 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showAddCarePlanItemDialog() {
+    final titleCtrl = TextEditingController();
+    final timeCtrl = TextEditingController(text: '09:00 AM');
+    final freqCtrl = TextEditingController(text: 'Daily morning routine');
+    String selectedType = 'Medication';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Row(
+            children: [
+              const Icon(Icons.add_task_rounded, color: AppTheme.forestGreen),
+              const SizedBox(width: 10),
+              Text(
+                'Add Care Plan Item',
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 18),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Title / Item Name', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: titleCtrl,
+                  decoration: InputDecoration(
+                    hintText: 'e.g. Vitamin D3 1000 IU or Memory Walk',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text('Scheduled Time', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: timeCtrl,
+                  decoration: InputDecoration(
+                    hintText: 'e.g. 09:00 AM',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text('Frequency / Note', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: freqCtrl,
+                  decoration: InputDecoration(
+                    hintText: 'e.g. Daily with breakfast',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text('Category', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 6),
+                DropdownButtonFormField<String>(
+                  value: selectedType,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'Medication', child: Text('💊 Medication')),
+                    DropdownMenuItem(value: 'Cognitive', child: Text('🧠 Cognitive Exercise')),
+                    DropdownMenuItem(value: 'Motor Care', child: Text('🦾 Motor / Tremor Care')),
+                    DropdownMenuItem(value: 'Dietary', child: Text('🥗 Dietary Routine')),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) setDlgState(() => selectedType = v);
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (titleCtrl.text.trim().isEmpty) return;
+                setState(() {
+                  _carePlanItems.add({
+                    'title': titleCtrl.text.trim(),
+                    'type': selectedType,
+                    'time': timeCtrl.text.trim(),
+                    'freq': freqCtrl.text.trim(),
+                    'active': true,
+                  });
+                });
+                _saveCarePlan();
+                Navigator.pop(ctx);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.forestGreen,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+              ),
+              child: const Text('Add & Save'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
