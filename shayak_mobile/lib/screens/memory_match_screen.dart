@@ -1,11 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-<<<<<<< HEAD
 import '../services/session_service.dart';
-=======
 import 'package:http/http.dart' as http;
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
 import '../theme/app_theme.dart';
 
 enum GameDifficultyTier {
@@ -92,8 +89,6 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
   bool _isChecking = false;
   int _matchesFound = 0;
   int _moves = 0;
-  late DateTime _gameStartTime;
-
   DateTime? _gameStartTime;
   String? _lastAdaptationMessage;
 
@@ -198,38 +193,6 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
     }
   }
 
-<<<<<<< HEAD
-  void _saveSessionResult() {
-    final patientId = SessionService.activePatientId ?? 'unknown';
-    // Accuracy: matched pairs out of total pairs, penalised by wrong moves
-    final totalPairs = _emojis.length;
-    final wrongMoves = (_moves - totalPairs).clamp(0, 100);
-    final accuracy = (totalPairs / (totalPairs + wrongMoves)).clamp(0.0, 1.0);
-    // Response time: total elapsed / number of moves (floor at 0.5s)
-    final elapsed =
-        DateTime.now().difference(_gameStartTime).inMilliseconds / 1000.0;
-    final responseSec = _moves > 0
-        ? (elapsed / _moves).clamp(0.5, 30.0)
-        : 3.0;
-    SessionService.instance.saveSession(GameSession(
-      sessionId: SessionService.generateId(patientId, 'memory_match'),
-      patientId: patientId,
-      gameType: 'memory_match',
-      playedAt: DateTime.now(),
-      accuracyRatio: accuracy,
-      responseTimeSec: responseSec,
-      totalMoves: _moves,
-      extras: {
-        'matchesFound': _matchesFound,
-        'totalPairs': totalPairs,
-        'elapsedSec': elapsed,
-      },
-    ));
-  }
-
-  void _showCelebrationDialog() {
-    _saveSessionResult(); // ← persist result before showing dialog
-=======
   void _recordSessionAndEvaluateAdaptation() {
     final durationSec = _gameStartTime != null
         ? DateTime.now().difference(_gameStartTime!).inSeconds
@@ -239,6 +202,25 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
     final minTurns = _currentTier.pairCount;
     final accuracyRatio = (minTurns / (_moves > 0 ? _moves : minTurns)).clamp(0.2, 1.0);
     final score = (accuracyRatio * 100).roundToDouble();
+
+    // Persist to local SessionService
+    final patientId = SessionService.activePatientId ?? 'PT-9042';
+    final elapsedSec = durationSec.toDouble();
+    final responseSec = _moves > 0 ? (elapsedSec / _moves).clamp(0.5, 30.0) : 3.0;
+    SessionService.instance.saveSession(GameSession(
+      sessionId: SessionService.generateId(patientId, 'memory_match'),
+      patientId: patientId,
+      gameType: 'memory_match',
+      playedAt: DateTime.now(),
+      accuracyRatio: accuracyRatio,
+      responseTimeSec: responseSec,
+      totalMoves: _moves,
+      extras: {
+        'matchesFound': _matchesFound,
+        'totalPairs': _currentTier.pairCount,
+        'elapsedSec': elapsedSec,
+      },
+    ));
 
     GameDifficultyTier nextTier = _currentTier;
     String adaptationNotice = 'Maintaining your comfortable pacing.';
@@ -277,9 +259,10 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
 
     // Broadcast session record to backend
     try {
+      final backendId = patientId.startsWith('patient-') ? 'PT-9042' : patientId;
       final sessionRecord = {
         'session_id': 'SES-${DateTime.now().millisecondsSinceEpoch}',
-        'patient_id': 'PT-9042',
+        'patient_id': backendId,
         'activity_type': 'memory_match',
         'score': score,
         'duration_seconds': durationSec,
@@ -296,7 +279,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
       };
 
       http.post(
-        Uri.parse('http://127.0.0.1:8000/api/v1/patient/PT-9042/session'),
+        Uri.parse('http://127.0.0.1:8000/api/v1/patient/$backendId/session'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(sessionRecord),
       ).catchError((_) => http.Response('{}', 500));
@@ -306,7 +289,6 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
   }
 
   void _showCelebrationDialog(double score, int durationSec, GameDifficultyTier nextTier) {
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -328,17 +310,12 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-<<<<<<< HEAD
               'Wonderful job!',
-              style: GoogleFonts.plusJakartaSans(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.forestGreen),
-=======
-              'Wonderful job, Ramesh!',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
                 color: AppTheme.forestGreen,
               ),
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),

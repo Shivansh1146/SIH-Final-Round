@@ -2,157 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-<<<<<<< HEAD
-import '../models/patient_profile.dart';
-import '../services/reminder_service.dart';
-import '../services/session_service.dart';
-=======
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
 import '../theme/app_theme.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/app_sidebar.dart';
-import 'reminders_screen.dart';
-
-// ════════════════════════════════════════════════════════════════════════════
-// AI Stats Data Model
-// ════════════════════════════════════════════════════════════════════════════
-class _CaregiverStatsData {
-  final int gamesCompleted;
-  final String averageAccuracy;
-  final String avgResponseTime;
-  final String currentDifficulty;
-  final List<double> sessionScores; // 7 values 0.0–1.0
-  final List<String> supportNotes;  // 3 AI-generated bullets
-  final String statusLabel;
-  final bool isLive;
-
-  const _CaregiverStatsData({
-    required this.gamesCompleted,
-    required this.averageAccuracy,
-    required this.avgResponseTime,
-    required this.currentDifficulty,
-    required this.sessionScores,
-    required this.supportNotes,
-    required this.statusLabel,
-    this.isLive = false,
-  });
-
-  /// Clean baseline for new patients who have completed 0 game sessions.
-  factory _CaregiverStatsData.empty({required String patientName}) {
-    return _CaregiverStatsData(
-      gamesCompleted: 0,
-      averageAccuracy: '--',
-      avgResponseTime: '--',
-      currentDifficulty: 'Baseline',
-      sessionScores: const [],
-      supportNotes: [
-        'No activities completed yet for $patientName.',
-        'Cognitive baseline will calibrate after completing the first game or assessment.',
-        'Recommended: Start with Memory Match or Clock Drawing Assessment.',
-      ],
-      statusLabel: 'Awaiting Assessment',
-      isLive: false,
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// Session Line Chart — CustomPainter
-// ════════════════════════════════════════════════════════════════════════════
-class _SessionLineChartPainter extends CustomPainter {
-  final List<double> scores;
-  _SessionLineChartPainter({required this.scores});
-
-  static const _green = Color(0xFF2D6A4F);
-  static const _gridColor = Color(0xFFE8EDE8);
-  static const _labelColor = Color(0xFFBBCCBB);
-  static const double _leftMargin = 26.0;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (scores.isEmpty) return;
-    final n = scores.length;
-
-    // Horizontal grid lines + y-axis labels at 0, 50, 100
-    final gridPaint = Paint()
-      ..color = _gridColor
-      ..strokeWidth = 0.8;
-    for (final entry in {1.0: '100', 0.5: '50', 0.0: '0'}.entries) {
-      final y = size.height * (1.0 - entry.key);
-      canvas.drawLine(
-          Offset(_leftMargin, y), Offset(size.width, y), gridPaint);
-      final tp = TextPainter(
-        text: TextSpan(
-          text: entry.value,
-          style: const TextStyle(fontSize: 8.5, color: _labelColor),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      tp.paint(canvas, Offset(0, y - tp.height / 2));
-    }
-
-    // Compute chart point positions
-    final chartWidth = size.width - _leftMargin;
-    final pts = List.generate(
-      n,
-      (i) => Offset(
-        _leftMargin + (n > 1 ? i * chartWidth / (n - 1) : chartWidth / 2),
-        size.height * (1.0 - scores[i]),
-      ),
-    );
-
-    if (n > 1) {
-      // Gradient fill area under line
-      final fillPath = Path()..moveTo(pts.first.dx, size.height);
-      for (final p in pts) fillPath.lineTo(p.dx, p.dy);
-      fillPath.lineTo(pts.last.dx, size.height);
-      fillPath.close();
-      canvas.drawPath(
-        fillPath,
-        Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              _green.withOpacity(0.16),
-              _green.withOpacity(0.00),
-            ],
-          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
-      );
-
-      // Line connecting all points
-      final linePath = Path()..moveTo(pts.first.dx, pts.first.dy);
-      for (int i = 1; i < n; i++) linePath.lineTo(pts[i].dx, pts[i].dy);
-      canvas.drawPath(
-        linePath,
-        Paint()
-          ..color = _green
-          ..strokeWidth = 2.0
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round,
-      );
-    }
-
-    // Dots at each session point
-    for (int i = 0; i < n; i++) {
-      final isLast = i == n - 1;
-      final r = isLast ? 5.5 : 3.5;
-      canvas.drawCircle(pts[i], r, Paint()..color = _green);
-      canvas.drawCircle(
-          pts[i],
-          r,
-          Paint()
-            ..color = Colors.white
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 2.0);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_SessionLineChartPainter old) =>
-      old.scores.join() != scores.join();
-}
 
 class CaregiverWorkspaceScreen extends StatefulWidget {
   final ValueChanged<AppViewMode> onNavigate;
@@ -168,62 +20,6 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
   bool _isSyncing = false;
   Map<String, dynamic>? _aiEvaluationData;
   bool _isLoadingAi = false;
-  _CaregiverStatsData? _statsData;
-  bool _isLoadingStats = false;
-
-  @override
-  void initState() {
-    super.initState();
-    PatientProfile.activeProfileNotifier.addListener(_onProfileOrReminderChanged);
-    ReminderService.instance.addListener(_onProfileOrReminderChanged);
-    SessionService.instance.addListener(_onSessionChanged);
-    // Auto-fetch AI stats after first frame so context & Hive are ready
-    WidgetsBinding.instance.addPostFrameCallback((_) => _fetchAiStats());
-  }
-
-  @override
-  void dispose() {
-    PatientProfile.activeProfileNotifier.removeListener(_onProfileOrReminderChanged);
-    ReminderService.instance.removeListener(_onProfileOrReminderChanged);
-    SessionService.instance.removeListener(_onSessionChanged);
-    super.dispose();
-  }
-
-  /// Called when the active patient profile changes (registration / switch).
-  void _onProfileOrReminderChanged() {
-    if (mounted) {
-      // Reset cached stats so they are re-fetched for the new patient
-      setState(() {
-        _statsData = null;
-        _aiEvaluationData = null;
-        _isLoadingStats = false;
-      });
-      _fetchAiStats();
-    }
-  }
-
-  /// Called when a new game session is saved — refresh stats immediately.
-  void _onSessionChanged() {
-    if (mounted) {
-      setState(() {
-        _statsData = null;
-        _isLoadingStats = false;
-      });
-      _fetchAiStats();
-    }
-  }
-
-  Widget _buildBodyContent({required bool isMobile}) {
-    switch (_sidebarIndex) {
-      case 1:
-        return _buildAiDecisionsView(isMobile: isMobile);
-      case 2:
-        return const RemindersScreen(isEmbedded: true);
-      case 0:
-      default:
-        return _buildCaregiverOverview(context, isMobile: isMobile);
-    }
-  }
 
   // Interactive Biomarker Simulation State
   double _simClockScore = 8.5;
@@ -444,144 +240,6 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     }
   }
 
-<<<<<<< HEAD
-  void _onTabSelected(int idx) {
-    setState(() => _sidebarIndex = idx);
-    if (idx == 1 && _aiEvaluationData == null) {
-      _fetchAiDecisions();
-    }
-    // Refresh AI stats when returning to Overview tab
-    if (idx == 0) _fetchAiStats();
-  }
-
-  /// Fetches real-time AI-computed stats from the FastAPI backend.
-  /// Uses REAL session history from SessionService; falls back to local data.
-  Future<void> _fetchAiStats() async {
-    if (_isLoadingStats || !mounted) return;
-    setState(() => _isLoadingStats = true);
-
-    final profile = PatientProfile.loadFromHive();
-    final patientName = profile?.fullName ?? 'Patient';
-    final patientId = profile?.id ?? 'unknown';
-
-    // ── Real game session data ─────────────────────────────────────────
-    final sessionStats = SessionService.instance.getStatsFor(patientId);
-    final hasSessions = sessionStats.totalSessions > 0;
-
-    // If new patient with NO game sessions yet:
-    if (!hasSessions) {
-      if (mounted) {
-        setState(() {
-          _aiEvaluationData = null;
-          _statsData = _CaregiverStatsData.empty(patientName: patientName);
-          _isLoadingStats = false;
-        });
-      }
-      return;
-    }
-
-    // When sessions exist, use real data:
-    final ratio = sessionStats.avgAccuracy;
-    final avgResponseSec = sessionStats.avgResponseSec;
-    final gamesPlayed = sessionStats.totalSessions;
-    final chartScores = sessionStats.last7Scores;
-
-    try {
-      final response = await http
-          .post(
-            Uri.parse('http://127.0.0.1:8000/api/v1/clinical/evaluate'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
-              'patient_id': patientId,
-              'age': profile?.age ?? 68,
-              'clock_drawing_score': (7.5 + ratio * 2.0).clamp(0.0, 10.0),
-              'drawing_hesitation_count': (4 - ratio * 2).round().clamp(0, 8),
-              'drawing_mean_velocity': (0.18 + ratio * 0.08).clamp(0.0, 1.0),
-              'kinematic_tremor_variance': (14.0 - ratio * 4.0).clamp(0.0, 25.0),
-              'postural_stability_score': (75.0 + ratio * 15.0).clamp(0.0, 100.0),
-              // Real memory accuracy from actual gameplay
-              'memory_recall_accuracy': ratio.clamp(0.0, 1.0),
-              // Real response latency from actual gameplay (ms)
-              'pattern_sequence_latency_ms':
-                  (avgResponseSec * 1000).clamp(500.0, 5000.0),
-              'speech_hesitation_ratio': (0.28 - ratio * 0.08).clamp(0.0, 1.0),
-              'phonation_jitter': (0.041 - ratio * 0.005).clamp(0.0, 0.1),
-              'acoustic_energy_entropy': (3.0 + ratio * 0.5).clamp(0.0, 6.0),
-            }),
-          )
-          .timeout(const Duration(seconds: 6));
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final accuracy = (ratio * 100).round().clamp(10, 100);
-        final responseDisplay = avgResponseSec.toStringAsFixed(1);
-        final level = accuracy >= 85
-            ? 'Level 3'
-            : accuracy >= 70
-                ? 'Level 2'
-                : 'Level 1';
-
-        final recs = (data['clinical_recommendations'] as List<dynamic>?) ?? [];
-        final thirdNote = recs.isNotEmpty
-            ? recs.first.toString()
-            : 'AI Adaptive Engine is actively calibrated to $level based on recent telemetry.';
-
-        if (mounted) {
-          setState(() {
-            _aiEvaluationData = data;
-            _statsData = _CaregiverStatsData(
-              gamesCompleted: gamesPlayed,
-              averageAccuracy: '$accuracy%',
-              avgResponseTime: '${responseDisplay}s',
-              currentDifficulty: level,
-              sessionScores: chartScores,
-              supportNotes: [
-                '$gamesPlayed activity(ies) completed for $patientName with consistent tracking.',
-                'Average accuracy is $accuracy% with an average response time of ${responseDisplay}s.',
-                thirdNote,
-              ],
-              statusLabel: accuracy >= 70 ? 'Active Routine' : 'Monitoring',
-              isLive: true,
-            );
-            _isLoadingStats = false;
-          });
-        }
-        return;
-      }
-    } catch (_) {}
-
-    // Fallback when backend is offline:
-    if (mounted) {
-      final accPct = (sessionStats.avgAccuracy * 100).round().clamp(10, 100);
-      final respDisplay = sessionStats.avgResponseSec.toStringAsFixed(1);
-      final level = accPct >= 85
-          ? 'Level 3'
-          : accPct >= 70
-              ? 'Level 2'
-              : 'Level 1';
-
-      setState(() {
-        _statsData = _CaregiverStatsData(
-          gamesCompleted: sessionStats.totalSessions,
-          averageAccuracy: '$accPct%',
-          avgResponseTime: '${respDisplay}s',
-          currentDifficulty: level,
-          sessionScores: chartScores,
-          supportNotes: [
-            '${sessionStats.totalSessions} activity(ies) completed for $patientName with consistent tracking.',
-            'Average accuracy is $accPct% with an average response time of ${respDisplay}s.',
-            'AI Adaptive Engine is actively calibrated to $level based on recent telemetry.',
-          ],
-          statusLabel: accPct >= 70 ? 'Active Routine' : 'Monitoring',
-          isLive: false,
-        );
-        _isLoadingStats = false;
-      });
-    }
-  }
-
-=======
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -597,38 +255,6 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
 
             // Sidebar + Main Workspace
             Expanded(
-<<<<<<< HEAD
-              child: isMobile
-                  ? SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-                      child: _buildBodyContent(isMobile: true),
-                    )
-                  : Row(
-                      children: [
-                        AppSidebar(
-                          isCaregiver: true,
-                          selectedIndex: _sidebarIndex,
-                          onSelectIndex: _onTabSelected,
-                          onResetData: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Caregiver cache cleared.', style: GoogleFonts.inter()),
-                                backgroundColor: AppTheme.forestGreen,
-                              ),
-                            );
-                          },
-                        ),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(horizontal: 36.0, vertical: 24.0),
-                            child: Center(
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(maxWidth: 960),
-                                child: _buildBodyContent(isMobile: false),
-                              ),
-                            ),
-                          ),
-=======
               child: Row(
                 children: [
                   AppSidebar(
@@ -654,7 +280,6 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 960),
                           child: _buildSelectedCaregiverView(context),
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
                         ),
                       ),
                     ),
@@ -668,16 +293,6 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     );
   }
 
-<<<<<<< HEAD
-  Widget _buildCaregiverOverview(BuildContext context, {required bool isMobile}) {
-    final profile = PatientProfile.loadFromHive();
-    final patientName = profile?.fullName ?? 'Ramesh Kumar';
-    final initials = profile != null && profile.fullName.trim().isNotEmpty
-        ? profile.fullName.trim().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join()
-        : 'RK';
-    final patientSubtitle = 'Age ${profile?.age ?? 68} · ${profile?.caregiverName ?? "Anita Kumar"} · ${profile?.preferredLanguage.displayName ?? "English"}';
-
-=======
   Widget _buildSelectedCaregiverView(BuildContext context) {
     switch (_sidebarIndex) {
       case 1:
@@ -693,7 +308,6 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
   }
 
   Widget _buildCaregiverOverview(BuildContext context) {
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -742,25 +356,6 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
               ),
             ),
 
-<<<<<<< HEAD
-            // Dropdown & Sync Button
-            if (!isMobile) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(100),
-                  border: Border.all(color: AppTheme.surfaceBorder),
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      patientName,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
-=======
             // Dropdown & Simulate Sync
             Row(
               children: [
@@ -780,7 +375,6 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                           fontWeight: FontWeight.w700,
                           color: AppTheme.textPrimary,
                         ),
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
                       ),
                       const SizedBox(width: 6),
                       const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppTheme.textSecondary),
@@ -838,37 +432,21 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-<<<<<<< HEAD
-              Expanded(
-                child: Text(
-                  'Local data · synced for $patientName',
-                  style: GoogleFonts.inter(
-                    fontSize: isMobile ? 11.5 : 12.0,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textSecondary,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-=======
               Text(
                 'Local data · last synchronized 14 Mar, 5:35 pm',
                 style: GoogleFonts.inter(
                   fontSize: 12.0,
                   fontWeight: FontWeight.w500,
                   color: AppTheme.textSecondary,
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
                 ),
               ),
               const Spacer(),
               Text(
-<<<<<<< HEAD
-                'LIVE DATA',
-=======
                 'DEMO SIMULATION',
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w800,
-                  color: AppTheme.forestGreen,
+                  color: AppTheme.textLight,
                   letterSpacing: 0.8,
                 ),
               ),
@@ -898,7 +476,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    initials,
+                    'RK',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 16.0,
                       fontWeight: FontWeight.w800,
@@ -923,7 +501,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      patientName,
+                      'Ramesh Kumar',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 18.0,
                         fontWeight: FontWeight.w800,
@@ -932,11 +510,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-<<<<<<< HEAD
-                      patientSubtitle,
-=======
                       'Age 68 · Caregiver Anita Kumar · Preferred language English',
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
                       style: GoogleFonts.inter(
                         fontSize: 12.5,
                         color: AppTheme.textSecondary,
@@ -1107,11 +681,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-<<<<<<< HEAD
-                        'Just now',
-=======
                         'Cognitive Difficulty & AI Pacing Controller',
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 16.0,
                           fontWeight: FontWeight.w800,
@@ -1185,222 +755,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
 
           const SizedBox(height: 18),
 
-<<<<<<< HEAD
-        // Patient Routine & Reminders Summary Card in Overview
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.psychology_outlined, color: AppTheme.forestGreen, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Patient Routine & Reminders',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  TextButton.icon(
-                    onPressed: () => setState(() => _sidebarIndex = 2),
-                    icon: const Icon(Icons.arrow_forward_rounded, size: 16),
-                    label: Text(
-                      'Manage All',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.forestGreen,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Builder(
-                builder: (context) {
-                  final reminders = ReminderService.instance.reminders;
-                  final completedCount = reminders.where((r) => r.isCompleted).length;
-
-                  if (reminders.isEmpty) {
-                    return Text(
-                      'No reminders set for $patientName.',
-                      style: GoogleFonts.inter(color: AppTheme.textSecondary, fontSize: 13),
-                    );
-                  }
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '$completedCount of ${reminders.length} completed today',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                          Text(
-                            '${(reminders.isNotEmpty ? (completedCount / reminders.length * 100).toInt() : 0)}%',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: AppTheme.forestGreen,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      ...reminders.take(4).map((item) => Container(
-                            margin: const EdgeInsets.only(bottom: 6),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: item.isCompleted ? AppTheme.background : AppTheme.sageLight.withValues(alpha: 0.5),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              children: [
-                                Text(item.emoji, style: const TextStyle(fontSize: 16)),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    item.title,
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                      color: item.isCompleted ? AppTheme.textLight : AppTheme.textPrimary,
-                                      decoration: item.isCompleted ? TextDecoration.lineThrough : null,
-                                    ),
-                                  ),
-                                ),
-                                Text(
-                                  item.formattedTime,
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppTheme.warmTerracotta,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Icon(
-                                  item.isCompleted ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                                  size: 18,
-                                  color: item.isCompleted ? AppTheme.forestGreen : AppTheme.textLight,
-                                ),
-                              ],
-                            ),
-                          )),
-                    ],
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-
-        SizedBox(height: isMobile ? 12 : 18),
-
-        // ── 4 AI Real-Time Stat Cards ────────────────────────────────────────
-        Builder(builder: (context) {
-          final s = _statsData;
-          final loading = _isLoadingStats && s == null;
-
-          Widget card(String title, String value, String subtitle,
-              IconData icon, Color color, Color bg) {
-            return _buildStatCard(
-              title: title,
-              value: loading ? '—' : value,
-              subtitle: subtitle,
-              badgeIcon: icon,
-              badgeColor: color,
-              badgeBg: bg,
-              isMobile: isMobile,
-            );
-          }
-
-          final cards = [
-            card(
-              'GAMES COMPLETED',
-              s?.gamesCompleted.toString() ?? '0',
-              'Across recent sessions',
-              Icons.check_circle_outline_rounded,
-              AppTheme.statusGreen,
-              AppTheme.sageLight,
-            ),
-            card(
-              'AVERAGE ACCURACY',
-              s?.averageAccuracy ?? '--',
-              'Gameplay performance',
-              Icons.north_east_rounded,
-              AppTheme.warmTerracotta,
-              AppTheme.warmPeach,
-            ),
-            card(
-              'AVERAGE RESPONSE',
-              s?.avgResponseTime ?? '--',
-              'Per interaction',
-              Icons.access_time_rounded,
-              AppTheme.warmOchre,
-              AppTheme.pastelYellow,
-            ),
-            card(
-              'CURRENT DIFFICULTY',
-              s?.currentDifficulty ?? 'Baseline',
-              'Adapts from performance',
-              Icons.psychology_outlined,
-              AppTheme.forestGreen,
-              AppTheme.pastelBlue,
-            ),
-          ];
-
-          if (isMobile) {
-            return GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              childAspectRatio: 1.3,
-              children: cards,
-            );
-          }
-          return Row(children: [
-            Expanded(child: cards[0]),
-            const SizedBox(width: 10),
-            Expanded(child: cards[1]),
-            const SizedBox(width: 10),
-            Expanded(child: cards[2]),
-            const SizedBox(width: 10),
-            Expanded(child: cards[3]),
-          ]);
-        }),
-
-        SizedBox(height: isMobile ? 14 : 20),
-
-        // Lower Dashboard: 7-Session Performance & Support Notes
-        if (isMobile) ...[
-          _buildCognitivePerformanceCard(isMobile: true),
-          const SizedBox(height: 14),
-          _buildSupportNotesCard(),
-        ] else ...[
-=======
           // Tiers Grid
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
           Row(
             children: tiers.map((tier) {
               final isCurrent = _caregiverDifficulty == tier;
@@ -1520,13 +875,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     );
   }
 
-<<<<<<< HEAD
-  Widget _buildCognitivePerformanceCard({required bool isMobile}) {
-    final scores = _statsData?.sessionScores ?? const [];
-
-=======
   Widget _buildCognitivePerformanceCard() {
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
     return Container(
       padding: const EdgeInsets.all(22.0),
       decoration: BoxDecoration(
@@ -1537,7 +886,6 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1545,9 +893,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    scores.isEmpty
-                        ? 'COGNITIVE PERFORMANCE'
-                        : 'THE LAST ${scores.length} SESSION${scores.length > 1 ? 'S' : ''}',
+                    'THE LAST 7 SESSIONS',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w800,
@@ -1567,12 +913,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 ],
               ),
               Container(
-<<<<<<< HEAD
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-=======
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
                 decoration: BoxDecoration(
                   color: AppTheme.sageLight,
                   borderRadius: BorderRadius.circular(100),
@@ -1589,43 +930,6 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
             ],
           ),
 
-<<<<<<< HEAD
-          const SizedBox(height: 18),
-
-          if (scores.isEmpty) ...[
-            Container(
-              height: 130,
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: AppTheme.background,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.surfaceBorder),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.show_chart_rounded,
-                      color: AppTheme.textLight, size: 30),
-                  const SizedBox(height: 8),
-                  Text(
-                    'No session activity recorded yet',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'Play games on the Patient tab to begin cognitive telemetry.',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                        fontSize: 11.5, color: AppTheme.textLight),
-                  ),
-                ],
-              ),
-=======
           const SizedBox(height: 20),
 
           // Custom visual chart representing 7 sessions trend
@@ -1643,49 +947,13 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 _buildChartBar('Session 6', 0.75, '75%'),
                 _buildChartBar('Session 7', 0.82, '82%', isCurrent: true),
               ],
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
             ),
-          ] else ...[
-            // Line chart drawn with CustomPainter
-            SizedBox(
-              height: 130,
-              width: double.infinity,
-              child: CustomPaint(
-                painter: _SessionLineChartPainter(scores: scores),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // Session x-axis labels (aligned to chart left margin)
-            Padding(
-              padding: const EdgeInsets.only(left: 26.0),
-              child: Row(
-                mainAxisAlignment: scores.length > 1
-                    ? MainAxisAlignment.spaceBetween
-                    : MainAxisAlignment.center,
-                children: List.generate(
-                  scores.length,
-                  (i) => Text(
-                    scores.length == 1
-                        ? 'Session 1 (Initial Calibration)'
-                        : 'Session ${i + 1}',
-                    style: GoogleFonts.inter(
-                      fontSize: isMobile ? 8.0 : 9.0,
-                      color: AppTheme.textLight,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ],
       ),
     );
   }
 
-<<<<<<< HEAD
-=======
   Widget _buildChartBar(String label, double pct, String value, {bool isCurrent = false}) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -1717,16 +985,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     );
   }
 
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
   Widget _buildSupportNotesCard() {
-    final notes = _statsData?.supportNotes ?? [
-      'Loading patient session data...',
-      'Tracking routine and performance metrics.',
-      'AI evaluation in progress.',
-    ];
-    final statusLabel = _statsData?.statusLabel ?? 'Loading';
-    final isLive = _statsData?.isLive ?? false;
-
     return Container(
       padding: const EdgeInsets.all(22.0),
       decoration: BoxDecoration(
@@ -1737,7 +996,6 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with AI LIVE badge
           Row(
             children: [
               Container(
@@ -1748,12 +1006,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: const Center(
-<<<<<<< HEAD
-                  child: Icon(Icons.notifications_none_rounded,
-                      size: 15, color: AppTheme.warmTerracotta),
-=======
                   child: Icon(Icons.notifications_none_rounded, size: 16, color: AppTheme.warmTerracotta),
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
                 ),
               ),
               const SizedBox(width: 10),
@@ -1765,108 +1018,16 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                   color: AppTheme.textPrimary,
                 ),
               ),
-              const Spacer(),
-              if (isLive)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppTheme.sageLight,
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 5,
-                        height: 5,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.statusGreen,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        'AI LIVE',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 9.0,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.forestGreen,
-                          letterSpacing: 0.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              else if (_isLoadingStats)
-                SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 1.5,
-                    color: AppTheme.forestGreen,
-                  ),
-                ),
             ],
           ),
 
           const SizedBox(height: 16),
 
-<<<<<<< HEAD
-          // AI-generated note bullets
-          _buildNoteItem(notes[0]),
-          const SizedBox(height: 8),
-          _buildNoteItem(notes[1]),
-          const SizedBox(height: 8),
-          _buildNoteItem(notes[2]),
-
-          const SizedBox(height: 12),
-          Container(height: 1, color: AppTheme.surfaceBorder),
-          const SizedBox(height: 10),
-
-          // Status bar + Inspect AI Logs link
-          Row(
-            children: [
-              Container(
-                width: 6,
-                height: 6,
-                decoration: const BoxDecoration(
-                  color: AppTheme.statusGreen,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Status: $statusLabel',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-              const Spacer(),
-              GestureDetector(
-                onTap: () => setState(() => _sidebarIndex = 1),
-                child: Text(
-                  'Inspect AI Logs →',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.forestGreen,
-                    decoration: TextDecoration.underline,
-                    decorationColor: AppTheme.forestGreen,
-                  ),
-                ),
-              ),
-            ],
-          ),
-=======
           _buildNoteItem('37s that Ramesh completed his session today.'),
           const SizedBox(height: 10),
           _buildNoteItem('Smooth motor interaction during memory matching.'),
           const SizedBox(height: 10),
           _buildNoteItem('Consistent daily morning schedule maintained.'),
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
         ],
       ),
     );

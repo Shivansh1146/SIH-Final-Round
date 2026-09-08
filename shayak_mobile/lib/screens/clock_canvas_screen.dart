@@ -88,17 +88,12 @@ class _ClockCanvasScreenState extends State<ClockCanvasScreen> {
   }
 
   void _submitDrawing(DrawingAssessmentSummary summary) async {
-    setState(() => _isAnalyzing = true);
-<<<<<<< HEAD
-
     // ── Persist session data to SessionService ──────────────────────────
-    final patientId = SessionService.activePatientId ?? 'unknown';
-    // Derive an accuracy proxy: lower jitter & hesitations = higher accuracy
+    final patientId = SessionService.activePatientId ?? 'PT-9042';
     final jitter = summary.tremorJitterVariance.clamp(0.0, 50.0);
     final hesitations = summary.totalHesitations.clamp(0, 20);
     final rawAccuracy = 1.0 - (jitter / 50.0 * 0.5 + hesitations / 20.0 * 0.5);
     final accuracy = rawAccuracy.clamp(0.0, 1.0);
-    // Response time proxy: mean velocity -> lower = slower
     final meanVel = summary.averageVelocity.clamp(0.01, 5.0);
     final responseSec = (3.0 / meanVel).clamp(0.5, 15.0);
     SessionService.instance.saveSession(GameSession(
@@ -116,14 +111,15 @@ class _ClockCanvasScreenState extends State<ClockCanvasScreen> {
         'tremorVariance': summary.tremorJitterVariance,
       },
     ));
-=======
+
     final calculatedScore = _estimateClockScore(summary);
 
-    // Save session locally and attempt backend broadcast
+    // Save session locally and broadcast to backend
     try {
+      final backendId = patientId.startsWith('patient-') ? 'PT-9042' : patientId;
       final sessionRecord = {
         'session_id': 'SES-${DateTime.now().millisecondsSinceEpoch}',
-        'patient_id': 'PT-9042',
+        'patient_id': backendId,
         'activity_type': 'clock_drawing',
         'score': calculatedScore * 10.0,
         'duration_seconds': (summary.totalDurationMs / 1000).round(),
@@ -137,14 +133,12 @@ class _ClockCanvasScreenState extends State<ClockCanvasScreen> {
         'timestamp': DateTime.now().toIso8601String(),
       };
 
-      // Try sending to local backend
       http.post(
-        Uri.parse('http://127.0.0.1:8000/api/v1/patient/PT-9042/session'),
+        Uri.parse('http://127.0.0.1:8000/api/v1/patient/$backendId/session'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(sessionRecord),
       ).catchError((_) => http.Response('{}', 500));
     } catch (_) {}
->>>>>>> 0ab6efe45811b2d47d4bed0741cb3eac4c87ca7c
 
     await Future.delayed(const Duration(milliseconds: 600));
 
