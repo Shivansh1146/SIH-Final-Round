@@ -33,7 +33,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
   // Live Backend Patient State
   String _patientId = 'PT-9042';
-  String _patientDisplayName = 'Ramesh';
+  String _patientDisplayName = 'Ramesh Kumar';
   String _currentDifficultyLevel = 'Level 2 (Moderate)';
   bool _isAdaptiveMode = true;
   int _totalSessions = 13;
@@ -80,7 +80,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     final active = PatientProfile.loadFromHive();
     if (active != null) {
       setState(() {
-        _patientDisplayName = active.fullName.split(' ').first;
+        _patientDisplayName = active.fullName.isNotEmpty ? active.fullName : 'Ramesh Kumar';
         _patientId = active.id.isNotEmpty ? active.id : 'PT-9042';
       });
     }
