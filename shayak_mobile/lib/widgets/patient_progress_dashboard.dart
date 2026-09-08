@@ -272,10 +272,10 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Graph Header & Switchers
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isNarrow = constraints.maxWidth < 450;
+                      final titleWidget = Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
@@ -286,14 +286,17 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
                                 size: 18,
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                _selectedGraphType == 0
-                                    ? LocalizationService.tr('weekly_accuracy_trend', lang)
-                                    : LocalizationService.tr('motor_stability_index', lang),
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 16.5,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppTheme.textPrimary,
+                              Expanded(
+                                child: Text(
+                                  _selectedGraphType == 0
+                                      ? LocalizationService.tr('weekly_accuracy_trend', lang)
+                                      : LocalizationService.tr('motor_stability_index', lang),
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 16.0,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppTheme.textPrimary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
@@ -304,12 +307,12 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
                                 ? LocalizationService.tr('tap_data_points', lang)
                                 : LocalizationService.tr('realtime_imu_curve', lang),
                             style: GoogleFonts.inter(fontSize: 12.0, color: AppTheme.textSecondary),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
-                      ),
+                      );
 
-                      // Graph Type Switcher Tabs
-                      Container(
+                      final switcherTabs = Container(
                         padding: const EdgeInsets.all(3),
                         decoration: BoxDecoration(
                           color: AppTheme.background,
@@ -323,8 +326,28 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
                             _buildGraphTab(LocalizationService.tr('stability_tab', lang), 1),
                           ],
                         ),
-                      ),
-                    ],
+                      );
+
+                      if (isNarrow) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            titleWidget,
+                            const SizedBox(height: 10),
+                            switcherTabs,
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: titleWidget),
+                          const SizedBox(width: 8),
+                          switcherTabs,
+                        ],
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 20),
@@ -341,29 +364,44 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
                   const SizedBox(height: 14),
 
                   // Graph Legend & Clinical Safe Zone Notes
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Row(
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          Container(
-                            width: 10,
-                            height: 10,
-                            decoration: const BoxDecoration(
-                              color: AppTheme.forestGreen,
-                              shape: BoxShape.circle,
-                            ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: const BoxDecoration(
+                                  color: AppTheme.forestGreen,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(LocalizationService.tr('recorded_session_score', lang), style: GoogleFonts.inter(fontSize: 11.5, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
+                            ],
                           ),
-                          const SizedBox(width: 6),
-                          Text(LocalizationService.tr('recorded_session_score', lang), style: GoogleFonts.inter(fontSize: 11.5, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
-                          const SizedBox(width: 16),
-                          Container(
-                            width: 16,
-                            height: 2,
-                            color: AppTheme.warmTerracotta.withOpacity(0.6),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 16,
+                                height: 2,
+                                color: AppTheme.warmTerracotta.withOpacity(0.6),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(LocalizationService.tr('clinical_target', lang), style: GoogleFonts.inter(fontSize: 11.5, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
+                            ],
                           ),
-                          const SizedBox(width: 6),
-                          Text(LocalizationService.tr('clinical_target', lang), style: GoogleFonts.inter(fontSize: 11.5, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
                         ],
                       ),
                       Container(
@@ -476,24 +514,29 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            LocalizationService.tr('recent_milestones_title', lang),
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 16.5,
-                              fontWeight: FontWeight.w800,
-                              color: AppTheme.textPrimary,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              LocalizationService.tr('recent_milestones_title', lang),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 16.5,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            LocalizationService.tr('recent_milestones_sub', lang),
-                            style: GoogleFonts.inter(fontSize: 12.0, color: AppTheme.textSecondary),
-                          ),
-                        ],
+                            const SizedBox(height: 2),
+                            Text(
+                              LocalizationService.tr('recent_milestones_sub', lang),
+                              style: GoogleFonts.inter(fontSize: 12.0, color: AppTheme.textSecondary),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
