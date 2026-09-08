@@ -26,8 +26,6 @@ class AppSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeProfile = PatientProfile.loadFromHive();
-    final patientName = activeProfile?.fullName ?? (isCaregiver ? 'Care Team' : 'Ramesh Kumar');
 
     return ValueListenableBuilder<AppLanguage>(
       valueListenable: LocalizationService.languageNotifier,
@@ -48,55 +46,7 @@ class AppSidebar extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
 
-                  // Header Card (PATIENT APP / CARE TEAM)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14.0),
-                    decoration: BoxDecoration(
-                      color: AppTheme.sageLight.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(16.0),
-                      border: Border.all(color: AppTheme.sageBorder.withOpacity(0.6)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isCaregiver ? LocalizationService.tr('care_team', lang) : LocalizationService.tr('patient_app', lang),
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.forestGreen,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          patientName,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 15.5,
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.textPrimary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          isCaregiver
-                              ? LocalizationService.tr('patient_care_team_sub', lang)
-                              : LocalizationService.tr('patient_space_sub', lang),
-                          style: GoogleFonts.inter(
-                            fontSize: 12.0,
-                            fontWeight: FontWeight.w400,
-                            color: AppTheme.textSecondary,
-                            height: 1.35,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
 
-                  const SizedBox(height: 20),
 
                   // Primary Navigation Menu Items
                   if (!isCaregiver) ...[
