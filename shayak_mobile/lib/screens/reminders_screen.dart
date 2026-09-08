@@ -587,7 +587,17 @@ class _RemindersScreenState extends State<RemindersScreen> {
     final filteredList = _items.where((item) {
       if (_filter == 'Pending') return !item.isCompleted;
       if (_filter == 'Completed') return item.isCompleted;
-      if (_filter == 'Medicines') return item.category == ReminderCategory.medicine;
+      if (_filter == 'Medicines') {
+        final t = item.title.toLowerCase();
+        return item.category == ReminderCategory.medicine ||
+            item.emoji == '💊' ||
+            t.contains('med') ||
+            t.contains('dawa') ||
+            t.contains('pill') ||
+            t.contains('tablet') ||
+            t.contains('donepezil') ||
+            t.contains('memantine');
+      }
       return true;
     }).toList();
 

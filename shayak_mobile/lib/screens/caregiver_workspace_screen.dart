@@ -902,17 +902,17 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(flex: 6, child: _buildCognitivePerformanceCard()),
+                Expanded(flex: 6, child: _buildCognitivePerformanceCard(lang)),
                 const SizedBox(width: 18),
-                Expanded(flex: 4, child: _buildSupportNotesCard(totalSessionsCount, patientName, latestScore)),
+                Expanded(flex: 4, child: _buildSupportNotesCard(totalSessionsCount, patientName, latestScore, lang)),
               ],
             );
           } else {
             return Column(
               children: [
-                _buildCognitivePerformanceCard(),
+                _buildCognitivePerformanceCard(lang),
                 const SizedBox(height: 18),
-                _buildSupportNotesCard(totalSessionsCount, patientName, latestScore),
+                _buildSupportNotesCard(totalSessionsCount, patientName, latestScore, lang),
               ],
             );
           }
@@ -1069,7 +1069,9 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            tier.split(' ')[0] + ' ' + tier.split(' ')[1],
+                            LocalizationService.trTier(tier, lang).contains('(')
+                                ? LocalizationService.trTier(tier, lang).split('(').first.trim()
+                                : LocalizationService.trTier(tier, lang),
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 12.5,
                               fontWeight: isCurrent ? FontWeight.w800 : FontWeight.w700,
@@ -1078,7 +1080,9 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            tier.split('(').last.replaceAll(')', ''),
+                            LocalizationService.trTier(tier, lang).contains('(')
+                                ? LocalizationService.trTier(tier, lang).split('(').last.replaceAll(')', '').trim()
+                                : '',
                             style: GoogleFonts.inter(
                               fontSize: 11.0,
                               color: isCurrent ? Colors.white.withOpacity(0.9) : AppTheme.textSecondary,
@@ -1162,7 +1166,8 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     );
   }
 
-  Widget _buildCognitivePerformanceCard() {
+  Widget _buildCognitivePerformanceCard([AppLanguage? lang]) {
+    final language = lang ?? LocalizationService.instance.currentLanguage;
     return Container(
       padding: const EdgeInsets.all(22.0),
       decoration: BoxDecoration(
@@ -1180,7 +1185,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'THE LAST 7 SESSIONS',
+                    LocalizationService.tr('the_last_7_sessions', language),
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w800,
@@ -1190,7 +1195,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Cognitive activity performance',
+                    LocalizationService.tr('cognitive_activity_performance', language),
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 16.0,
                       fontWeight: FontWeight.w800,
@@ -1206,7 +1211,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                   borderRadius: BorderRadius.circular(100),
                 ),
                 child: Text(
-                  'Non-medical view',
+                  LocalizationService.tr('non_medical_view', language),
                   style: GoogleFonts.inter(
                     fontSize: 11.0,
                     fontWeight: FontWeight.w600,
@@ -1264,7 +1269,8 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     );
   }
 
-  Widget _buildSupportNotesCard(int totalSessions, String patientName, double latestScore) {
+  Widget _buildSupportNotesCard(int totalSessions, String patientName, double latestScore, [AppLanguage? lang]) {
+    final language = lang ?? LocalizationService.instance.currentLanguage;
     final firstName = patientName.split(' ').first;
     final scorePct = (latestScore * 100).toStringAsFixed(0);
     return Container(
@@ -1292,7 +1298,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
               ),
               const SizedBox(width: 10),
               Text(
-                'Support notes',
+                LocalizationService.tr('support_notes', language),
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 16.0,
                   fontWeight: FontWeight.w800,
@@ -1304,11 +1310,11 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
 
           const SizedBox(height: 16),
 
-          _buildNoteItem('$totalSessions recorded game activities completed by $firstName.'),
+          _buildNoteItem(LocalizationService.getSupportNote1(totalSessions, firstName, language)),
           const SizedBox(height: 10),
-          _buildNoteItem('Latest session accuracy recorded at $scorePct% with steady interaction.'),
+          _buildNoteItem(LocalizationService.getSupportNote2(scorePct, language)),
           const SizedBox(height: 10),
-          _buildNoteItem('Smooth motor interaction and consistent daily routine maintained.'),
+          _buildNoteItem(LocalizationService.getSupportNote3(language)),
         ],
       ),
     );
@@ -1761,7 +1767,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item['title'] as String,
+                            LocalizationService.trCarePlanTitle(item['title'] as String, lang),
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 15.0,
                               fontWeight: FontWeight.w700,
@@ -1769,7 +1775,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                             ),
                           ),
                           Text(
-                            '${item['time']} · ${item['freq']} (${item['type']})',
+                            '${item['time']} · ${LocalizationService.trCarePlanFreq(item['freq'] as String, lang)} (${LocalizationService.trCarePlanType(item['type'] as String, lang)})',
                             style: GoogleFonts.inter(fontSize: 12.5, color: AppTheme.textSecondary),
                           ),
                         ],

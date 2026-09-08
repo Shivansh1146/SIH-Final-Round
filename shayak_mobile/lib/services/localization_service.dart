@@ -196,6 +196,663 @@ class LocalizationService {
     }
   }
 
+  static String trTier(String tier, [AppLanguage? lang]) {
+    final l = lang ?? instance.currentLanguage;
+    final t = tier.toLowerCase();
+    if (t.contains('level 1') || t.contains('gentle')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'स्तर 1 (सौम्य)';
+        case AppLanguage.assamese: return 'স্তৰ ১ (কোমল)';
+        case AppLanguage.bengali: return 'স্তর ১ (কোমল)';
+        case AppLanguage.manipuri: return 'থাক ১ (নমথবা)';
+        case AppLanguage.bodo: return 'थाखो १ (गुरै)';
+        case AppLanguage.nepali: return 'तह १ (सौम्य)';
+        case AppLanguage.mizo: return 'Level 1 (Zawi)';
+        case AppLanguage.english: default: return 'Level 1 (Gentle)';
+      }
+    } else if (t.contains('level 2') || t.contains('moderate')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'स्तर 2 (मध्यम)';
+        case AppLanguage.assamese: return 'স্তৰ ২ (মধ্যম)';
+        case AppLanguage.bengali: return 'স্তর ২ (মাঝারি)';
+        case AppLanguage.manipuri: return 'থাক ২ (ময়াইওইবা)';
+        case AppLanguage.bodo: return 'थाखो २ (गेजेर)';
+        case AppLanguage.nepali: return 'तह २ (मध्यम)';
+        case AppLanguage.mizo: return 'Level 2 (Inawm)';
+        case AppLanguage.english: default: return 'Level 2 (Moderate)';
+      }
+    } else if (t.contains('level 3') || t.contains('challenging')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'स्तर 3 (कठिन)';
+        case AppLanguage.assamese: return 'স্তৰ ৩ (প্ৰত্যাহ্বানজনক)';
+        case AppLanguage.bengali: return 'স্তর ৩ (চ্যালেঞ্জিং)';
+        case AppLanguage.manipuri: return 'থাক ৩ (চেলেঞ্জিং)';
+        case AppLanguage.bodo: return 'थाखो ३ (गोब्राब)';
+        case AppLanguage.nepali: return 'तह ३ (चुनौतीपूर्ण)';
+        case AppLanguage.mizo: return 'Level 3 (Harsa)';
+        case AppLanguage.english: default: return 'Level 3 (Challenging)';
+      }
+    } else if (t.contains('level 4') || t.contains('master')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'स्तर 4 (कुशल)';
+        case AppLanguage.assamese: return 'স্তৰ ৪ (পাৰদৰ্শী)';
+        case AppLanguage.bengali: return 'স্তর ৪ (মাস্টার)';
+        case AppLanguage.manipuri: return 'থাক ৪ (মাষ্টর)';
+        case AppLanguage.bodo: return 'थाखो ४ (उस्ताद)';
+        case AppLanguage.nepali: return 'तह ४ (मास्टर)';
+        case AppLanguage.mizo: return 'Level 4 (Thiam)';
+        case AppLanguage.english: default: return 'Level 4 (Master)';
+      }
+    }
+    return tier;
+  }
+
+  static String getSupportNote1(int totalSessions, String firstName, [AppLanguage? lang]) {
+    final l = lang ?? instance.currentLanguage;
+    switch (l) {
+      case AppLanguage.hindi:
+        return '$firstName द्वारा $totalSessions पूर्ण की गई गतिविधियाँ दर्ज की गईं।';
+      case AppLanguage.assamese:
+        return '$firstName ৰ দ্বাৰা $totalSessions টা কাৰ্যকলাপ সম্পন্ন হৈছে।';
+      case AppLanguage.bengali:
+        return '$firstName বাবু $totalSessions টি কার্যকলাপ সম্পন্ন করেছেন।';
+      case AppLanguage.manipuri:
+        return '$firstName না থবক $totalSessions লোইশিনখ্রে।';
+      case AppLanguage.bodo:
+        return '$firstName आ $totalSessions हाबाफारि फुंखांबाय।';
+      case AppLanguage.nepali:
+        return '$firstName द्वारा $totalSessions गतिविधिहरू पूरा गरियो।';
+      case AppLanguage.mizo:
+        return '$firstName-an activity $totalSessions a zo tawh.';
+      case AppLanguage.english:
+      default:
+        return '$totalSessions recorded game activities completed by $firstName.';
+    }
+  }
+
+  static String getSupportNote2(String scorePct, [AppLanguage? lang]) {
+    final l = lang ?? instance.currentLanguage;
+    switch (l) {
+      case AppLanguage.hindi:
+        return 'स्थिर बातचीत के साथ नवीनतम सत्र सटीकता $scorePct% दर्ज की गई।';
+      case AppLanguage.assamese:
+        return 'স্থিৰ প্ৰদৰ্শনৰ সৈতে শেহতীয়া সঠিকতা $scorePct% ৰেকৰ্ড কৰা হৈছে।';
+      case AppLanguage.bengali:
+        return 'স্থিতিশীল মিথস্ক্রিয়ার সাথে সর্বশেষ নির্ভুলতা $scorePct% রেকর্ড করা হয়েছে।';
+      case AppLanguage.manipuri:
+        return 'অরোইবা সেসনগী অচুম্বা চাং চাদা $scorePct নি।';
+      case AppLanguage.bodo:
+        return 'गोरोबनाय बिबां $scorePct% आनजाद मोनबाय।';
+      case AppLanguage.nepali:
+        return 'स्थिर अन्तरक्रियाका साथ पछिल्लो शुद्धता $scorePct% रेकर्ड गरियो।';
+      case AppLanguage.mizo:
+        return 'Session hnuhnung ber dikna chu $scorePct% a ni.';
+      case AppLanguage.english:
+      default:
+        return 'Latest session accuracy recorded at $scorePct% with steady interaction.';
+    }
+  }
+
+  static String getSupportNote3([AppLanguage? lang]) {
+    final l = lang ?? instance.currentLanguage;
+    switch (l) {
+      case AppLanguage.hindi:
+        return 'सुचारू शारीरिक गति और नियमित दैनिक दिनचर्या बनी हुई है।';
+      case AppLanguage.assamese:
+        return 'সুচাৰু শাৰীৰিক গতি আৰু নিয়মীয়া দিনচৰ্যা বজাই ৰখা হৈছে।';
+      case AppLanguage.bengali:
+        return 'মসৃণ গতি ও নিয়মিত দৈনিক রুটিন বজায় রয়েছে।';
+      case AppLanguage.manipuri:
+        return 'নোংমগী থৌরাং চুম্না চত্থরি।';
+      case AppLanguage.bodo:
+        return 'सानफ्रोमनि हाबाफारिया मोजाङै जाबाय थादों।';
+      case AppLanguage.nepali:
+        return 'नियमित दैनिक दिनचर्या र सहज गति कायम छ।';
+      case AppLanguage.mizo:
+        return 'Ni tin thiltih mumal takin a kal chho zel.';
+      case AppLanguage.english:
+      default:
+        return 'Smooth motor interaction and consistent daily routine maintained.';
+    }
+  }
+
+  static String trCarePlanTitle(String title, [AppLanguage? lang]) {
+    final l = lang ?? instance.currentLanguage;
+    final t = title.toLowerCase();
+    if (t.contains('donepezil')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'डोनिपेजिल 5mg (Donepezil)';
+        case AppLanguage.assamese: return 'ডনেপেজিল 5mg';
+        case AppLanguage.bengali: return 'ডনেপেজিল ৫ মিলিগ্রাম';
+        case AppLanguage.manipuri: return 'ডোনেপেজিল 5mg';
+        case AppLanguage.bodo: return 'दनेपेजिल 5mg';
+        case AppLanguage.nepali: return 'डोनिपेजिल ५ एमजी';
+        case AppLanguage.mizo: return 'Donepezil 5mg';
+        case AppLanguage.english: default: return 'Donepezil 5mg';
+      }
+    } else if (t.contains('memantine')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'मेमेंटाइन 10mg (Memantine)';
+        case AppLanguage.assamese: return 'মেমেণ্টাইন 10mg';
+        case AppLanguage.bengali: return 'মেম্যান্টাইন ১০ মিলিগ্রাম';
+        case AppLanguage.manipuri: return 'মেমন্টাইন 10mg';
+        case AppLanguage.bodo: return 'मेमान्तिन 10mg';
+        case AppLanguage.nepali: return 'मेमेन्टाइन १० एमजी';
+        case AppLanguage.mizo: return 'Memantine 10mg';
+        case AppLanguage.english: default: return 'Memantine 10mg';
+      }
+    } else if (t.contains('visual pattern')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'दृश्य पैटर्न अभ्यास (Visual Pattern)';
+        case AppLanguage.assamese: return 'দৃশ্য পেটাৰ্ণ অনুশীলন';
+        case AppLanguage.bengali: return 'ভিজ্যুয়াল প্যাটার্ন ব্যায়াম';
+        case AppLanguage.manipuri: return 'ভিজুএল পেতর্ন এক্সরসাইজ';
+        case AppLanguage.bodo: return 'नुनाय महर आनजाद';
+        case AppLanguage.nepali: return 'दृश्य ढाँचा अभ्यास';
+        case AppLanguage.mizo: return 'Thil Lem Inmilh Enkawlna';
+        case AppLanguage.english: default: return 'Visual Pattern Exercise';
+      }
+    } else if (t.contains('kinematic')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'हाथ कंपन स्थिरीकरण (Kinematic Arm)';
+        case AppLanguage.assamese: return 'হাত কঁপা স্থিৰিকৰণ (Kinematic)';
+        case AppLanguage.bengali: return 'কাইনেমেটিক হাত স্থিরীকরণ';
+        case AppLanguage.manipuri: return 'খুৎ কন্বা থিংবা (Kinematic)';
+        case AppLanguage.bodo: return 'आथिं-आखाय थि खालामनाय';
+        case AppLanguage.nepali: return 'हात कम्पन स्थिरीकरण';
+        case AppLanguage.mizo: return 'Kut Khur Tihtlemna (Kinematic)';
+        case AppLanguage.english: default: return 'Kinematic Arm Stabilization';
+      }
+    } else if (t.contains('hydration') || t.contains('fruit')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'पानी और ताजे फल (Hydration & Fruit)';
+        case AppLanguage.assamese: return 'পানী আৰু ফলমূল গ্ৰহণ';
+        case AppLanguage.bengali: return 'জলপান ও তাজা ফল';
+        case AppLanguage.manipuri: return 'ঈশিং অমসুং হৈহিং চাবা';
+        case AppLanguage.bodo: return 'दै आरो फिथाइ जाफुंनाय';
+        case AppLanguage.nepali: return 'पानी र ताजा फलफूल';
+        case AppLanguage.mizo: return 'Tui In & Thei Ei';
+        case AppLanguage.english: default: return 'Hydration & Fruit snack';
+      }
+    }
+    return title;
+  }
+
+  static String trCarePlanFreq(String freq, [AppLanguage? lang]) {
+    final l = lang ?? instance.currentLanguage;
+    final f = freq.toLowerCase();
+    if (f.contains('breakfast')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'नाश्ते के साथ प्रतिदिन';
+        case AppLanguage.assamese: return 'ৰাতিপুৱাৰ জলপানৰ সৈতে';
+        case AppLanguage.bengali: return 'সকালের নাস্তার সাথে প্রতিদিন';
+        case AppLanguage.manipuri: return 'নুমিদাং য়ুক্না চাবা';
+        case AppLanguage.bodo: return 'फुंनि जामुं जों लोगोसे';
+        case AppLanguage.nepali: return 'बिहानको खाजासँगै';
+        case AppLanguage.mizo: return 'Tukthuan eikhamah';
+        case AppLanguage.english: default: return 'Daily with breakfast';
+      }
+    } else if (f.contains('dinner')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'रात के खाने के साथ प्रतिदिन';
+        case AppLanguage.assamese: return 'ৰাতিৰ আহাৰৰ সৈতে';
+        case AppLanguage.bengali: return 'রাতের খাবারের সাথে প্রতিদিন';
+        case AppLanguage.manipuri: return 'নুমিদাং চাক্কা লোয়ননা';
+        case AppLanguage.bodo: return 'होरनि जामुं जों लोगोसे';
+        case AppLanguage.nepali: return 'रातिको खानासँगै';
+        case AppLanguage.mizo: return 'Zanriah eikhamah';
+        case AppLanguage.english: default: return 'Daily with dinner';
+      }
+    } else if (f.contains('morning session')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'सुबह का सत्र';
+        case AppLanguage.assamese: return 'ৰাতিপুৱাৰ সত্ৰ';
+        case AppLanguage.bengali: return 'সকালের সেশন';
+        case AppLanguage.manipuri: return 'অয়ুক্কী সেসন';
+        case AppLanguage.bodo: return 'फुंनि हाबाफारि';
+        case AppLanguage.nepali: return 'बिहानको सत्र';
+        case AppLanguage.mizo: return 'Zing session';
+        case AppLanguage.english: default: return 'Morning session';
+      }
+    } else if (f.contains('esp32') || f.contains('utensil')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'सक्रिय ESP32 उपकरण';
+        case AppLanguage.assamese: return 'সক্ৰিয় ESP32 ডিভাইচ';
+        case AppLanguage.bengali: return 'সক্রিয় ESP32 ডিভাইস';
+        case AppLanguage.manipuri: return 'ESP32 খুৎলাই';
+        case AppLanguage.bodo: return 'गोसोहोनाय ESP32 आगजु';
+        case AppLanguage.nepali: return 'सक्रिय ESP32 उपकरण';
+        case AppLanguage.mizo: return 'ESP32 hmanraw hmangin';
+        case AppLanguage.english: default: return 'Active ESP32 Utensil';
+      }
+    } else if (f.contains('routine')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'दैनिक दिनचर्या';
+        case AppLanguage.assamese: return 'দৈনিক দিনচৰ্যা';
+        case AppLanguage.bengali: return 'দৈনিক রুটিন';
+        case AppLanguage.manipuri: return 'নোংমগী থবক';
+        case AppLanguage.bodo: return 'सानफ्रोमनि हाबाफारि';
+        case AppLanguage.nepali: return 'दैनिक दिनचर्या';
+        case AppLanguage.mizo: return 'Ni tin thiltih';
+        case AppLanguage.english: default: return 'Daily routine';
+      }
+    }
+    return freq;
+  }
+
+  static String trCarePlanType(String type, [AppLanguage? lang]) {
+    final l = lang ?? instance.currentLanguage;
+    switch (type.toLowerCase()) {
+      case 'medication':
+        switch (l) {
+          case AppLanguage.hindi: return 'दवा';
+          case AppLanguage.assamese: return 'ঔষধ';
+          case AppLanguage.bengali: return 'ওষুধ';
+          case AppLanguage.manipuri: return 'হিদাক';
+          case AppLanguage.bodo: return 'मुलि';
+          case AppLanguage.nepali: return 'औषधि';
+          case AppLanguage.mizo: return 'Damdawi';
+          case AppLanguage.english: default: return 'Medication';
+        }
+      case 'cognitive':
+        switch (l) {
+          case AppLanguage.hindi: return 'संज्ञानात्मक';
+          case AppLanguage.assamese: return 'জ্ঞানীয়';
+          case AppLanguage.bengali: return 'জ্ঞানীয়';
+          case AppLanguage.manipuri: return 'নিংশিংবা';
+          case AppLanguage.bodo: return 'गोसोनि';
+          case AppLanguage.nepali: return 'संज्ञानात्मक';
+          case AppLanguage.mizo: return 'Hriatna';
+          case AppLanguage.english: default: return 'Cognitive';
+        }
+      case 'motor care':
+        switch (l) {
+          case AppLanguage.hindi: return 'शारीरिक गति';
+          case AppLanguage.assamese: return 'গতি যত্ন';
+          case AppLanguage.bengali: return 'শারীরিক যত্ন';
+          case AppLanguage.manipuri: return 'হকচাংগী যত্ন';
+          case AppLanguage.bodo: return 'आथिं-आखाय';
+          case AppLanguage.nepali: return 'शारीरिक हेरचाह';
+          case AppLanguage.mizo: return 'Taksa chetna';
+          case AppLanguage.english: default: return 'Motor Care';
+        }
+      case 'dietary':
+        switch (l) {
+          case AppLanguage.hindi: return 'आहार';
+          case AppLanguage.assamese: return 'খাদ্যতালিকা';
+          case AppLanguage.bengali: return 'খাদ্যাভ্যাস';
+          case AppLanguage.manipuri: return 'চিনাক-মচাং';
+          case AppLanguage.bodo: return 'जाफुं-आहार';
+          case AppLanguage.nepali: return 'आहार';
+          case AppLanguage.mizo: return 'Chaw ei';
+          case AppLanguage.english: default: return 'Dietary';
+        }
+      default:
+        return type;
+    }
+  }
+
+  static String trDayLabel(String day, [AppLanguage? lang]) {
+    final l = lang ?? instance.currentLanguage;
+    final d = day.toLowerCase();
+    if (d == 'mon') {
+      switch (l) {
+        case AppLanguage.hindi: return 'सोम';
+        case AppLanguage.assamese: return 'সোম';
+        case AppLanguage.bengali: return 'সোম';
+        case AppLanguage.manipuri: return 'নিংথৌ';
+        case AppLanguage.bodo: return 'सम';
+        case AppLanguage.nepali: return 'सोम';
+        case AppLanguage.mizo: return 'Thawh';
+        case AppLanguage.english: default: return 'Mon';
+      }
+    } else if (d == 'tue') {
+      switch (l) {
+        case AppLanguage.hindi: return 'मंगल';
+        case AppLanguage.assamese: return 'মঙ্গল';
+        case AppLanguage.bengali: return 'মঙ্গল';
+        case AppLanguage.manipuri: return 'লৈপাক';
+        case AppLanguage.bodo: return 'मंगलबार';
+        case AppLanguage.nepali: return 'मङ्गल';
+        case AppLanguage.mizo: return 'Thawhleh';
+        case AppLanguage.english: default: return 'Tue';
+      }
+    } else if (d == 'wed') {
+      switch (l) {
+        case AppLanguage.hindi: return 'बुध';
+        case AppLanguage.assamese: return 'বুধ';
+        case AppLanguage.bengali: return 'বুধ';
+        case AppLanguage.manipuri: return 'য়ুমসকৈসা';
+        case AppLanguage.bodo: return 'बुधबार';
+        case AppLanguage.nepali: return 'बुध';
+        case AppLanguage.mizo: return 'Nilai';
+        case AppLanguage.english: default: return 'Wed';
+      }
+    } else if (d == 'thu') {
+      switch (l) {
+        case AppLanguage.hindi: return 'गुरु';
+        case AppLanguage.assamese: return 'বৃহস্পতি';
+        case AppLanguage.bengali: return 'বৃহস্পতি';
+        case AppLanguage.manipuri: return 'সগোলসেন';
+        case AppLanguage.bodo: return 'बिसथि';
+        case AppLanguage.nepali: return 'बिही';
+        case AppLanguage.mizo: return 'Ningani';
+        case AppLanguage.english: default: return 'Thu';
+      }
+    } else if (d == 'fri') {
+      switch (l) {
+        case AppLanguage.hindi: return 'शुक्र';
+        case AppLanguage.assamese: return 'শুক্ৰ';
+        case AppLanguage.bengali: return 'শুক্র';
+        case AppLanguage.manipuri: return 'ইরাই';
+        case AppLanguage.bodo: return 'सुखुरबार';
+        case AppLanguage.nepali: return 'शुक्र';
+        case AppLanguage.mizo: return 'Zirtawp';
+        case AppLanguage.english: default: return 'Fri';
+      }
+    } else if (d == 'sat') {
+      switch (l) {
+        case AppLanguage.hindi: return 'शनि';
+        case AppLanguage.assamese: return 'শনি';
+        case AppLanguage.bengali: return 'শনি';
+        case AppLanguage.manipuri: return 'থাংজা';
+        case AppLanguage.bodo: return 'सुनिबार';
+        case AppLanguage.nepali: return 'शनि';
+        case AppLanguage.mizo: return 'Inrin';
+        case AppLanguage.english: default: return 'Sat';
+      }
+    } else if (d == 'today') {
+      switch (l) {
+        case AppLanguage.hindi: return 'आज';
+        case AppLanguage.assamese: return 'আজি';
+        case AppLanguage.bengali: return 'আজ';
+        case AppLanguage.manipuri: return 'ঙসি';
+        case AppLanguage.bodo: return 'दिनै';
+        case AppLanguage.nepali: return 'आज';
+        case AppLanguage.mizo: return 'Vawiin';
+        case AppLanguage.english: default: return 'Today';
+      }
+    }
+    return day;
+  }
+
+  static String trDomainName(String name, [AppLanguage? lang]) {
+    final l = lang ?? instance.currentLanguage;
+    final n = name.toLowerCase();
+    if (n.contains('working memory')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'कार्यकारी स्मृति (Memory Match)';
+        case AppLanguage.assamese: return 'কাৰ্যকৰী স্মৃতি (Memory Match)';
+        case AppLanguage.bengali: return 'কার্যকরী স্মৃতি (Memory Match)';
+        case AppLanguage.manipuri: return 'নিংশিংবা (Memory Match)';
+        case AppLanguage.bodo: return 'गोसोआव दोननाय (Memory Match)';
+        case AppLanguage.nepali: return 'कार्यकारी स्मरण (Memory Match)';
+        case AppLanguage.mizo: return 'Hriatrengna (Memory Match)';
+        case AppLanguage.english: default: return 'Working Memory (Memory Match)';
+      }
+    } else if (n.contains('adl') || n.contains('procedural')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'दैनिक दिनचर्या अनुक्रम (Chai & Plants)';
+        case AppLanguage.assamese: return 'দৈনিক দিনচৰ্যা প্ৰক্ৰিয়া (Chai & Plants)';
+        case AppLanguage.bengali: return 'দৈনিক রুটিন ক্রম (Chai & Plants)';
+        case AppLanguage.manipuri: return 'নোংমগী থৌরাং (Chai & Plants)';
+        case AppLanguage.bodo: return 'सानफ्रोमनि फारि (Chai & Plants)';
+        case AppLanguage.nepali: return 'दैनिक कार्य अनुक्रम (Chai & Plants)';
+        case AppLanguage.mizo: return 'Ni tin thiltih indawt (Chai & Plants)';
+        case AppLanguage.english: default: return 'ADL Procedural Flow (Chai & Plants)';
+      }
+    } else if (n.contains('spatial') || n.contains('clock canvas')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'स्थानिक और कार्यकारी योजना (Clock Canvas)';
+        case AppLanguage.assamese: return 'স্থানিক আৰু কাৰ্যনিৰ্বাহক পৰিকল্পনা (Clock Canvas)';
+        case AppLanguage.bengali: return 'স্থানিক ও কার্যনির্বাহী পরিকল্পনা (Clock Canvas)';
+        case AppLanguage.manipuri: return 'স্পেসিয়েল অমসুং এক্সেক্যুতিভ (Clock Canvas)';
+        case AppLanguage.bodo: return 'जायगा आरो घडी आनजाद (Clock Canvas)';
+        case AppLanguage.nepali: return 'स्थानिक तथा योजना क्षमता (Clock Canvas)';
+        case AppLanguage.mizo: return 'Sana lem ruahmanna (Clock Canvas)';
+        case AppLanguage.english: default: return 'Spatial & Executive Planning (Clock Canvas)';
+      }
+    } else if (n.contains('tremor') || n.contains('dampening')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'कंपन नियंत्रण और शारीरिक शांति';
+        case AppLanguage.assamese: return 'হাত কঁপনি নিয়ন্ত্ৰণ আৰু স্থিৰতা';
+        case AppLanguage.bengali: return 'কম্পন নিয়ন্ত্রণ ও শারীরিক প্রশান্তি';
+        case AppLanguage.manipuri: return 'খুৎ কন্বা থিংবা অমসুং শান্ত';
+        case AppLanguage.bodo: return 'आखाय खौनाय होबथानाय';
+        case AppLanguage.nepali: return 'हात कम्पन नियन्त्रण र शारीरिक शान्ति';
+        case AppLanguage.mizo: return 'Kut khur vawnfimkhurna';
+        case AppLanguage.english: default: return 'Tremor Dampening & Kinematic Calm';
+      }
+    } else if (n.contains('adherence') || n.contains('reminder')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'दैनिक अनुस्मारक अनुपालन';
+        case AppLanguage.assamese: return 'দৈনিক সোঁৱৰণী পালন';
+        case AppLanguage.bengali: return 'দৈনিক রিমাইন্ডার মেনে চলা';
+        case AppLanguage.manipuri: return 'নোংমগী নিংশিংবা ঙাক্না চৎপা';
+        case AppLanguage.bodo: return 'सानफ्रोमनि गोसोखांथि मानिनाय';
+        case AppLanguage.nepali: return 'दैनिक रिमाइन्डर पालना';
+        case AppLanguage.mizo: return 'Ni tin hriattirna zawm dan';
+        case AppLanguage.english: default: return 'Daily Reminder Adherence';
+      }
+    }
+    return name;
+  }
+
+  static String trDomainDesc(String desc, [AppLanguage? lang]) {
+    final l = lang ?? instance.currentLanguage;
+    final d = desc.toLowerCase();
+    if (d.contains('strong recognition')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'मजबूत पहचान';
+        case AppLanguage.assamese: return 'দৃঢ় চিনাক্তকৰণ';
+        case AppLanguage.bengali: return 'দৃঢ় সনাক্তকরণ';
+        case AppLanguage.manipuri: return 'অচেৎপা মশক খঙবা';
+        case AppLanguage.bodo: return 'मोजां सिनायथि';
+        case AppLanguage.nepali: return 'बलियो पहिचान';
+        case AppLanguage.mizo: return 'Hriatna chak tha';
+        case AppLanguage.english: default: return 'Strong recognition';
+      }
+    } else if (d.contains('sequence recall')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'उत्कृष्ट अनुक्रम स्मरण';
+        case AppLanguage.assamese: return 'উৎকৃষ্ট ক্ৰম সোঁৱৰণ';
+        case AppLanguage.bengali: return 'চমৎকার ক্রম স্মরণ';
+        case AppLanguage.manipuri: return 'ফবা নিংশিংবা';
+        case AppLanguage.bodo: return 'जोबोद मोजां गोसोखांथि';
+        case AppLanguage.nepali: return 'उत्कृष्ट क्रम स्मरण';
+        case AppLanguage.mizo: return 'Indawt theihna tha';
+        case AppLanguage.english: default: return 'Excellent sequence recall';
+      }
+    } else if (d.contains('accurate contour')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'सटीक रूपरेखा और सुइयां';
+        case AppLanguage.assamese: return 'সঠিক আকৃতি আৰু কাঁটা';
+        case AppLanguage.bengali: return 'সঠিক রূপরেখা ও কাঁটা';
+        case AppLanguage.manipuri: return 'চুম্বা মওং অমসুং কাটা';
+        case AppLanguage.bodo: return 'थि महर आरो कांटा';
+        case AppLanguage.nepali: return 'सटीक रूपरेखा र सुई';
+        case AppLanguage.mizo: return 'Sana kutzung dik tak';
+        case AppLanguage.english: default: return 'Accurate contour & hands';
+      }
+    } else if (d.contains('jitter') || d.contains('stabilized')) {
+      switch (l) {
+        case AppLanguage.hindi: return '4-12 Hz कंपन स्थिर';
+        case AppLanguage.assamese: return '৪-১২ Hz কঁপনি স্থিৰিকৃত';
+        case AppLanguage.bengali: return '৪-১২ Hz কম্পন প্রশমিত';
+        case AppLanguage.manipuri: return '৪-১২ Hz কন্বা থিংখ্রে';
+        case AppLanguage.bodo: return '४-१२ Hz खौनाय थि खालामबाय';
+        case AppLanguage.nepali: return '४-१२ Hz कम्पन स्थिर';
+        case AppLanguage.mizo: return '4-12 Hz khurna tihtlem';
+        case AppLanguage.english: default: return '4-12 Hz jitter stabilized';
+      }
+    } else if (d.contains('active daily')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'सक्रिय दैनिक दिनचर्या';
+        case AppLanguage.assamese: return 'সক্ৰিয় দৈনিক দিনচৰ্যা';
+        case AppLanguage.bengali: return 'সক্রিয় দৈনিক রুটিন';
+        case AppLanguage.manipuri: return 'নোংমগী থবক সোইদনা চৎপা';
+        case AppLanguage.bodo: return 'सानफ्रोमनि हाबाफारि सोलिबाय थादों';
+        case AppLanguage.nepali: return 'सक्रिय दैनिक दिनचर्या';
+        case AppLanguage.mizo: return 'Ni tin thiltih tha taka zawm';
+        case AppLanguage.english: default: return 'Active daily routine';
+      }
+    }
+    return desc;
+  }
+
+  static String trMilestoneTitle(String title, [AppLanguage? lang]) {
+    final l = lang ?? instance.currentLanguage;
+    final t = title.toLowerCase();
+    if (t.contains('clock contour')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'घड़ी रूपरेखा और सुई स्थापन पूर्ण';
+        case AppLanguage.assamese: return 'ঘড়ী চিত্ৰাংকন আৰু কাঁটা স্থাপন সম্পূৰ্ণ';
+        case AppLanguage.bengali: return 'ঘড়ির রূপরেখা ও কাঁটা স্থাপন সম্পন্ন';
+        case AppLanguage.manipuri: return 'ঘড়ী য়েকপা অমসুং কাটা থম্বা লোইশিনখ্রে';
+        case AppLanguage.bodo: return 'घडी आखिनाय आरो कांटा दोननाय आबुं जाबाय';
+        case AppLanguage.nepali: return 'घडीको रूपरेखा र सुई राख्ने काम पूरा भयो';
+        case AppLanguage.mizo: return 'Sana lem ziah leh kutzung dah zawh a ni';
+        case AppLanguage.english: default: return 'Clock Contour & Hand Placement Completed';
+      }
+    } else if (t.contains('memory match')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'स्मृति मिलान जोड़े हल किए (स्तर 2)';
+        case AppLanguage.assamese: return 'স্মৃতি মিলান জোৰা সমাধান কৰা হ’ল (স্তৰ ২)';
+        case AppLanguage.bengali: return 'মেমরি ম্যাচ জোড়া সমাধান (স্তর ২)';
+        case AppLanguage.manipuri: return 'মেমোরি মেচ পেরে সমাধান তৌখ্রে (থাক ২)';
+        case AppLanguage.bodo: return 'गोसोआव दोननाय जोरा आनजाद (थाखो २)';
+        case AppLanguage.nepali: return 'स्मृति मिलान जोडी समाधान गरियो (तह २)';
+        case AppLanguage.mizo: return 'Hriatrengna Inmilh a zo fel (Level 2)';
+        case AppLanguage.english: default: return 'Memory Match Pairs Solved (Level 2)';
+      }
+    } else if (t.contains('chai') || t.contains('making morning chai')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'दैनिक दिनचर्या: सुबह की चाय बनाना अनुक्रमित';
+        case AppLanguage.assamese: return 'দৈনিক দিনচৰ্যা: ৰাতিপুৱাৰ চাহ বনোৱা সম্পূৰ্ণ';
+        case AppLanguage.bengali: return 'দৈনিক রুটিন: সকালের চা তৈরির ক্রম সম্পন্ন';
+        case AppLanguage.manipuri: return 'নোংমগী থবক: অয়ুক্কী চা শাবা লোইশিনখ্রে';
+        case AppLanguage.bodo: return 'सानफ्रोमनि हाबा: फुंनि साहा बानायनाय फारि';
+        case AppLanguage.nepali: return 'दैनिक दिनचर्या: बिहानको चिया बनाउने क्रम पूरा भयो';
+        case AppLanguage.mizo: return 'Ni tin thiltih: Zing thingpui lum dan indawt';
+        case AppLanguage.english: default: return 'Daily Routine: Making Morning Chai Sequenced';
+      }
+    } else if (t.contains('esp32') || t.contains('bio-tremor')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'ESP32 बायो-कंपन सेंसर फ़िल्टरिंग सक्रिय';
+        case AppLanguage.assamese: return 'ESP32 বায়’-ট্ৰেমৰ চেন্সৰ সক্ৰিয়';
+        case AppLanguage.bengali: return 'ESP32 বায়ো-কম্পন সেন্সর ফিল্টারিং সক্রিয়';
+        case AppLanguage.manipuri: return 'ESP32 সেন্সর এক্তিব লৈরে';
+        case AppLanguage.bodo: return 'ESP32 आखाय खौनाय सेन्सर सोलिदों';
+        case AppLanguage.nepali: return 'ESP32 कम्पन सेन्सर सक्रिय';
+        case AppLanguage.mizo: return 'ESP32 Kut khur filter a nung e';
+        case AppLanguage.english: default: return 'ESP32 Bio-Tremor Sensor Filtering Active';
+      }
+    }
+    return title;
+  }
+
+  static String trMilestoneSubtitle(String sub, [AppLanguage? lang]) {
+    final l = lang ?? instance.currentLanguage;
+    final s = sub.toLowerCase();
+    if (s.contains('clinical score') && s.contains('spatial')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'नैदानिक स्कोर 8.5/10 · आज, 09:15 AM · स्थानिक योजना';
+        case AppLanguage.assamese: return 'স্কোৰ ৮.৫/১০ · আজি, ০৯:১৫ AM · স্থানিক পৰিকল্পনা';
+        case AppLanguage.bengali: return 'ক্লিনিক্যাল স্কোর ৮.৫/১০ · আজ, ০৯:১৫ AM · স্থানিক পরিকল্পনা';
+        case AppLanguage.manipuri: return 'ক্লিনিকেল স্কোর ৮.৫/১০ · ঙসি, ০৯:১৫ AM';
+        case AppLanguage.bodo: return 'अनजिमा ८.५/१० · दिनै, ०९:१५ AM';
+        case AppLanguage.nepali: return 'क्लिनिकल स्कोर ८.५/१० · आज, ०९:१५ AM · स्थानिक योजना';
+        case AppLanguage.mizo: return 'Clinical score 8.5/10 · Vawiin, 09:15 AM · Hmun awmze ruahmanna';
+        case AppLanguage.english: default: return 'Clinical score 8.5/10 · Today, 09:15 AM · Spatial Planning';
+      }
+    } else if (s.contains('turn accuracy') || s.contains('12 moves')) {
+      switch (l) {
+        case AppLanguage.hindi: return 'सटीकता 86% · 12 चालें · आज, 08:45 AM';
+        case AppLanguage.assamese: return 'সঠিকতা ৮৬% · ১২ টা খোজ · আজি, ০৮:৪৫ AM';
+        case AppLanguage.bengali: return 'নির্ভুলতা ৮৬% · ১২টি চাল · আজ, ০৮:৪৫ AM';
+        case AppLanguage.manipuri: return 'অচুম্বা ৮৬% · খোঙথাং ১২ · ঙসি, ০৮:৪৫ AM';
+        case AppLanguage.bodo: return 'गोरोबनाय ८६% · १२ खोलोब · दिनै, ०८:४५ AM';
+        case AppLanguage.nepali: return 'शुद्धता ८६% · १२ चाल · आज, ०८:४५ AM';
+        case AppLanguage.mizo: return 'Dik zat 86% · Chetdan 12 · Vawiin, 08:45 AM';
+        case AppLanguage.english: default: return 'Turn accuracy 86% · 12 moves · Today, 08:45 AM';
+      }
+    } else if (s.contains('procedural sequence') || s.contains('3.2 mins')) {
+      switch (l) {
+        case AppLanguage.hindi: return '4-चरणीय अनुक्रम 3.2 मिनट में पूर्ण · कल';
+        case AppLanguage.assamese: return '৪-পদক্ষেপৰ ক্ৰম ৩.২ মিনিটত সম্পূৰ্ণ · কালি';
+        case AppLanguage.bengali: return '৪-ধাপের প্রক্রিয়া ৩.২ মিনিটে সম্পন্ন · গতকাল';
+        case AppLanguage.manipuri: return 'স্তেক ৪ গী থবক মিনিট ৩.২ দা লোইশিনখ্রে · ঙরাং';
+        case AppLanguage.bodo: return '४-थाखो हाबाफारि ३.२ मिनिटआव जोबबाय · मिया';
+        case AppLanguage.nepali: return '४-चरणको प्रक्रिया ३.२ मिनेटमा पूरा · हिजो';
+        case AppLanguage.mizo: return 'Step 4 awm chu minute 3.2 chhungin a zo · Nimin';
+        case AppLanguage.english: default: return '4-step procedural sequence completed in 3.2 mins · Yesterday';
+      }
+    } else if (s.contains('parkinsonian') || s.contains('neutralized')) {
+      switch (l) {
+        case AppLanguage.hindi: return '4-12 Hz कंपन संतुलित · 6 सितं, 02:30 PM';
+        case AppLanguage.assamese: return '৪-১২ Hz কঁপনি নিয়ন্ত্ৰিত · ৬ ছেপ্টেম্বৰ, ০২:৩০ PM';
+        case AppLanguage.bengali: return '৪-১২ Hz কম্পন নিয়ন্ত্রিত · ৬ সেপ্টেম্বর, ০২:৩০ PM';
+        case AppLanguage.manipuri: return '৪-১২ Hz কন্বা থিংখ্রে · ৬ সেপ্তেম্বর, ০২:৩০ PM';
+        case AppLanguage.bodo: return '४-१२ Hz आखाय खौनाय थि खालामबाय · ६ सेप्टेम्बर, ०२:३० PM';
+        case AppLanguage.nepali: return '४-१२ Hz कम्पन नियन्त्रित · ६ सेप्टेम्बर, ०२:३० PM';
+        case AppLanguage.mizo: return '4-12 Hz khurna tihtlem · 6 Sep, 02:30 PM';
+        case AppLanguage.english: default: return '4-12 Hz Parkinsonian tremor neutralized · 6 Sep, 02:30 PM';
+      }
+    }
+    return sub;
+  }
+
+  static String trMilestoneFilter(String filter, [AppLanguage? lang]) {
+    final l = lang ?? instance.currentLanguage;
+    switch (filter) {
+      case 'Memory Match':
+        switch (l) {
+          case AppLanguage.hindi: return 'स्मृति मिलान';
+          case AppLanguage.assamese: return 'স্মৃতি মিলান';
+          case AppLanguage.bengali: return 'মেমরি ম্যাচ';
+          case AppLanguage.manipuri: return 'মেমোরি মেচ';
+          case AppLanguage.bodo: return 'गोसोआव दोननाय';
+          case AppLanguage.nepali: return 'स्मृति मिलान';
+          case AppLanguage.mizo: return 'Memory Match';
+          case AppLanguage.english: default: return 'Memory Match';
+        }
+      case 'Routine Sequencer':
+        switch (l) {
+          case AppLanguage.hindi: return 'दिनचर्या अनुक्रमक';
+          case AppLanguage.assamese: return 'দিনচৰ্যা অনুক্ৰমক';
+          case AppLanguage.bengali: return 'রুটিন সিকোয়েন্সার';
+          case AppLanguage.manipuri: return 'থৌরাং অনুক্রমক';
+          case AppLanguage.bodo: return 'हाबाफारि फारि';
+          case AppLanguage.nepali: return 'दिनचर्या अनुक्रमक';
+          case AppLanguage.mizo: return 'Routine Sequencer';
+          case AppLanguage.english: default: return 'Routine Sequencer';
+        }
+      case 'Clock Drawing':
+        switch (l) {
+          case AppLanguage.hindi: return 'घड़ी चित्रांकन';
+          case AppLanguage.assamese: return 'ঘড়ী চিত্ৰাংকন';
+          case AppLanguage.bengali: return 'ঘড়ি অঙ্কন';
+          case AppLanguage.manipuri: return 'ঘড়ী য়েকপা';
+          case AppLanguage.bodo: return 'घडी आखिनाय';
+          case AppLanguage.nepali: return 'घडी चित्रांकन';
+          case AppLanguage.mizo: return 'Clock Drawing';
+          case AppLanguage.english: default: return 'Clock Drawing';
+        }
+      case 'All':
+      default:
+        switch (l) {
+          case AppLanguage.hindi: return 'सभी';
+          case AppLanguage.assamese: return 'সকলো';
+          case AppLanguage.bengali: return 'সমস্ত';
+          case AppLanguage.manipuri: return 'পুম্নমক';
+          case AppLanguage.bodo: return 'गासैबो';
+          case AppLanguage.nepali: return 'सबै';
+          case AppLanguage.mizo: return 'Zawng zawng';
+          case AppLanguage.english: default: return 'All';
+        }
+    }
+  }
+
   static String getCaregiverVoiceGreeting(AppLanguage lang, [String patientName = 'Ramesh']) {
     switch (lang) {
       case AppLanguage.hindi:

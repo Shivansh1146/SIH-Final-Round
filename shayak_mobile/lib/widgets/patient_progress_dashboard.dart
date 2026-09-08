@@ -49,9 +49,10 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
     return [78.0, 80.0, 82.0, 79.0, 85.0, 84.0, widget.stabilityScore.clamp(60.0, 100.0)];
   }
 
-  List<String> _getDayLabels() {
+  List<String> _getDayLabels([AppLanguage? lang]) {
+    final language = lang ?? LocalizationService.instance.currentLanguage;
     final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Today'];
-    return days;
+    return days.map((d) => LocalizationService.trDayLabel(d, language)).toList();
   }
 
   void _narrateProgress() {
@@ -108,397 +109,404 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 700;
+    return ValueListenableBuilder<AppLanguage>(
+      valueListenable: LocalizationService.languageNotifier,
+      builder: (context, lang, _) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isMobile = screenWidth < 700;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Top Header Row
-        Row(
+        return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
+            // Top Header Row
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppTheme.sageLight,
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: Text(
+                          LocalizationService.tr('your_journey', lang),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.forestGreen,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        LocalizationService.tr('progress_wellness', lang),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: isMobile ? 26.0 : 32.0,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.forestGreen,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        LocalizationService.tr('progress_wellness_sub', lang),
+                        style: GoogleFonts.inter(
+                          fontSize: isMobile ? 13.0 : 14.5,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Wrap(
+                  spacing: 6,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: _narrateProgress,
+                      icon: const Icon(Icons.volume_up_rounded, size: 16, color: AppTheme.forestGreen),
+                      label: Text(
+                        isMobile ? LocalizationService.tr('listen', lang) : LocalizationService.tr('listen_to_report', lang),
+                        style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppTheme.forestGreen),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        side: const BorderSide(color: AppTheme.surfaceBorder),
+                        padding: EdgeInsets.symmetric(horizontal: isMobile ? 10 : 16, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // 4 Highlight Metric Cards Grid
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final cols = constraints.maxWidth > 800 ? 4 : (constraints.maxWidth > 500 ? 2 : 1);
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    _buildMetricCard(
+                      width: (constraints.maxWidth - (cols - 1) * 12) / cols,
+                      badge: '🔥 ${LocalizationService.tr('daily_streak', lang)}',
+                      value: LocalizationService.tr('seven_days', lang),
+                      title: LocalizationService.tr('consistency_streak', lang),
+                      subtitle: LocalizationService.tr('adherence_this_week', lang),
+                      bgColor: AppTheme.warmPeach,
+                    ),
+                    _buildMetricCard(
+                      width: (constraints.maxWidth - (cols - 1) * 12) / cols,
+                      badge: '🎯 ${LocalizationService.tr('sessions_caps', lang)}',
+                      value: '${widget.totalSessions} ${LocalizationService.tr('completed_caps', lang)}',
+                      title: LocalizationService.tr('cognitive_activities', lang),
+                      subtitle: LocalizationService.tr('completed_this_week', lang),
+                      bgColor: AppTheme.sageLight,
+                    ),
+                    _buildMetricCard(
+                      width: (constraints.maxWidth - (cols - 1) * 12) / cols,
+                      badge: '🧠 ${LocalizationService.tr('accuracy_caps', lang)}',
+                      value: '${widget.avgAccuracy.toStringAsFixed(0)}%',
+                      title: LocalizationService.tr('working_memory_score', lang),
+                      subtitle: LocalizationService.tr('progression_vs_baseline', lang),
+                      bgColor: AppTheme.pastelYellow,
+                    ),
+                    _buildMetricCard(
+                      width: (constraints.maxWidth - (cols - 1) * 12) / cols,
+                      badge: '⚖️ ${LocalizationService.tr('kinematics_caps', lang)}',
+                      value: '${widget.stabilityScore.toStringAsFixed(0)}/100',
+                      title: LocalizationService.tr('motor_posture_balance', lang),
+                      subtitle: LocalizationService.tr('sensor_stabilized', lang),
+                      bgColor: AppTheme.pastelBlue,
+                    ),
+                  ],
+                );
+              },
+            ),
+
+            const SizedBox(height: 22),
+
+            // Interactive Progress Graph Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(22.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24.0),
+                border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.sageLight,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: Text(
-                      'YOUR JOURNEY',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.forestGreen,
-                        letterSpacing: 0.8,
+                  // Graph Header & Switchers
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                _selectedGraphType == 0 ? Icons.trending_up_rounded : Icons.sensors_rounded,
+                                color: AppTheme.forestGreen,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _selectedGraphType == 0
+                                    ? LocalizationService.tr('weekly_accuracy_trend', lang)
+                                    : LocalizationService.tr('motor_stability_index', lang),
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 16.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppTheme.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _selectedGraphType == 0
+                                ? LocalizationService.tr('tap_data_points', lang)
+                                : LocalizationService.tr('realtime_imu_curve', lang),
+                            style: GoogleFonts.inter(fontSize: 12.0, color: AppTheme.textSecondary),
+                          ),
+                        ],
                       ),
-                    ),
+
+                      // Graph Type Switcher Tabs
+                      Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: AppTheme.background,
+                          borderRadius: BorderRadius.circular(100),
+                          border: Border.all(color: AppTheme.surfaceBorder),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildGraphTab(LocalizationService.tr('memory_tab', lang), 0),
+                            _buildGraphTab(LocalizationService.tr('stability_tab', lang), 1),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Progress & Wellness',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: isMobile ? 26.0 : 32.0,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.forestGreen,
-                      letterSpacing: -0.5,
-                    ),
+
+                  const SizedBox(height: 20),
+
+                  // Interactive Custom Painted Graph
+                  SizedBox(
+                    height: 200,
+                    width: double.infinity,
+                    child: _selectedGraphType == 0
+                        ? _buildAccuracyChart(lang)
+                        : _buildStabilityBarChart(lang),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Consistent gentle practice nurtures brain reserve and physical confidence.',
-                    style: GoogleFonts.inter(
-                      fontSize: isMobile ? 13.0 : 14.5,
-                      color: AppTheme.textSecondary,
-                    ),
+
+                  const SizedBox(height: 14),
+
+                  // Graph Legend & Clinical Safe Zone Notes
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: const BoxDecoration(
+                              color: AppTheme.forestGreen,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(LocalizationService.tr('recorded_session_score', lang), style: GoogleFonts.inter(fontSize: 11.5, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
+                          const SizedBox(width: 16),
+                          Container(
+                            width: 16,
+                            height: 2,
+                            color: AppTheme.warmTerracotta.withOpacity(0.6),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(LocalizationService.tr('clinical_target', lang), style: GoogleFonts.inter(fontSize: 11.5, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppTheme.sageLight,
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: Text(
+                          LocalizationService.tr('ai_confidence', lang),
+                          style: GoogleFonts.plusJakartaSans(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppTheme.forestGreen),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            Wrap(
-              spacing: 6,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: _narrateProgress,
-                  icon: const Icon(Icons.volume_up_rounded, size: 16, color: AppTheme.forestGreen),
-                  label: Text(
-                    isMobile ? 'Listen' : 'Listen to Report',
-                    style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppTheme.forestGreen),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    side: const BorderSide(color: AppTheme.surfaceBorder),
-                    padding: EdgeInsets.symmetric(horizontal: isMobile ? 10 : 16, vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
 
-        const SizedBox(height: 20),
+            const SizedBox(height: 22),
 
-        // 4 Highlight Metric Cards Grid
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final cols = constraints.maxWidth > 800 ? 4 : (constraints.maxWidth > 500 ? 2 : 1);
-            return Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                _buildMetricCard(
-                  width: (constraints.maxWidth - (cols - 1) * 12) / cols,
-                  badge: '🔥 DAILY STREAK',
-                  value: '7 DAYS',
-                  title: 'Consistency Streak',
-                  subtitle: '100% adherence this week',
-                  bgColor: AppTheme.warmPeach,
-                ),
-                _buildMetricCard(
-                  width: (constraints.maxWidth - (cols - 1) * 12) / cols,
-                  badge: '🎯 SESSIONS',
-                  value: '${widget.totalSessions} COMPLETED',
-                  title: 'Cognitive Activities',
-                  subtitle: '+3 completed this week',
-                  bgColor: AppTheme.sageLight,
-                ),
-                _buildMetricCard(
-                  width: (constraints.maxWidth - (cols - 1) * 12) / cols,
-                  badge: '🧠 ACCURACY',
-                  value: '${widget.avgAccuracy.toStringAsFixed(0)}%',
-                  title: 'Working Memory Score',
-                  subtitle: '+6% progression vs baseline',
-                  bgColor: AppTheme.pastelYellow,
-                ),
-                _buildMetricCard(
-                  width: (constraints.maxWidth - (cols - 1) * 12) / cols,
-                  badge: '⚖️ KINEMATICS',
-                  value: '${widget.stabilityScore.toStringAsFixed(0)}/100',
-                  title: 'Motor & Posture Balance',
-                  subtitle: 'ESP32 sensor stabilized',
-                  bgColor: AppTheme.pastelBlue,
-                ),
-              ],
-            );
-          },
-        ),
-
-        const SizedBox(height: 22),
-
-        // Interactive Progress Graph Card
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(22.0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24.0),
-            border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+            // Cognitive Domain Progress Bars
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(22.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24.0),
+                border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
               ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Graph Header & Switchers
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Text(
+                    LocalizationService.tr('clinical_domains_title', lang),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    LocalizationService.tr('clinical_domains_sub', lang),
+                    style: GoogleFonts.inter(fontSize: 12.5, color: AppTheme.textSecondary),
+                  ),
+                  const SizedBox(height: 18),
+                  _buildDomainRow('Working Memory (Memory Match)', 0.86, '86%', AppTheme.forestGreen, 'Strong recognition', lang),
+                  const SizedBox(height: 14),
+                  _buildDomainRow('ADL Procedural Flow (Chai & Plants)', 0.92, '92%', const Color(0xFFE65100), 'Excellent sequence recall', lang),
+                  const SizedBox(height: 14),
+                  _buildDomainRow('Spatial & Executive Planning (Clock Canvas)', 0.85, '8.5/10', const Color(0xFF1976D2), 'Accurate contour & hands', lang),
+                  const SizedBox(height: 14),
+                  _buildDomainRow('Tremor Dampening & Kinematic Calm', 0.89, '89%', const Color(0xFF7B1FA2), '4-12 Hz jitter stabilized', lang),
+                  const SizedBox(height: 14),
+                  _buildDomainRow('Daily Reminder Adherence', 0.95, '95%', AppTheme.statusGreen, 'Active daily routine', lang),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 22),
+
+            // Recent Clinical Milestones and Activity History
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(22.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24.0),
+                border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            _selectedGraphType == 0 ? Icons.trending_up_rounded : Icons.sensors_rounded,
-                            color: AppTheme.forestGreen,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
                           Text(
-                            _selectedGraphType == 0 ? 'Weekly Cognitive Accuracy Trend' : 'Motor & Tremor Stability Index',
+                            LocalizationService.tr('recent_milestones_title', lang),
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 16.5,
                               fontWeight: FontWeight.w800,
                               color: AppTheme.textPrimary,
                             ),
                           ),
+                          const SizedBox(height: 2),
+                          Text(
+                            LocalizationService.tr('recent_milestones_sub', lang),
+                            style: GoogleFonts.inter(fontSize: 12.0, color: AppTheme.textSecondary),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _selectedGraphType == 0
-                            ? 'Tap data points to inspect individual session scores'
-                            : 'Real-time IMU posture and hand tremor dampening curve',
-                        style: GoogleFonts.inter(fontSize: 12.0, color: AppTheme.textSecondary),
-                      ),
-                    ],
-                  ),
-
-                  // Graph Type Switcher Tabs
-                  Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      color: AppTheme.background,
-                      borderRadius: BorderRadius.circular(100),
-                      border: Border.all(color: AppTheme.surfaceBorder),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildGraphTab('🧠 Memory', 0),
-                        _buildGraphTab('⚖️ Stability', 1),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // Interactive Custom Painted Graph
-              SizedBox(
-                height: 200,
-                width: double.infinity,
-                child: _selectedGraphType == 0
-                    ? _buildAccuracyChart()
-                    : _buildStabilityBarChart(),
-              ),
-
-              const SizedBox(height: 14),
-
-              // Graph Legend & Clinical Safe Zone Notes
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
                       Container(
-                        width: 10,
-                        height: 10,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.forestGreen,
-                          shape: BoxShape.circle,
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppTheme.sageLight,
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: Text(
+                          LocalizationService.tr('ai_engine_live', lang),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.forestGreen,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      Text('Recorded Session Score', style: GoogleFonts.inter(fontSize: 11.5, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
-                      const SizedBox(width: 16),
-                      Container(
-                        width: 16,
-                        height: 2,
-                        color: AppTheme.warmTerracotta.withOpacity(0.6),
-                      ),
-                      const SizedBox(width: 6),
-                      Text('Clinical Target (75%)', style: GoogleFonts.inter(fontSize: 11.5, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
                     ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppTheme.sageLight,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: Text(
-                      'AI Confidence: 94.2%',
-                      style: GoogleFonts.plusJakartaSans(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppTheme.forestGreen),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
 
-        const SizedBox(height: 22),
+                  const SizedBox(height: 16),
 
-        // Cognitive Domain Progress Bars
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(22.0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24.0),
-            border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Clinical Cognitive & Physical Domains',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 16.5,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Multi-modal evaluation across working memory, executive clock planning, and kinematic motor calm.',
-                style: GoogleFonts.inter(fontSize: 12.5, color: AppTheme.textSecondary),
-              ),
-              const SizedBox(height: 18),
-              _buildDomainRow('Working Memory (Memory Match)', 0.86, '86%', AppTheme.forestGreen, 'Strong recognition'),
-              const SizedBox(height: 14),
-              _buildDomainRow('ADL Procedural Flow (Chai & Plants)', 0.92, '92%', const Color(0xFFE65100), 'Excellent sequence recall'),
-              const SizedBox(height: 14),
-              _buildDomainRow('Spatial & Executive Planning (Clock Canvas)', 0.85, '8.5/10', const Color(0xFF1976D2), 'Accurate contour & hands'),
-              const SizedBox(height: 14),
-              _buildDomainRow('Tremor Dampening & Kinematic Calm', 0.89, '89%', const Color(0xFF7B1FA2), '4-12 Hz jitter stabilized'),
-              const SizedBox(height: 14),
-              _buildDomainRow('Daily Reminder Adherence', 0.95, '95%', AppTheme.statusGreen, 'Active daily routine'),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 22),
-
-        // Recent Clinical Milestones and Activity History
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(22.0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24.0),
-            border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Recent Clinical Milestones & History',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 16.5,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Verified session outcomes logged to your device',
-                        style: GoogleFonts.inter(fontSize: 12.0, color: AppTheme.textSecondary),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.sageLight,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: Text(
-                      'AI Engine Live',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.forestGreen,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Filter Chips
-              SizedBox(
-                height: 32,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: ['All', 'Memory Match', 'Routine Sequencer', 'Clock Drawing'].map((filter) {
-                    final isSel = _sessionFilter == filter;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: InkWell(
-                        onTap: () => setState(() => _sessionFilter = filter),
-                        borderRadius: BorderRadius.circular(100),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: isSel ? AppTheme.forestGreen : AppTheme.background,
+                  // Filter Chips
+                  SizedBox(
+                    height: 32,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: ['All', 'Memory Match', 'Routine Sequencer', 'Clock Drawing'].map((filter) {
+                        final isSel = _sessionFilter == filter;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: InkWell(
+                            onTap: () => setState(() => _sessionFilter = filter),
                             borderRadius: BorderRadius.circular(100),
-                            border: Border.all(
-                              color: isSel ? AppTheme.forestGreen : AppTheme.surfaceBorder,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: isSel ? AppTheme.forestGreen : AppTheme.background,
+                                borderRadius: BorderRadius.circular(100),
+                                border: Border.all(
+                                  color: isSel ? AppTheme.forestGreen : AppTheme.surfaceBorder,
+                                ),
+                              ),
+                              child: Text(
+                                LocalizationService.trMilestoneFilter(filter, lang),
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: isSel ? Colors.white : AppTheme.textSecondary,
+                                ),
+                              ),
                             ),
                           ),
-                          child: Text(
-                            filter,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: isSel ? Colors.white : AppTheme.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Dynamic Milestone List
+                  ..._buildMilestoneItems(lang),
+                ],
               ),
-
-              const SizedBox(height: 16),
-
-              // Dynamic Milestone List
-              ..._buildMilestoneItems(),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -598,9 +606,9 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
     );
   }
 
-  Widget _buildAccuracyChart() {
+  Widget _buildAccuracyChart([AppLanguage? lang]) {
     final data = _getAccuracyData();
-    final days = _getDayLabels();
+    final days = _getDayLabels(lang);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -618,9 +626,9 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
     );
   }
 
-  Widget _buildStabilityBarChart() {
+  Widget _buildStabilityBarChart([AppLanguage? lang]) {
     final data = _getStabilityData();
-    final days = _getDayLabels();
+    final days = _getDayLabels(lang);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -675,7 +683,8 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
     );
   }
 
-  Widget _buildDomainRow(String name, double progress, String valStr, Color color, String desc) {
+  Widget _buildDomainRow(String name, double progress, String valStr, Color color, String desc, [AppLanguage? lang]) {
+    final language = lang ?? LocalizationService.instance.currentLanguage;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -685,7 +694,7 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
             Row(
               children: [
                 Text(
-                  name,
+                  LocalizationService.trDomainName(name, language),
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w700,
@@ -694,7 +703,7 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '· $desc',
+                  '· ${LocalizationService.trDomainDesc(desc, language)}',
                   style: GoogleFonts.inter(fontSize: 11.5, color: AppTheme.textSecondary),
                 ),
               ],
@@ -723,35 +732,36 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
     );
   }
 
-  List<Widget> _buildMilestoneItems() {
+  List<Widget> _buildMilestoneItems([AppLanguage? lang]) {
+    final language = lang ?? LocalizationService.instance.currentLanguage;
     final List<Map<String, dynamic>> items = [
       {
-        'title': 'Clock Contour & Hand Placement Completed',
-        'subtitle': 'Clinical score 8.5/10 · Today, 09:15 AM · Spatial Planning',
+        'title': LocalizationService.trMilestoneTitle('Clock Contour & Hand Placement Completed', language),
+        'subtitle': LocalizationService.trMilestoneSubtitle('Clinical score 8.5/10 · Today, 09:15 AM · Spatial Planning', language),
         'icon': Icons.draw_rounded,
         'badge': '8.5 / 10',
         'type': 'Clock Drawing',
         'color': const Color(0xFF1976D2),
       },
       {
-        'title': 'Memory Match Pairs Solved (Level 2)',
-        'subtitle': 'Turn accuracy 86% · 12 moves · Today, 08:45 AM',
+        'title': LocalizationService.trMilestoneTitle('Memory Match Pairs Solved (Level 2)', language),
+        'subtitle': LocalizationService.trMilestoneSubtitle('Turn accuracy 86% · 12 moves · Today, 08:45 AM', language),
         'icon': Icons.psychology_rounded,
         'badge': '86% Acc',
         'type': 'Memory Match',
         'color': AppTheme.forestGreen,
       },
       {
-        'title': 'Daily Routine: Making Morning Chai Sequenced',
-        'subtitle': '4-step procedural sequence completed in 3.2 mins · Yesterday',
+        'title': LocalizationService.trMilestoneTitle('Daily Routine: Making Morning Chai Sequenced', language),
+        'subtitle': LocalizationService.trMilestoneSubtitle('4-step procedural sequence completed in 3.2 mins · Yesterday', language),
         'icon': Icons.coffee_rounded,
         'badge': '100% Sequence',
         'type': 'Routine Sequencer',
         'color': const Color(0xFFE65100),
       },
       {
-        'title': 'ESP32 Bio-Tremor Sensor Filtering Active',
-        'subtitle': '4-12 Hz Parkinsonian tremor neutralized · 6 Sep, 02:30 PM',
+        'title': LocalizationService.trMilestoneTitle('ESP32 Bio-Tremor Sensor Filtering Active', language),
+        'subtitle': LocalizationService.trMilestoneSubtitle('4-12 Hz Parkinsonian tremor neutralized · 6 Sep, 02:30 PM', language),
         'icon': Icons.sensors_rounded,
         'badge': '89/100 Stability',
         'type': 'Kinematics',

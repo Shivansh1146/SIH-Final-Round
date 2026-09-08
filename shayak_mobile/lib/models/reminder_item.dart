@@ -65,15 +65,43 @@ class ReminderItem {
   }
 
   factory ReminderItem.fromMap(Map<dynamic, dynamic> map) {
+    final title = (map['title'] ?? 'Reminder').toString();
+    final lowerTitle = title.toLowerCase();
+
+    ReminderCategory cat = ReminderCategory.values.firstWhere(
+      (e) => e.name == map['category'],
+      orElse: () {
+        if (lowerTitle.contains('med') || lowerTitle.contains('dawa') || lowerTitle.contains('pill') || lowerTitle.contains('donepezil') || lowerTitle.contains('memantine')) {
+          return ReminderCategory.medicine;
+        } else if (lowerTitle.contains('water') || lowerTitle.contains('hydrat')) {
+          return ReminderCategory.hydration;
+        } else if (lowerTitle.contains('lunch') || lowerTitle.contains('dinner') || lowerTitle.contains('breakfast') || lowerTitle.contains('meal') || lowerTitle.contains('vitamin')) {
+          return ReminderCategory.meal;
+        } else if (lowerTitle.contains('walk')) {
+          return ReminderCategory.walk;
+        } else if (lowerTitle.contains('match') || lowerTitle.contains('game') || lowerTitle.contains('memory')) {
+          return ReminderCategory.activity;
+        }
+        return ReminderCategory.medicine;
+      },
+    );
+
+    // If title has "medicine", ensure category is always medicine
+    if (lowerTitle.contains('med') || lowerTitle.contains('dawa') || lowerTitle.contains('pill') || lowerTitle.contains('donepezil') || lowerTitle.contains('memantine')) {
+      cat = ReminderCategory.medicine;
+    }
+
+    String emoji = map['emoji'] ?? '💊';
+    if (cat == ReminderCategory.medicine && (emoji == '🧠' || emoji.isEmpty)) {
+      emoji = '💊';
+    }
+
     return ReminderItem(
       id: map['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      title: map['title'] ?? 'Reminder',
+      title: title,
       time: TimeOfDay(hour: map['hour'] ?? 8, minute: map['minute'] ?? 0),
-      category: ReminderCategory.values.firstWhere(
-        (e) => e.name == map['category'],
-        orElse: () => ReminderCategory.medicine,
-      ),
-      emoji: map['emoji'] ?? '💊',
+      category: cat,
+      emoji: emoji,
       isCompleted: map['isCompleted'] ?? false,
       isRepeatingDaily: map['isRepeatingDaily'] ?? true,
       notes: map['notes'],
