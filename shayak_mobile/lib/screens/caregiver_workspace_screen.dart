@@ -10,6 +10,7 @@ import '../widgets/app_top_bar.dart';
 import '../widgets/app_sidebar.dart';
 import '../services/session_service.dart';
 import '../services/localization_service.dart';
+import '../services/api_config.dart';
 import '../models/patient_profile.dart';
 
 class CaregiverWorkspaceScreen extends StatefulWidget {
@@ -94,7 +95,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
 
   void _pollBackendUpdates() async {
     try {
-      final res = await http.get(Uri.parse('http://127.0.0.1:8000/api/v1/patient/PT-9042/history')).timeout(const Duration(seconds: 2));
+      final res = await http.get(Uri.parse('${ApiConfig.baseUrl}/api/v1/patient/PT-9042/history')).timeout(const Duration(seconds: 2));
       if (res.statusCode == 200 && mounted) {
         setState(() {});
       }
@@ -139,7 +140,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
 
   Future<void> _fetchPatientDifficulty() async {
     try {
-      final res = await http.get(Uri.parse('http://127.0.0.1:8000/api/v1/patient/PT-9042/history'));
+      final res = await http.get(Uri.parse('${ApiConfig.baseUrl}/api/v1/patient/PT-9042/history'));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (mounted) {
@@ -159,7 +160,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     });
     try {
       await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/v1/patient/PT-9042/difficulty'),
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/patient/PT-9042/difficulty'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'difficulty_level': level,
@@ -203,7 +204,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
   void _simulateSync() async {
     setState(() => _isSyncing = true);
     try {
-      await http.get(Uri.parse('http://127.0.0.1:8000/api/v1/patient/PT-9042/history')).timeout(const Duration(seconds: 2));
+      await http.get(Uri.parse('${ApiConfig.baseUrl}/api/v1/patient/PT-9042/history')).timeout(const Duration(seconds: 2));
     } catch (_) {}
     SessionService.instance.ensureDemoDataSeeded(forceRefresh: true);
     await Future.delayed(const Duration(milliseconds: 600));
@@ -229,7 +230,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     setState(() => _isLoadingAi = true);
     try {
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/v1/clinical/evaluate'),
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/clinical/evaluate'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'patient_id': 'PT-9042',

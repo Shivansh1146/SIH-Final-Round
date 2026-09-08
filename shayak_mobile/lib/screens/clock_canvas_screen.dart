@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import '../models/assessment_point.dart';
 import '../services/session_service.dart';
+import '../services/api_config.dart';
 import '../theme/app_theme.dart';
 
 /// ============================================================================
@@ -115,7 +116,7 @@ class _ClockCanvasScreenState extends State<ClockCanvasScreen> {
       final backendId =
           patientId.startsWith('patient-') ? 'PT-9042' : patientId;
       final res = await http
-          .get(Uri.parse('http://127.0.0.1:8000/api/v1/patient/$backendId/history'))
+          .get(Uri.parse('${ApiConfig.baseUrl}/api/v1/patient/$backendId/history'))
           .timeout(const Duration(seconds: 2));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as Map<String, dynamic>;
@@ -148,7 +149,7 @@ class _ClockCanvasScreenState extends State<ClockCanvasScreen> {
           patientId.startsWith('patient-') ? 'PT-9042' : patientId;
       http
           .post(
-            Uri.parse('http://127.0.0.1:8000/api/v1/patient/$backendId/difficulty'),
+            Uri.parse('${ApiConfig.baseUrl}/api/v1/patient/$backendId/difficulty'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
               'difficulty_level': tier.label,
@@ -315,7 +316,7 @@ class _ClockCanvasScreenState extends State<ClockCanvasScreen> {
 
       http
           .post(
-            Uri.parse('http://127.0.0.1:8000/api/v1/patient/$backendId/session'),
+            Uri.parse('${ApiConfig.baseUrl}/api/v1/patient/$backendId/session'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode(sessionRecord),
           )

@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import '../theme/app_theme.dart';
 import '../services/session_service.dart';
 import '../services/audio_narration_service.dart';
+import '../services/api_config.dart';
 
 enum RoutineDifficultyTier {
   gentle,
@@ -473,7 +474,7 @@ class _RoutineSequencerScreenState extends State<RoutineSequencerScreen> {
     try {
       final backendId = SessionService.activePatientId?.startsWith('patient-') == true ? 'PT-9042' : 'PT-9042';
       await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/v1/patient/$backendId/session'),
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/patient/$backendId/session'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'session_type': 'Daily Routine & ADL Sequencer',

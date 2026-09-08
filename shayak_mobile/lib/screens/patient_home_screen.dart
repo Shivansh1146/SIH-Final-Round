@@ -12,6 +12,7 @@ import '../models/patient_profile.dart';
 import '../services/audio_narration_service.dart';
 import '../services/reminder_service.dart';
 import '../services/localization_service.dart';
+import '../services/api_config.dart';
 import 'reminders_screen.dart';
 import 'memory_match_screen.dart';
 import 'clock_canvas_screen.dart';
@@ -93,7 +94,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
     try {
       final backendId = _patientId.startsWith('patient-') ? 'PT-9042' : _patientId;
-      final res = await http.get(Uri.parse('http://127.0.0.1:8000/api/v1/patient/$backendId/history'));
+      final res = await http.get(Uri.parse('${ApiConfig.baseUrl}/api/v1/patient/$backendId/history'));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (mounted) {

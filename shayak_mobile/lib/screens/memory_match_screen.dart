@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import '../services/session_service.dart';
+import '../services/api_config.dart';
 
 enum GameDifficultyTier {
   gentle,
@@ -203,7 +204,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
   Future<void> _fetchPatientDifficultyPreference() async {
     final patientId = SessionService.activePatientId ?? 'PT-9042';
     try {
-      final res = await http.get(Uri.parse('http://127.0.0.1:8000/api/v1/patient/$patientId/history'));
+      final res = await http.get(Uri.parse('${ApiConfig.baseUrl}/api/v1/patient/$patientId/history'));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         final levelStr = data['current_difficulty_level'] as String?;
@@ -379,7 +380,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
       };
 
       http.post(
-        Uri.parse('http://127.0.0.1:8000/api/v1/patient/$backendId/session'),
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/patient/$backendId/session'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(sessionRecord),
       ).catchError((_) => http.Response('{}', 500));
@@ -567,7 +568,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
     final patientId = SessionService.activePatientId ?? 'PT-9042';
     try {
       http.post(
-        Uri.parse('http://127.0.0.1:8000/api/v1/patient/$patientId/difficulty'),
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/patient/$patientId/difficulty'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'difficulty_level': tier.label,
