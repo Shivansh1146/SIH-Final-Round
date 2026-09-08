@@ -141,19 +141,6 @@ extension GameDifficultyTierExtension on GameDifficultyTier {
     }
   }
 
-  Color get accentColor {
-    switch (this) {
-      case GameDifficultyTier.gentle:
-        return const Color(0xFF00A86B);
-      case GameDifficultyTier.moderate:
-        return const Color(0xFF0288D1);
-      case GameDifficultyTier.challenging:
-        return const Color(0xFF7B1FA2);
-      case GameDifficultyTier.master:
-        return const Color(0xFFE64A19);
-    }
-  }
-
   int get pairCount {
     switch (this) {
       case GameDifficultyTier.gentle:
@@ -196,7 +183,7 @@ class MemoryMatchScreen extends StatefulWidget {
 }
 
 class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
-  GameDifficultyTier _currentTier = GameDifficultyTier.moderate;
+  GameDifficultyTier _currentTier = GameDifficultyTier.gentle;
   bool _isAdaptiveMode = true;
 
   late List<_CardItem> _cards;
@@ -645,44 +632,49 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 860),
+            constraints: const BoxConstraints(maxWidth: 820),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Column(
                 children: [
                   _buildDifficultyHeader(),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   _buildColorfulStatsBar(),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   Expanded(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         final crossAxis = _currentTier.gridCrossAxisCount;
                         final rowCount = (_cards.length / crossAxis).ceil();
-                        final availableHeight = constraints.maxHeight - (rowCount - 1) * 12;
-                        final availableWidth = constraints.maxWidth - (crossAxis - 1) * 12;
+                        const spacing = 10.0;
+
+                        final availableHeight = constraints.maxHeight - (rowCount - 1) * spacing;
+                        final availableWidth = constraints.maxWidth - (crossAxis - 1) * spacing;
+
                         final cardWidth = availableWidth / crossAxis;
-                        final cardHeight = availableHeight / rowCount;
-                        final ratio = (cardWidth / (cardHeight > 0 ? cardHeight : 1)).clamp(0.75, 1.30);
+                        final cardHeight = availableHeight / (rowCount > 0 ? rowCount : 1);
+
+                        // Exact aspect ratio guarantees every single tile fits 100% inside the screen
+                        final exactAspectRatio = cardWidth / (cardHeight > 0 ? cardHeight : cardWidth);
 
                         return GridView.builder(
-                          physics: const BouncingScrollPhysics(),
+                          physics: const NeverScrollableScrollPhysics(),
                           itemCount: _cards.length,
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: crossAxis,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: ratio,
+                            crossAxisSpacing: spacing,
+                            mainAxisSpacing: spacing,
+                            childAspectRatio: exactAspectRatio,
                           ),
                           itemBuilder: (context, index) {
                             final card = _cards[index];
-                            return _buildCardWidget(card, index);
+                            return _buildCardWidget(card, index, cardHeight);
                           },
                         );
                       },
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                 ],
               ),
             ),
@@ -694,15 +686,15 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
 
   Widget _buildColorfulStatsBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 6,
             offset: const Offset(0, 2),
           ),
         ],
@@ -716,14 +708,14 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
             icon: Icons.touch_app_rounded,
             gradient: const [Color(0xFF3B82F6), Color(0xFF2563EB)],
           ),
-          Container(width: 1, height: 28, color: const Color(0xFFE2E8F0)),
+          Container(width: 1, height: 24, color: const Color(0xFFE2E8F0)),
           _buildStatPill(
             label: 'Matched',
             value: '$_matchesFound / ${_currentTier.pairCount}',
             icon: Icons.stars_rounded,
             gradient: const [Color(0xFFF59E0B), Color(0xFFD97706)],
           ),
-          Container(width: 1, height: 28, color: const Color(0xFFE2E8F0)),
+          Container(width: 1, height: 24, color: const Color(0xFFE2E8F0)),
           _buildStatPill(
             label: 'Pace Tier',
             value: _currentTier.shortTitle,
@@ -745,20 +737,20 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 34,
-          height: 34,
+          width: 30,
+          height: 30,
           decoration: BoxDecoration(
             gradient: LinearGradient(colors: gradient),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
-                color: gradient[0].withOpacity(0.35),
-                blurRadius: 6,
+                color: gradient[0].withOpacity(0.3),
+                blurRadius: 5,
                 offset: const Offset(0, 2),
               ),
             ],
           ),
-          child: Icon(icon, size: 18, color: Colors.white),
+          child: Icon(icon, size: 16, color: Colors.white),
         ),
         const SizedBox(width: 8),
         Column(
@@ -768,7 +760,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
             Text(
               value,
               style: GoogleFonts.plusJakartaSans(
-                fontSize: 14.5,
+                fontSize: 13.5,
                 fontWeight: FontWeight.w800,
                 color: const Color(0xFF0F172A),
               ),
@@ -776,7 +768,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
             Text(
               label,
               style: GoogleFonts.inter(
-                fontSize: 10.5,
+                fontSize: 10.0,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF64748B),
               ),
@@ -789,16 +781,16 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
 
   Widget _buildDifficultyHeader() {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -811,22 +803,22 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(5),
+                    padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       color: _isAdaptiveMode ? const Color(0xFFECFDF5) : const Color(0xFFFFF7ED),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       _isAdaptiveMode ? Icons.auto_awesome_rounded : Icons.tune_rounded,
-                      size: 16,
+                      size: 15,
                       color: _isAdaptiveMode ? const Color(0xFF10B981) : const Color(0xFFF97316),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Text(
                     _isAdaptiveMode ? 'AI-Adaptive Pacing' : 'Manual Pacing',
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14.0,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w800,
                       color: const Color(0xFF0F172A),
                     ),
@@ -862,23 +854,23 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Row(
             children: GameDifficultyTier.values.map((tier) {
               final isSelected = _currentTier == tier;
               return Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 3.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 2.5),
                   child: InkWell(
                     onTap: () => _onManualDifficultySelected(tier),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 6),
                       decoration: BoxDecoration(
                         gradient: isSelected ? LinearGradient(colors: tier.themeGradient) : null,
                         color: isSelected ? null : const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isSelected ? Colors.transparent : const Color(0xFFCBD5E1),
                           width: isSelected ? 0 : 1,
@@ -886,9 +878,9 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: tier.themeGradient[0].withOpacity(0.4),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
+                                  color: tier.themeGradient[0].withOpacity(0.35),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
                                 ),
                               ]
                             : null,
@@ -899,16 +891,16 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
                           Text(
                             tier.shortTitle,
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12.0,
+                              fontSize: 11.5,
                               fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
                               color: isSelected ? Colors.white : const Color(0xFF334155),
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 1),
                           Text(
                             '${tier.pairCount * 2} Cards',
                             style: GoogleFonts.inter(
-                              fontSize: 10.0,
+                              fontSize: 9.5,
                               fontWeight: FontWeight.w600,
                               color: isSelected ? Colors.white.withOpacity(0.9) : const Color(0xFF64748B),
                             ),
@@ -935,7 +927,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(100),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: isActive ? const Color(0xFF0F172A) : Colors.transparent,
           borderRadius: BorderRadius.circular(100),
@@ -943,7 +935,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
         child: Text(
           label,
           style: GoogleFonts.plusJakartaSans(
-            fontSize: 11.5,
+            fontSize: 11.0,
             fontWeight: FontWeight.w700,
             color: isActive ? Colors.white : const Color(0xFF64748B),
           ),
@@ -952,7 +944,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
     );
   }
 
-  Widget _buildCardWidget(_CardItem card, int index) {
+  Widget _buildCardWidget(_CardItem card, int index, double cardHeight) {
     final showFace = card.isFlipped || card.isMatched;
     final theme = _kCardThemes[card.emoji] ??
         const _CardThemeInfo(
@@ -963,13 +955,16 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
           shadowColor: Color(0x66FF5E62),
         );
 
+    final emojiSize = (cardHeight * 0.38).clamp(24.0, 56.0);
+    final iconSize = (cardHeight * 0.28).clamp(20.0, 40.0);
+
     return GestureDetector(
       onTap: () => _onCardTap(index),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutBack,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22.0),
+          borderRadius: BorderRadius.circular(18.0),
           gradient: showFace
               ? LinearGradient(
                   colors: theme.gradient,
@@ -984,28 +979,28 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
           border: Border.all(
             color: card.isMatched
                 ? const Color(0xFFFFD700)
-                : (showFace ? Colors.white.withOpacity(0.8) : const Color(0xFF475569)),
+                : (showFace ? Colors.white.withOpacity(0.85) : const Color(0xFF475569)),
             width: card.isMatched ? 3.0 : 1.5,
           ),
           boxShadow: [
             BoxShadow(
               color: showFace ? theme.shadowColor : Colors.black.withOpacity(0.12),
-              blurRadius: showFace ? 14 : 8,
-              offset: const Offset(0, 6),
+              blurRadius: showFace ? 12 : 6,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(22.0),
+          borderRadius: BorderRadius.circular(18.0),
           child: Stack(
             children: [
               // Background playful decorative shapes
               Positioned(
-                top: -15,
-                right: -15,
+                top: -10,
+                right: -10,
                 child: Container(
-                  width: 60,
-                  height: 60,
+                  width: 50,
+                  height: 50,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(showFace ? 0.15 : 0.05),
                     shape: BoxShape.circle,
@@ -1013,11 +1008,11 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
                 ),
               ),
               Positioned(
-                bottom: -20,
-                left: -20,
+                bottom: -15,
+                left: -15,
                 child: Container(
-                  width: 70,
-                  height: 70,
+                  width: 60,
+                  height: 60,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(showFace ? 0.10 : 0.04),
                     shape: BoxShape.circle,
@@ -1028,7 +1023,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
               // Card Content (Face vs Back)
               Center(
                 child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
+                  duration: const Duration(milliseconds: 200),
                   transitionBuilder: (child, animation) {
                     return ScaleTransition(scale: animation, child: child);
                   },
@@ -1036,30 +1031,29 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
                       ? Column(
                           key: ValueKey('face_${card.id}'),
                           mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(10),
+                              padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 color: Colors.white.withOpacity(0.92),
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.15),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
                                   ),
                                 ],
                               ),
                               child: Text(
                                 card.emoji,
-                                style: TextStyle(
-                                  fontSize: _currentTier == GameDifficultyTier.gentle ? 44.0 : 32.0,
-                                ),
+                                style: TextStyle(fontSize: emojiSize),
                               ),
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 5),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
                                 color: Colors.black.withOpacity(0.25),
                                 borderRadius: BorderRadius.circular(100),
@@ -1067,10 +1061,10 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
                               child: Text(
                                 card.isMatched ? 'MATCH! ⭐' : theme.title,
                                 style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 10.5,
+                                  fontSize: 10.0,
                                   fontWeight: FontWeight.w800,
                                   color: card.isMatched ? const Color(0xFFFFD700) : Colors.white,
-                                  letterSpacing: 0.4,
+                                  letterSpacing: 0.3,
                                 ),
                               ),
                             ),
@@ -1079,10 +1073,11 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
                       : Column(
                           key: ValueKey('back_${card.id}'),
                           mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Container(
-                              width: _currentTier == GameDifficultyTier.gentle ? 56 : 42,
-                              height: _currentTier == GameDifficultyTier.gentle ? 56 : 42,
+                              width: iconSize * 1.6,
+                              height: iconSize * 1.6,
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
                                   colors: [Color(0xFF38BDF8), Color(0xFF818CF8)],
@@ -1093,27 +1088,27 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
                                 boxShadow: [
                                   BoxShadow(
                                     color: const Color(0xFF38BDF8).withOpacity(0.4),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
                                   ),
                                 ],
                               ),
                               child: Center(
                                 child: Icon(
                                   Icons.star_rounded,
-                                  size: _currentTier == GameDifficultyTier.gentle ? 32 : 24,
+                                  size: iconSize,
                                   color: Colors.white,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 4),
                             Text(
                               'TAP ME',
                               style: GoogleFonts.plusJakartaSans(
-                                fontSize: 9.5,
+                                fontSize: 9.0,
                                 fontWeight: FontWeight.w800,
                                 color: const Color(0xFF94A3B8),
-                                letterSpacing: 1.0,
+                                letterSpacing: 0.8,
                               ),
                             ),
                           ],
@@ -1141,4 +1136,3 @@ class _CardItem {
     this.isMatched = false,
   });
 }
-
