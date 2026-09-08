@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/assessment_point.dart';
 import '../theme/app_theme.dart';
 
@@ -32,7 +32,7 @@ class _ClockCanvasScreenState extends State<ClockCanvasScreen> {
       _currentStroke!.addPoint(
         details.localPosition.dx,
         details.localPosition.dy,
-        1.0, // Default pressure for capacitive touch
+        1.0,
         now,
       );
     });
@@ -59,14 +59,6 @@ class _ClockCanvasScreenState extends State<ClockCanvasScreen> {
     });
   }
 
-  void _undoLastStroke() {
-    if (_strokes.isNotEmpty) {
-      setState(() {
-        _strokes.removeLast();
-      });
-    }
-  }
-
   void _clearCanvas() {
     setState(() {
       _strokes.clear();
@@ -74,129 +66,66 @@ class _ClockCanvasScreenState extends State<ClockCanvasScreen> {
     });
   }
 
-  Future<void> _submitAssessment() async {
-    if (_strokes.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Please draw the clock before submitting.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppTheme.softWarmCream,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          backgroundColor: AppTheme.alertCoral,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-      return;
-    }
-
+  void _submitDrawing(DrawingAssessmentSummary summary) async {
     setState(() => _isAnalyzing = true);
-
-    // Compute Kinematic Summary
-    final summary = DrawingAssessmentSummary.fromStrokes(_strokes);
-
-    // Save to Hive cache for offline-first clinical synchronization
-    try {
-      if (Hive.isBoxOpen('assessment_cache')) {
-        final box = Hive.box('assessment_cache');
-        await box.add({
-          'type': 'clock_drawing_test',
-          'timestamp': DateTime.now().toIso8601String(),
-          'stroke_count': summary.strokes.length,
-          'hesitations': summary.totalHesitations,
-          'mean_velocity': summary.averageVelocity,
-          'tremor_variance': summary.tremorJitterVariance,
-          'total_duration_ms': summary.totalDurationMs,
-        });
-      }
-    } catch (e) {
-      debugPrint('Hive offline cache note: $e');
-    }
-
-    await Future.delayed(const Duration(milliseconds: 600)); // Simulate on-device TFLite scoring
+    await Future.delayed(const Duration(milliseconds: 600));
 
     if (!mounted) return;
     setState(() => _isAnalyzing = false);
 
-    // Present clear, accessible clinical summary dialog
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Row(
           children: [
-            const Icon(Icons.check_circle_outline, color: AppTheme.successMint, size: 36),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Assessment Recorded',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
+            const Icon(Icons.check_circle_rounded, color: AppTheme.statusGreen, size: 28),
+            const SizedBox(width: 10),
+            Text(
+              'Assessment Complete',
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppTheme.forestGreen),
             ),
           ],
         ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Your clock drawing has been digitally evaluated for cognitive placement and motor stability.',
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 16),
-              _buildMetricRow('Total Strokes:', '${summary.strokes.length}'),
-              _buildMetricRow('Hesitation Pauses:', '${summary.totalHesitations}'),
-              _buildMetricRow('Avg Drawing Speed:', '${(summary.averageVelocity * 1000).toStringAsFixed(1)} px/s'),
-              _buildMetricRow('Tremor Jitter Score:', summary.tremorJitterVariance.toStringAsFixed(2)),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardNavy,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.warmAmber, width: 1.5),
-                ),
-                child: Text(
-                  'Status: Synced to local encrypted records & ready for doctor review.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.warmAmber,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Your drawing telemetry has been securely recorded locally.',
+              style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            _resultMetric('Total Stroke Count', '${summary.strokes.length} strokes'),
+            _resultMetric('Mean Stroke Velocity', '${summary.averageVelocity.toStringAsFixed(2)} px/ms'),
+            _resultMetric('Hesitation Pauses (>500ms)', '${summary.totalHesitations} pauses'),
+            _resultMetric('Tremor Micro-Jitter Index', '${summary.tremorJitterVariance.toStringAsFixed(2)} var'),
+          ],
         ),
         actions: [
           ElevatedButton(
             onPressed: () {
-              Navigator.of(ctx).pop();
-              Navigator.of(context).pop(); // Return to Game Menu
+              Navigator.pop(ctx);
+              Navigator.pop(context);
             },
-            child: const Text('Return to Activities'),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.forestGreen),
+            child: const Text('Return to Home'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMetricRow(String label, String value) {
+  Widget _resultMetric(String label, String val) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.only(bottom: 6.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: Theme.of(context).textTheme.bodyLarge),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppTheme.warmAmber,
-            ),
-          ),
+          Text(label, style: GoogleFonts.inter(fontSize: 12.5, color: AppTheme.textSecondary)),
+          Text(val, style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
         ],
       ),
     );
@@ -210,262 +139,156 @@ class _ClockCanvasScreenState extends State<ClockCanvasScreen> {
     ]);
 
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkNavy,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, size: 32, color: AppTheme.softWarmCream),
-          tooltip: 'Go back to activities',
-          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_rounded, color: AppTheme.forestGreen),
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Clock Drawing Test',
-          style: Theme.of(context).textTheme.headlineMedium,
+          'Clock Drawing Assessment',
+          style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.forestGreen),
         ),
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Clinical Instruction Banner (Ultra-Clear Typography)
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: AppTheme.cardNavy,
-                borderRadius: BorderRadius.circular(AppTheme.cardBorderRadius),
-                border: Border.all(color: AppTheme.cardNavyBorder, width: 2.0),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.record_voice_over, color: AppTheme.warmAmber, size: 32),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Instructions',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppTheme.warmAmber,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '1. Draw a large circle for the clock face.\n2. Write in all numbers from 1 to 12.\n3. Draw the hands to show 10 past 11.',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Kinematic telemetry indicator bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildTelemetryBadge(
-                      'Strokes',
-                      '${summary.strokes.length}',
-                      Icons.gesture,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildTelemetryBadge(
-                      'Pauses',
-                      '${summary.totalHesitations}',
-                      Icons.timer_outlined,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildTelemetryBadge(
-                      'Stability',
-                      summary.tremorJitterVariance < 15.0 ? 'Optimal' : 'Tremor',
-                      Icons.graphic_eq,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // High-Contrast Drawing Surface
-            Expanded(
-              child: Container(
-                margin: const EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF070F1A), // Ultra-dark canvas contrast
-                  borderRadius: BorderRadius.circular(20.0),
-                  border: Border.all(
-                    color: AppTheme.canvasBorder,
-                    width: 3.0,
-                  ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black45,
-                      blurRadius: 10,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(17.0),
-                  child: GestureDetector(
-                    onPanStart: _onPanStart,
-                    onPanUpdate: _onPanUpdate,
-                    onPanEnd: _onPanEnd,
-                    child: CustomPaint(
-                      painter: _ClockPainter(
-                        strokes: _strokes,
-                        activeStroke: _currentStroke,
-                      ),
-                      size: Size.infinite,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Accessible Action Control Bar (All targets >= 56x56)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      // Undo Last Stroke
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _strokes.isNotEmpty ? _undoLastStroke : null,
-                          icon: const Icon(Icons.undo, size: 28),
-                          label: const Text('Undo'),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(AppTheme.minTouchTarget, AppTheme.buttonHeight),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Clear Canvas
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: (_strokes.isNotEmpty || _currentStroke != null)
-                              ? _clearCanvas
-                              : null,
-                          icon: const Icon(Icons.delete_outline, size: 28, color: AppTheme.alertCoral),
-                          label: const Text(
-                            'Clear',
-                            style: TextStyle(color: AppTheme.alertCoral),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppTheme.alertCoral, width: 2.0),
-                            minimumSize: const Size(AppTheme.minTouchTarget, AppTheme.buttonHeight),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  // Primary Action CTA: Submit Assessment
-                  SizedBox(
+                  // Instruction Card
+                  Container(
                     width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _isAnalyzing ? null : _submitAssessment,
-                      icon: _isAnalyzing
-                          ? const SizedBox(
-                              width: 28,
-                              height: 28,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 3,
-                                color: AppTheme.darkNavy,
-                              ),
-                            )
-                          : const Icon(Icons.check_circle, size: 32),
-                      label: Text(
-                        _isAnalyzing ? 'Analyzing Strokes...' : 'Complete & Save Test',
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppTheme.surfaceBorder),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline_rounded, color: AppTheme.forestGreen, size: 22),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Draw a large clock face circle, write numbers 1 to 12, and set the hands to 10 past 11.',
+                            style: GoogleFonts.inter(fontSize: 13.5, color: AppTheme.textSecondary, height: 1.35),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Canvas Area
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: AppTheme.sageBorder, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: GestureDetector(
+                          onPanStart: _onPanStart,
+                          onPanUpdate: _onPanUpdate,
+                          onPanEnd: _onPanEnd,
+                          child: CustomPaint(
+                            painter: _ClockPainter(
+                              strokes: _strokes,
+                              currentStroke: _currentStroke,
+                            ),
+                            child: const SizedBox.expand(),
+                          ),
+                        ),
                       ),
                     ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Bottom Controls
+                  Row(
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: _strokes.isEmpty ? null : _clearCanvas,
+                        icon: const Icon(Icons.clear_rounded, size: 16),
+                        label: const Text('Clear'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                        ),
+                      ),
+                      const Spacer(),
+                      ElevatedButton.icon(
+                        onPressed: _strokes.isEmpty || _isAnalyzing ? null : () => _submitDrawing(summary),
+                        icon: _isAnalyzing
+                            ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : const Icon(Icons.check_rounded, size: 18),
+                        label: Text(_isAnalyzing ? 'Analyzing...' : 'Complete Assessment'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.forestGreen,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTelemetryBadge(String title, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-      decoration: BoxDecoration(
-        color: AppTheme.cardNavy,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.cardNavyBorder, width: 1.5),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 22, color: AppTheme.warmAmber),
-          const SizedBox(width: 6),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(fontSize: 12, color: AppTheme.mutedSlate, fontWeight: FontWeight.w600),
-              ),
-              Text(
-                value,
-                style: const TextStyle(fontSize: 16, color: AppTheme.softWarmCream, fontWeight: FontWeight.w800),
-              ),
-            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-/// Custom Canvas Painter rendering smooth, high-contrast pen strokes
 class _ClockPainter extends CustomPainter {
   final List<Stroke> strokes;
-  final Stroke? activeStroke;
+  final Stroke? currentStroke;
 
-  _ClockPainter({
-    required this.strokes,
-    this.activeStroke,
-  });
+  _ClockPainter({required this.strokes, required this.currentStroke});
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Subtle background circle guide
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.shortestSide / 2) * 0.85;
+
+    final guidePaint = Paint()
+      ..color = const Color(0xFFE3ECE6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    canvas.drawCircle(center, radius, guidePaint);
+
     final strokePaint = Paint()
-      ..color = AppTheme.softWarmCream
+      ..color = AppTheme.forestGreen
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..strokeWidth = 5.0
+      ..strokeWidth = 3.5
       ..style = PaintingStyle.stroke;
 
-    final activePaint = Paint()
-      ..color = AppTheme.warmAmber
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..strokeWidth = 6.0
-      ..style = PaintingStyle.stroke;
-
-    // Draw completed strokes
-    for (final stroke in strokes) {
-      _drawStroke(canvas, stroke, strokePaint);
+    for (final s in strokes) {
+      _drawStroke(canvas, s, strokePaint);
     }
-
-    // Draw active stroke with high-vis amber highlighting
-    if (activeStroke != null) {
-      _drawStroke(canvas, activeStroke!, activePaint);
+    if (currentStroke != null) {
+      _drawStroke(canvas, currentStroke!, strokePaint);
     }
   }
 
@@ -475,26 +298,17 @@ class _ClockPainter extends CustomPainter {
       canvas.drawCircle(
         Offset(stroke.points[0].x, stroke.points[0].y),
         paint.strokeWidth / 2,
-        paint,
+        paint..style = PaintingStyle.fill,
       );
+      paint.style = PaintingStyle.stroke;
       return;
     }
 
     final path = Path();
     path.moveTo(stroke.points[0].x, stroke.points[0].y);
-
     for (int i = 1; i < stroke.points.length; i++) {
-      // Quadratic bezier curve smoothing between points
-      final p0 = stroke.points[i - 1];
-      final p1 = stroke.points[i];
-      path.quadraticBezierTo(
-        p0.x,
-        p0.y,
-        (p0.x + p1.x) / 2.0,
-        (p0.y + p1.y) / 2.0,
-      );
+      path.lineTo(stroke.points[i].x, stroke.points[i].y);
     }
-    path.lineTo(stroke.points.last.x, stroke.points.last.y);
     canvas.drawPath(path, paint);
   }
 

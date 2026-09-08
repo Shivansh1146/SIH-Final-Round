@@ -4,7 +4,6 @@ import '../theme/app_theme.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/app_sidebar.dart';
 import 'memory_match_screen.dart';
-import 'clock_canvas_screen.dart';
 
 class PatientHomeScreen extends StatefulWidget {
   final ValueChanged<AppViewMode> onNavigate;

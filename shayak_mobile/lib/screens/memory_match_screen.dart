@@ -302,7 +302,6 @@ class _CardItem {
   _CardItem({
     required this.id,
     required this.emoji,
-    this.isFlipped = false,
-    this.isMatched = false,
-  });
+  })  : isFlipped = false,
+        isMatched = false;
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
 import '../widgets/app_top_bar.dart';
 import 'landing_screen.dart';
 import 'patient_home_screen.dart';
