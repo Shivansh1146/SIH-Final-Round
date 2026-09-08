@@ -2,193 +2,151 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// ============================================================================
-/// SHAYAK-AI: Accessible Elderly Design System & Theme
-/// Conforms to WCAG AAA contrast standards (minimum 7:1 ratio for regular text,
-/// 4.5:1 for large text). Optimized specifically for individuals with cognitive
-/// decline, cataracts/visual impairment, and Parkinsonian motor tremors.
+/// SHAYAK-AI: Warm Organic & Accessible Design System
+/// Replicates the exact tranquil sage, forest teal, warm terracotta,
+/// and ivory aesthetic tailored for elderly cognitive care and caregiver clarity.
 /// ============================================================================
 class AppTheme {
-  // Primary Palette Tokens (High Contrast WCAG AAA)
-  static const Color darkNavy = Color(0xFF0B192C);      // Deep canvas background
-  static const Color cardNavy = Color(0xFF1E3E62);      // Elevated surface containers
-  static const Color cardNavyBorder = Color(0xFF4A709C);// High-visibility container outline
-  static const Color softWarmCream = Color(0xFFFBF8EF); // High-contrast primary text & surface
-  static const Color warmAmber = Color(0xFFF5A623);     // Primary accent / Action callout
-  static const Color vibrantCyan = Color(0xFF00E5FF);   // Secondary informational accent
-  static const Color alertCoral = Color(0xFFE63946);    // High-visibility critical indicator
-  static const Color successMint = Color(0xFF2EC4B6);   // Confirmation / Completion indicator
-  static const Color mutedSlate = Color(0xFFB0BEC5);    // High-contrast secondary text (> 4.5:1 on dark)
-  static const Color canvasBorder = Color(0xFFD4AF37);  // Clock canvas boundary gold
+  // Brand Palette
+  static const Color background = Color(0xFFF4F7F4);          // Soft ivory/sage canvas
+  static const Color surface = Color(0xFFFFFFFF);             // Pure white card surfaces
+  static const Color surfaceSubtle = Color(0xFFF8FAF8);       // Subtle card background
+  static const Color surfaceBorder = Color(0xFFE3ECE6);       // Crisp subtle border
+  
+  static const Color forestGreen = Color(0xFF134E3F);         // Primary brand dark green
+  static const Color forestTealCard = Color(0xFF1B5A46);      // Hero activity card green
+  static const Color forestTealDark = Color(0xFF0F3A2E);      // Deep forest header tone
+  static const Color sageLight = Color(0xFFE7F0EA);           // Sage badge/card container
+  static const Color sageBorder = Color(0xFFCDE0D4);          // Sage container outline
+  
+  static const Color warmTerracotta = Color(0xFFD97736);      // Accent warm terracotta / orange
+  static const Color warmPeach = Color(0xFFFDE8D8);           // Peach button / pill surface
+  static const Color warmPeachDark = Color(0xFFF5BD93);       // Darker peach border/hover
+  static const Color warmOchre = Color(0xFFC86B32);           // Header gradient accent
+  
+  static const Color textPrimary = Color(0xFF15332B);         // High-contrast primary text
+  static const Color textSecondary = Color(0xFF5A756C);       // Muted secondary text
+  static const Color textLight = Color(0xFF8BA39A);           // Subtle captions
+  
+  static const Color pastelPink = Color(0xFFFDE8EC);          // Brain / activity chip
+  static const Color pastelBlue = Color(0xFFEAF1FB);          // Lunch / info chip
+  static const Color pastelYellow = Color(0xFFFEF7E0);        // Medicine / alert chip
+  
+  static const Color statusGreen = Color(0xFF22C55E);         // Live sync green dot
+  static const Color alertCoral = Color(0xFFE63946);          // Alert indicator
 
-  // Accessibility Touch Metrics
-  static const double minTouchTarget = 56.0;   // WCAG standard minimum tap target
-  static const double buttonHeight = 64.0;     // Large accessible buttons for tremor tolerance
-  static const double cardBorderRadius = 18.0; // High visual demarcation roundedness
-  static const double iconSizeLarge = 36.0;    // Prominent iconography
-  static const double iconSizeHero = 48.0;
-
-  /// High-Contrast Dark Theme Specification
-  static ThemeData get highContrastTheme {
-    final baseTypography = GoogleFonts.outfitTextTheme();
-
+  static ThemeData get themeData {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: darkNavy,
-      primaryColor: warmAmber,
-      canvasColor: darkNavy,
-      cardColor: cardNavy,
+      scaffoldBackgroundColor: background,
+      primaryColor: forestGreen,
+      canvasColor: background,
+      cardColor: surface,
 
-      colorScheme: const ColorScheme(
-        brightness: Brightness.dark,
-        primary: warmAmber,
-        onPrimary: darkNavy,
-        secondary: softWarmCream,
-        onSecondary: darkNavy,
-        surface: cardNavy,
-        onSurface: softWarmCream,
+      colorScheme: const ColorScheme.light(
+        primary: forestGreen,
+        onPrimary: Colors.white,
+        secondary: warmTerracotta,
+        onSecondary: Colors.white,
+        surface: surface,
+        onSurface: textPrimary,
         error: alertCoral,
-        onError: softWarmCream,
       ),
 
-      // WCAG AAA Scaled Typography (Min 18pt body, 28pt+ headings)
       textTheme: TextTheme(
-        displayLarge: GoogleFonts.outfit(
-          fontSize: 34.0,
+        displayLarge: GoogleFonts.plusJakartaSans(
+          fontSize: 42.0,
           fontWeight: FontWeight.w800,
-          color: softWarmCream,
-          letterSpacing: 0.2,
-          height: 1.25,
+          color: textPrimary,
+          letterSpacing: -0.8,
+          height: 1.15,
         ),
-        displayMedium: GoogleFonts.outfit(
-          fontSize: 28.0,
-          fontWeight: FontWeight.w700,
-          color: softWarmCream,
-          letterSpacing: 0.1,
-          height: 1.3,
+        displayMedium: GoogleFonts.plusJakartaSans(
+          fontSize: 32.0,
+          fontWeight: FontWeight.w800,
+          color: textPrimary,
+          letterSpacing: -0.5,
+          height: 1.2,
         ),
-        headlineLarge: GoogleFonts.outfit(
+        headlineLarge: GoogleFonts.plusJakartaSans(
           fontSize: 26.0,
           fontWeight: FontWeight.w700,
-          color: softWarmCream,
-          height: 1.3,
+          color: textPrimary,
+          letterSpacing: -0.3,
         ),
-        headlineMedium: GoogleFonts.outfit(
-          fontSize: 22.0,
-          fontWeight: FontWeight.w600,
-          color: softWarmCream,
-          height: 1.35,
-        ),
-        titleLarge: GoogleFonts.outfit(
+        headlineMedium: GoogleFonts.plusJakartaSans(
           fontSize: 20.0,
           fontWeight: FontWeight.w700,
-          color: softWarmCream,
-          height: 1.35,
+          color: textPrimary,
         ),
-        titleMedium: GoogleFonts.outfit(
-          fontSize: 18.0,
-          fontWeight: FontWeight.w600,
-          color: warmAmber,
-          height: 1.35,
-        ),
-        bodyLarge: GoogleFonts.outfit(
-          fontSize: 18.0,
-          fontWeight: FontWeight.w500,
-          color: softWarmCream,
-          letterSpacing: 0.15,
-          height: 1.5,
-        ),
-        bodyMedium: GoogleFonts.outfit(
-          fontSize: 18.0,
-          fontWeight: FontWeight.w400,
-          color: mutedSlate,
-          letterSpacing: 0.15,
-          height: 1.45,
-        ),
-        labelLarge: GoogleFonts.outfit(
+        titleLarge: GoogleFonts.plusJakartaSans(
           fontSize: 18.0,
           fontWeight: FontWeight.w700,
-          color: darkNavy,
-          letterSpacing: 0.3,
+          color: textPrimary,
+        ),
+        titleMedium: GoogleFonts.plusJakartaSans(
+          fontSize: 16.0,
+          fontWeight: FontWeight.w600,
+          color: textPrimary,
+        ),
+        bodyLarge: GoogleFonts.inter(
+          fontSize: 16.0,
+          fontWeight: FontWeight.w400,
+          color: textSecondary,
+          height: 1.5,
+        ),
+        bodyMedium: GoogleFonts.inter(
+          fontSize: 14.0,
+          fontWeight: FontWeight.w400,
+          color: textSecondary,
+          height: 1.45,
+        ),
+        labelLarge: GoogleFonts.plusJakartaSans(
+          fontSize: 15.0,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
         ),
       ),
 
-      // Accessible Card Theme with 2px high-contrast borders
-      cardTheme: CardTheme(
-        color: cardNavy,
-        elevation: 4.0,
+      cardTheme: CardThemeData(
+        color: surface,
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(cardBorderRadius),
-          side: const BorderSide(color: cardNavyBorder, width: 2.0),
+          borderRadius: BorderRadius.circular(20.0),
+          side: const BorderSide(color: surfaceBorder, width: 1.2),
         ),
-        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+        margin: EdgeInsets.zero,
       ),
 
-      // Ultra-Accessible Large Target Elevated Buttons
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: warmAmber,
-          foregroundColor: darkNavy,
-          minimumSize: const Size(minTouchTarget, buttonHeight),
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          elevation: 6.0,
-          shadowColor: Colors.black54,
+          backgroundColor: forestGreen,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 14.0),
+          elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
-            side: const BorderSide(color: softWarmCream, width: 2.0),
+            borderRadius: BorderRadius.circular(100.0),
           ),
-          textStyle: GoogleFonts.outfit(
-            fontSize: 20.0,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.3,
-          ),
-        ),
-      ),
-
-      // Outlined Buttons with clear high-contrast borders
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: softWarmCream,
-          minimumSize: const Size(minTouchTarget, buttonHeight),
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          side: const BorderSide(color: softWarmCream, width: 2.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
-          ),
-          textStyle: GoogleFonts.outfit(
-            fontSize: 18.0,
+          textStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 16.0,
             fontWeight: FontWeight.w700,
           ),
         ),
       ),
 
-      // Bottom Navigation Theme (large icons with guaranteed persistent text labels)
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: darkNavy,
-        selectedItemColor: warmAmber,
-        unselectedItemColor: mutedSlate,
-        selectedLabelStyle: TextStyle(
-          fontSize: 16.0,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.2,
-        ),
-        unselectedLabelStyle: TextStyle(
-          fontSize: 15.0,
-          fontWeight: FontWeight.w600,
-        ),
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
-        elevation: 12.0,
-      ),
-
-      // Dialogs with thick border indicators
-      dialogTheme: DialogTheme(
-        backgroundColor: darkNavy,
-        elevation: 16.0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.0),
-          side: const BorderSide(color: softWarmCream, width: 2.5),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: textPrimary,
+          backgroundColor: surface,
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+          side: const BorderSide(color: surfaceBorder, width: 1.4),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(100.0),
+          ),
+          textStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 15.0,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
