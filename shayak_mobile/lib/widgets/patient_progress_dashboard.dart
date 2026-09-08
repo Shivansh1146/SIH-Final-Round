@@ -64,40 +64,35 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
             'आप 7 दिनों की निरंतरता पर हैं और आपने ${widget.totalSessions} अभ्यास सत्र पूरे किए हैं। '
             'आपकी औसत स्मृति सटीकता ${widget.avgAccuracy.toStringAsFixed(0)} प्रतिशत है और स्थिरता स्कोर ${widget.stabilityScore.toStringAsFixed(0)} है। बहुत अच्छा प्रदर्शन!';
         break;
+      case AppLanguage.assamese:
+        speechText = 'নমস্কাৰ ${widget.patientDisplayName}। এইটো আপোনাৰ অগ্ৰগতি প্ৰতিবেদন। '
+            'আপুনি ৭ দিনৰ ধাৰাবাহিকতাত আছে আৰু ${widget.totalSessions} টা অনুশীলন সম্পূৰ্ণ কৰিছে। '
+            'আপোনাৰ গড় সঠিকতা ${widget.avgAccuracy.toStringAsFixed(0)} শতাংশ আৰু স্থিৰতা স্কোৰ ${widget.stabilityScore.toStringAsFixed(0)}। অতি উত্তম অগ্ৰগতি!';
+        break;
       case AppLanguage.bengali:
         speechText = 'নমস্কার ${widget.patientDisplayName}। এটি আপনার অগ্রগতি রিপোর্ট। '
             'আপনি ৭ দিনের ধারাবাহিকতায় রয়েছেন এবং ${widget.totalSessions} টি সেশন সম্পন্ন করেছেন। '
             'আপনার গড় নির্ভুলতা ${widget.avgAccuracy.toStringAsFixed(0)} শতাংশ। দারুণ উন্নতি!';
         break;
-      case AppLanguage.gujarati:
-        speechText = 'નમસ્તે ${widget.patientDisplayName}। આ તમારો પ્રગતિ અહેવાલ છે. '
-            'તમે 7 દિવસની સાતત્યતા પર છો અને ${widget.totalSessions} સત્રો પૂર્ણ કર્યા છે. '
-            'તમારી સરેરાશ ચોકસાઈ ${widget.avgAccuracy.toStringAsFixed(0)} ટકા છે. ઉત્તમ પ્રગતિ!';
+      case AppLanguage.manipuri:
+        speechText = 'খুরুমজরি ${widget.patientDisplayName}। মসি নহাক্কী চাউখৎলকপগী রিপোর্তনি। '
+            'নহাক্না নুমিৎ ৭গী চাং নাইবা সেসন ${widget.totalSessions} লোইশিনখ্রে। '
+            'নহাক্কী নিংশিংবা অচুম্বা চাদা ${widget.avgAccuracy.toStringAsFixed(0)} অমসুং স্তেবিলিতি স্কোর ${widget.stabilityScore.toStringAsFixed(0)}নি। য়াম্না ফরে!';
         break;
-      case AppLanguage.tamil:
-        speechText = 'வணக்கம் ${widget.patientDisplayName}. இது உங்கள் முன்னேற்ற அறிக்கை. '
-            'நீங்கள் 7 நாட்கள் தொடர்ச்சியுடன் ${widget.totalSessions} அமர்வுகளை முடித்துள்ளீர்கள். '
-            'உங்கள் துல்லியம் ${widget.avgAccuracy.toStringAsFixed(0)} சதவீதம்.';
+      case AppLanguage.bodo:
+        speechText = 'खुलुमबाय ${widget.patientDisplayName}। बेयो नोंथांनि जौगानाय रिपर्ट। '
+            'नोंथाङा सान ७ नि फारियाव ${widget.totalSessions} सानजाद फुंखांबाय। '
+            'नोंथांनि गोरोबनाय बिबाङा ${widget.avgAccuracy.toStringAsFixed(0)} जौखोन्दो। साबायखर!';
         break;
-      case AppLanguage.telugu:
-        speechText = 'నమస్కారం ${widget.patientDisplayName}. ఇది మీ పురోగతి నివేదిక. '
-            'మీరు 7 రోజుల స్థిరత్వంతో ${widget.totalSessions} సెషన్లను పూర్తి చేశారు.';
+      case AppLanguage.nepali:
+        speechText = 'नमस्ते ${widget.patientDisplayName}। यो तपाईंको प्रगति प्रतिवेदन हो। '
+            'तपाईं ७ दिनको निरन्तरतामा हुनुहुन्छ र ${widget.totalSessions} सत्रहरू पूरा गर्नुभएको छ। '
+            'तपाईंको औसत शुद्धता ${widget.avgAccuracy.toStringAsFixed(0)} प्रतिशत र स्थिरता स्कोर ${widget.stabilityScore.toStringAsFixed(0)} छ। धेरै राम्रो!';
         break;
-      case AppLanguage.marathi:
-        speechText = 'नमस्कार ${widget.patientDisplayName}. हा आपला प्रगती अहवाल आहे. '
-            'तुम्ही 7 दिवसांच्या सातत्यासह ${widget.totalSessions} सत्रे पूर्ण केली आहेत.';
-        break;
-      case AppLanguage.kannada:
-        speechText = 'ನಮಸ್ಕಾರ ${widget.patientDisplayName}. ಇದು ನಿಮ್ಮ ಪ್ರಗತಿ ವರದಿ. '
-            'ನೀವು 7 ದಿನಗಳ ನಿರಂತರತೆಯೊಂದಿಗೆ ${widget.totalSessions} ಸೆಷನ್‌ಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಿದ್ದೀರಿ.';
-        break;
-      case AppLanguage.malayalam:
-        speechText = 'നമസ്കാരം ${widget.patientDisplayName}. ഇത് നിങ്ങളുടെ പുരോഗതി റിപ്പോർട്ടാണ്. '
-            'നിങ്ങൾ 7 ദിവസത്തെ തുടർച്ചയോടെ ${widget.totalSessions} സെഷനുകൾ പൂർത്തിയാക്കി.';
-        break;
-      case AppLanguage.punjabi:
-        speechText = 'ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ ${widget.patientDisplayName}। ਇਹ ਤੁਹਾਡੀ ਪ੍ਰਗਤੀ ਰਿਪੋਰਟ ਹੈ। '
-            'ਤੁਸੀਂ 7 ਦਿਨਾਂ ਦੀ ਨਿਰੰਤਰਤਾ ਨਾਲ ${widget.totalSessions} ਸੈਸ਼ਨ ਪੂਰੇ ਕੀਤੇ ਹਨ।';
+      case AppLanguage.mizo:
+        speechText = 'Chibai ${widget.patientDisplayName}. Hei hi i hmasawnna report a ni e. '
+            'Ni 7 chhung zawnin session ${widget.totalSessions} i zo tawh a. '
+            'I hriatrengna dik zat chu ${widget.avgAccuracy.toStringAsFixed(0)}% a ni a, stability score chu ${widget.stabilityScore.toStringAsFixed(0)} a ni. I ti tha hle mai!';
         break;
       case AppLanguage.english:
       default:

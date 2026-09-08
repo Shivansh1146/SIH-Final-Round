@@ -54,14 +54,12 @@ class AudioNarrationService extends ChangeNotifier {
   String _mapLanguageToLocale(AppLanguage lang) {
     switch (lang) {
       case AppLanguage.hindi:     return 'hi-IN';
+      case AppLanguage.assamese:  return 'as-IN';
       case AppLanguage.bengali:   return 'bn-IN';
-      case AppLanguage.tamil:     return 'ta-IN';
-      case AppLanguage.telugu:    return 'te-IN';
-      case AppLanguage.marathi:   return 'mr-IN';
-      case AppLanguage.gujarati:  return 'gu-IN';
-      case AppLanguage.kannada:   return 'kn-IN';
-      case AppLanguage.malayalam: return 'ml-IN';
-      case AppLanguage.punjabi:   return 'pa-IN';
+      case AppLanguage.manipuri:  return 'mni-IN';
+      case AppLanguage.bodo:      return 'brx-IN';
+      case AppLanguage.nepali:    return 'ne-NP';
+      case AppLanguage.mizo:      return 'lus-IN';
       case AppLanguage.english:
       default:                    return 'en-US';
     }

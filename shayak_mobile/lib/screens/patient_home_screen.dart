@@ -125,37 +125,29 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         textToRead = "शुभ प्रभात $_patientDisplayName। आज की मुख्य गतिविधि स्मृति मिलान (Memory Match) है। "
             "आपने $_totalSessions अभ्यास सत्र पूरे किए हैं और आपकी औसत सटीकता ${_avgAccuracy.toStringAsFixed(0)} प्रतिशत है।";
         break;
+      case AppLanguage.assamese:
+        textToRead = "শুভ প্ৰভাত $_patientDisplayName। আজিৰ মুখ্য কাৰ্যকলাপ স্মৃতি মিলন (Memory Match)। "
+            "আপুনি $_totalSessions টা অনুশীলন সম্পূৰ্ণ কৰিছে আৰু আপোনাৰ গড় সঠিকতা ${_avgAccuracy.toStringAsFixed(0)} শতাংশ।";
+        break;
       case AppLanguage.bengali:
         textToRead = "সুপ্রভাত $_patientDisplayName। আজকের প্রধান কার্যকলাপ স্মৃতি মেলানো (Memory Match)। "
             "আপনি $_totalSessions টি সেশন সম্পন্ন করেছেন এবং গড় নির্ভুলতা ${_avgAccuracy.toStringAsFixed(0)} শতাংশ।";
         break;
-      case AppLanguage.tamil:
-        textToRead = "காலை வணக்கம் $_patientDisplayName. இன்றைய முக்கிய செயல்பாடு நினைவக பொருத்தம் (Memory Match). "
-            "நீங்கள் $_totalSessions அமர்வுகளை முடித்துள்ளீர்கள்.";
+      case AppLanguage.manipuri:
+        textToRead = "নুমিৎ খাবল $_patientDisplayName। ঙসিগী মরুওইবা থবক নিংশিংবা চাংয়েং (Memory Match) নি। "
+            "নহাক্না সেসন $_totalSessions লোইশিনখ্রে অমসুং অচুম্বা চাং চাদা ${_avgAccuracy.toStringAsFixed(0)} নি।";
         break;
-      case AppLanguage.telugu:
-        textToRead = "శుభోదయం $_patientDisplayName. నేటి ముఖ్య కార్యాచరణ జ్ఞాపకశక్తి సరిపోలిక (Memory Match). "
-            "మీరు $_totalSessions సెషన్లను పూర్తి చేశారు.";
+      case AppLanguage.bodo:
+        textToRead = "फुंबिलिनि खुलुमबाय $_patientDisplayName। दिनैनि गाहाय हाबाफारिया गोसोखांथि गोरोबनाय (Memory Match)। "
+            "नोंथाङा $_totalSessions खेब आनजाद फुंखांबाय आरो गोरोबनाय बिबाङा ${_avgAccuracy.toStringAsFixed(0)} जौखोन्दो।";
         break;
-      case AppLanguage.marathi:
-        textToRead = "शुभ प्रभात $_patientDisplayName. आजचा मुख्य खेळ स्मृती जुळवणी (Memory Match) आहे. "
-            "तुम्ही $_totalSessions सत्रे पूर्ण केली आहेत.";
+      case AppLanguage.nepali:
+        textToRead = "शुभ प्रभात $_patientDisplayName। आजको मुख्य गतिविधि स्मरण मिलान (Memory Match) हो। "
+            "तपाईंले $_totalSessions सत्रहरू पूरा गर्नुभएको छ र औसत शुद्धता ${_avgAccuracy.toStringAsFixed(0)} प्रतिशत छ।";
         break;
-      case AppLanguage.gujarati:
-        textToRead = "શુભ સવાર $_patientDisplayName. આજની મુખ્ય પ્રવૃત્તિ યાદશક્તિ મેચ (Memory Match) છે. "
-            "તમે $_totalSessions સત્રો પૂર્ણ કર્યા છે.";
-        break;
-      case AppLanguage.kannada:
-        textToRead = "ಶುಭೋದಯ $_patientDisplayName. ಇಂದಿನ ಮುಖ್ಯ ಆಟ ನೆನಪಿನ ಹೊಂದಾಣಿಕೆ (Memory Match). "
-            "ನೀವು $_totalSessions ಸೆಷನ್‌ಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಿದ್ದೀರಿ.";
-        break;
-      case AppLanguage.malayalam:
-        textToRead = "സുപ്രഭാതം $_patientDisplayName. ഇന്നത്തെ പ്രധാന പ്രവർത്തനം ഓർമ്മ പൊരുത്തം (Memory Match) ആണ്. "
-            "നിങ്ങൾ $_totalSessions സെഷനുകൾ പൂർത്തിയാക്കി.";
-        break;
-      case AppLanguage.punjabi:
-        textToRead = "ਸ਼ੁਭ ਸਵੇਰ $_patientDisplayName. ਅੱਜ ਦੀ ਮੁੱਖ ਗਤੀਵਿਧੀ ਯਾਦਦਾਸ਼ਤ ਮੇਲ (Memory Match) ਹੈ। "
-            "ਤੁਸੀਂ $_totalSessions ਸੈਸ਼ਨ ਪੂਰੇ ਕੀਤੇ ਹਨ।";
+      case AppLanguage.mizo:
+        textToRead = "Chibai zing chibai $_patientDisplayName. Vawiin thiltih ber chu Hriatrengna Inmilh (Memory Match) a ni. "
+            "Session $_totalSessions i zo tawh a, i ti tha hle mai (${_avgAccuracy.toStringAsFixed(0)}%).";
         break;
       case AppLanguage.english:
       default:

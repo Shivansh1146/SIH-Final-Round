@@ -1,18 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-/// All supported UI languages for SAHAYAK-AI
+/// All supported UI languages for SAHAYAK-AI (English, Hindi, and NER North-Eastern Region Languages)
 enum AppLanguage {
   english,
   hindi,
+  assamese,
   bengali,
-  tamil,
-  telugu,
-  marathi,
-  gujarati,
-  kannada,
-  malayalam,
-  punjabi,
+  manipuri,
+  bodo,
+  nepali,
+  mizo,
 }
 
 extension AppLanguageExt on AppLanguage {
@@ -20,14 +18,12 @@ extension AppLanguageExt on AppLanguage {
     switch (this) {
       case AppLanguage.english:   return 'English';
       case AppLanguage.hindi:     return 'हिंदी (Hindi)';
+      case AppLanguage.assamese:  return 'অসমীয়া (Assamese)';
       case AppLanguage.bengali:   return 'বাংলা (Bengali)';
-      case AppLanguage.tamil:     return 'தமிழ் (Tamil)';
-      case AppLanguage.telugu:    return 'తెలుగు (Telugu)';
-      case AppLanguage.marathi:   return 'मराठी (Marathi)';
-      case AppLanguage.gujarati:  return 'ગુજરાતી (Gujarati)';
-      case AppLanguage.kannada:   return 'ಕನ್ನಡ (Kannada)';
-      case AppLanguage.malayalam: return 'മലയാളം (Malayalam)';
-      case AppLanguage.punjabi:   return 'ਪੰਜਾਬੀ (Punjabi)';
+      case AppLanguage.manipuri:  return 'মৈতৈলোন্ (Manipuri)';
+      case AppLanguage.bodo:      return 'बड़ो (Bodo)';
+      case AppLanguage.nepali:    return 'नेपाली (Nepali)';
+      case AppLanguage.mizo:      return 'Mizo ṭawng (Mizo)';
     }
   }
 
@@ -35,14 +31,12 @@ extension AppLanguageExt on AppLanguage {
     switch (this) {
       case AppLanguage.english:   return '🇬🇧';
       case AppLanguage.hindi:     return '🇮🇳';
-      case AppLanguage.bengali:   return '🇧🇩';
-      case AppLanguage.tamil:     return '🇮🇳';
-      case AppLanguage.telugu:    return '🇮🇳';
-      case AppLanguage.marathi:   return '🇮🇳';
-      case AppLanguage.gujarati:  return '🇮🇳';
-      case AppLanguage.kannada:   return '🇮🇳';
-      case AppLanguage.malayalam: return '🇮🇳';
-      case AppLanguage.punjabi:   return '🇮🇳';
+      case AppLanguage.assamese:  return '🇮🇳';
+      case AppLanguage.bengali:   return '🇮🇳';
+      case AppLanguage.manipuri:  return '🇮🇳';
+      case AppLanguage.bodo:      return '🇮🇳';
+      case AppLanguage.nepali:    return '🇳🇵';
+      case AppLanguage.mizo:      return '🇮🇳';
     }
   }
 }
