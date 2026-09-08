@@ -70,8 +70,8 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     _fetchPatientDifficulty();
     // Re-render line graph whenever a game session is saved
     SessionService.instance.addListener(_onSessionUpdate);
-    // Automatic live background sync & clock update every 10 seconds
-    _autoSyncTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+    // Automatic live background sync & clock update every 2 seconds
+    _autoSyncTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       if (mounted) {
         setState(() {
           _lastSyncTime = DateTime.now();
@@ -693,7 +693,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
               ),
               const Spacer(),
               Text(
-                'LIVE AUTO-SYNC (10s)',
+                'LIVE AUTO-SYNC (2s)',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w800,
