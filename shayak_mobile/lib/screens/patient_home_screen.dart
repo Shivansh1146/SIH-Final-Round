@@ -38,6 +38,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     _profile = PatientProfile.loadFromHive();
     _loadReminders();
     ReminderService.instance.addListener(_onReminderServiceChanged);
+    PatientProfile.activeProfileNotifier.addListener(_onActiveProfileChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -49,7 +50,16 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   @override
   void dispose() {
     ReminderService.instance.removeListener(_onReminderServiceChanged);
+    PatientProfile.activeProfileNotifier.removeListener(_onActiveProfileChanged);
     super.dispose();
+  }
+
+  void _onActiveProfileChanged() {
+    if (mounted) {
+      setState(() {
+        _profile = PatientProfile.loadFromHive();
+      });
+    }
   }
 
   void _onReminderServiceChanged() {

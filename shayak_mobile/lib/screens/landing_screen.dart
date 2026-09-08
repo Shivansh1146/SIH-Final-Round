@@ -20,6 +20,21 @@ class _LandingScreenState extends State<LandingScreen> {
   void initState() {
     super.initState();
     _profile = PatientProfile.loadFromHive();
+    PatientProfile.activeProfileNotifier.addListener(_onActiveProfileChanged);
+  }
+
+  @override
+  void dispose() {
+    PatientProfile.activeProfileNotifier.removeListener(_onActiveProfileChanged);
+    super.dispose();
+  }
+
+  void _onActiveProfileChanged() {
+    if (mounted) {
+      setState(() {
+        _profile = PatientProfile.loadFromHive();
+      });
+    }
   }
 
   @override

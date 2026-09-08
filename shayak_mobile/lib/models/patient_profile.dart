@@ -150,28 +150,140 @@ class PatientProfile {
 
   // ── Hive helpers ────────────────────────────────────────────────────────────
 
-  static PatientProfile? loadFromHive() {
+  static final ValueNotifier<String?> activeProfileNotifier = ValueNotifier<String?>(null);
+
+  static List<PatientProfile> get defaultDemoProfiles => [
+        PatientProfile(
+          id: 'patient-ramesh',
+          fullName: 'Ramesh Kumar',
+          age: 68,
+          gender: Gender.male,
+          city: 'Assam',
+          diagnosis: 'Mild Cognitive Impairment',
+          preferredLanguage: AppLanguage.english,
+          registeredAt: DateTime.now(),
+          linkCode: 'SAH-9042-RAME',
+        ),
+        PatientProfile(
+          id: 'patient-monalisa',
+          fullName: 'Monalisa Barua',
+          age: 64,
+          gender: Gender.female,
+          city: 'Assam',
+          diagnosis: 'Early Stage Dementia',
+          preferredLanguage: AppLanguage.hindi,
+          registeredAt: DateTime.now(),
+          linkCode: 'SAH-8812-MONA',
+        ),
+        PatientProfile(
+          id: 'patient-tenzin',
+          fullName: 'Tenzin Dorjee',
+          age: 72,
+          gender: Gender.male,
+          city: 'Arunachal Pradesh',
+          diagnosis: 'Postural & Kinematic Stability Monitoring',
+          preferredLanguage: AppLanguage.english,
+          registeredAt: DateTime.now(),
+          linkCode: 'SAH-7631-TENZ',
+        ),
+      ];
+
+  static List<PatientProfile> loadAllFromHive() {
     try {
       final box = Hive.box('user_preferences');
-      final saved = box.get('patient_profile');
-      if (saved != null) {
-        return PatientProfile.fromMap(Map<dynamic, dynamic>.from(saved));
+      final savedList = box.get('saved_profiles');
+      if (savedList != null && savedList is List && savedList.isNotEmpty) {
+        return savedList
+            .map((e) => PatientProfile.fromMap(Map<dynamic, dynamic>.from(e)))
+            .toList();
       }
+    } catch (_) {}
+
+    final defaults = defaultDemoProfiles;
+    saveAllToHive(defaults);
+    try {
+      final box = Hive.box('user_preferences');
+      if (box.get('active_patient_id') == null) {
+        box.put('active_patient_id', defaults.first.id);
+      }
+    } catch (_) {}
+    return defaults;
+  }
+
+  static void saveAllToHive(List<PatientProfile> profiles) {
+    try {
+      final box = Hive.box('user_preferences');
+      final listMap = profiles.map((e) => e.toMap()).toList();
+      box.put('saved_profiles', listMap);
+    } catch (_) {}
+  }
+
+  static PatientProfile? loadFromHive() {
+    try {
+      final all = loadAllFromHive();
+      if (all.isEmpty) return null;
+
+      final box = Hive.box('user_preferences');
+      final activeId = box.get('active_patient_id') as String?;
+      if (activeId != null) {
+        final match = all.firstWhere((p) => p.id == activeId, orElse: () => all.first);
+        return match;
+      }
+      return all.first;
     } catch (_) {}
     return null;
   }
 
-  void saveToHive() {
+  static void setActiveProfile(String id) {
     try {
       final box = Hive.box('user_preferences');
-      box.put('patient_profile', toMap());
+      box.put('active_patient_id', id);
+      activeProfileNotifier.value = id;
+    } catch (_) {}
+  }
+
+  void saveToHive() {
+    try {
+      final all = loadAllFromHive();
+      final existingIdx = all.indexWhere((p) => p.id == id);
+      if (existingIdx != -1) {
+        all[existingIdx] = this;
+      } else {
+        all.add(this);
+      }
+      saveAllToHive(all);
+      setActiveProfile(id);
+    } catch (_) {}
+  }
+
+  static void deleteProfileFromHive(String id) {
+    try {
+      final all = loadAllFromHive();
+      all.removeWhere((p) => p.id == id);
+      saveAllToHive(all);
+
+      final box = Hive.box('user_preferences');
+      final activeId = box.get('active_patient_id');
+      if (activeId == id) {
+        if (all.isNotEmpty) {
+          setActiveProfile(all.first.id);
+        } else {
+          box.delete('active_patient_id');
+          activeProfileNotifier.value = null;
+        }
+      } else {
+        activeProfileNotifier.value = DateTime.now().millisecondsSinceEpoch.toString();
+      }
     } catch (_) {}
   }
 
   static void clearFromHive() {
     try {
       final box = Hive.box('user_preferences');
+      box.delete('saved_profiles');
+      box.delete('active_patient_id');
       box.delete('patient_profile');
+      activeProfileNotifier.value = null;
     } catch (_) {}
   }
 
