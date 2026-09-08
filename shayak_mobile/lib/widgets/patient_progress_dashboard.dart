@@ -810,27 +810,36 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                Text(
-                  LocalizationService.trDomainName(name, language),
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
-                  ),
+            Expanded(
+              child: RichText(
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: LocalizationService.trDomainName(name, language),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13.0,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    TextSpan(
+                      text: ' · ${LocalizationService.trDomainDesc(desc, language)}',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.0,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  '· ${LocalizationService.trDomainDesc(desc, language)}',
-                  style: GoogleFonts.inter(fontSize: 11.5, color: AppTheme.textSecondary),
-                ),
-              ],
+              ),
             ),
+            const SizedBox(width: 8),
             Text(
               valStr,
               style: GoogleFonts.plusJakartaSans(
-                fontSize: 13.5,
+                fontSize: 13.0,
                 fontWeight: FontWeight.w800,
                 color: color,
               ),
