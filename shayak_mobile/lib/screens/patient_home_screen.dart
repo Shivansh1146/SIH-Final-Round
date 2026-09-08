@@ -118,40 +118,41 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
     setState(() => _isPlayingAudio = true);
     final currentLang = LocalizationService.instance.currentLanguage;
+    final timeGreeting = LocalizationService.getTimeGreeting(currentLang).replaceAll(',', '').trim();
     String textToRead;
 
     switch (currentLang) {
       case AppLanguage.hindi:
-        textToRead = "शुभ प्रभात $_patientDisplayName। आज की मुख्य गतिविधि स्मृति मिलान (Memory Match) है। "
+        textToRead = "$timeGreeting $_patientDisplayName। आज की मुख्य गतिविधि स्मृति मिलान (Memory Match) है। "
             "आपने $_totalSessions अभ्यास सत्र पूरे किए हैं और आपकी औसत सटीकता ${_avgAccuracy.toStringAsFixed(0)} प्रतिशत है।";
         break;
       case AppLanguage.assamese:
-        textToRead = "শুভ প্ৰভাত $_patientDisplayName। আজিৰ মুখ্য কাৰ্যকলাপ স্মৃতি মিলন (Memory Match)। "
+        textToRead = "$timeGreeting $_patientDisplayName। আজিৰ মুখ্য কাৰ্যকলাপ স্মৃতি মিলন (Memory Match)। "
             "আপুনি $_totalSessions টা অনুশীলন সম্পূৰ্ণ কৰিছে আৰু আপোনাৰ গড় সঠিকতা ${_avgAccuracy.toStringAsFixed(0)} শতাংশ।";
         break;
       case AppLanguage.bengali:
-        textToRead = "সুপ্রভাত $_patientDisplayName। আজকের প্রধান কার্যকলাপ স্মৃতি মেলানো (Memory Match)। "
+        textToRead = "$timeGreeting $_patientDisplayName। আজকের প্রধান কার্যকলাপ স্মৃতি মেলানো (Memory Match)। "
             "আপনি $_totalSessions টি সেশন সম্পন্ন করেছেন এবং গড় নির্ভুলতা ${_avgAccuracy.toStringAsFixed(0)} শতাংশ।";
         break;
       case AppLanguage.manipuri:
-        textToRead = "নুমিৎ খাবল $_patientDisplayName। ঙসিগী মরুওইবা থবক নিংশিংবা চাংয়েং (Memory Match) নি। "
+        textToRead = "$timeGreeting $_patientDisplayName। ঙসিগী মরুওইবা থবক নিংশিংবা চাংয়েং (Memory Match) নি। "
             "নহাক্না সেসন $_totalSessions লোইশিনখ্রে অমসুং অচুম্বা চাং চাদা ${_avgAccuracy.toStringAsFixed(0)} নি।";
         break;
       case AppLanguage.bodo:
-        textToRead = "फुंबिलिनि खुलुमबाय $_patientDisplayName। दिनैनि गाहाय हाबाफारिया गोसोखांथि गोरोबनाय (Memory Match)। "
+        textToRead = "$timeGreeting $_patientDisplayName। दिनैनि गाहाय हाबाफारिया गोसोखांथि गोरोबनाय (Memory Match)। "
             "नोंथाङा $_totalSessions खेब आनजाद फुंखांबाय आरो गोरोबनाय बिबाङा ${_avgAccuracy.toStringAsFixed(0)} जौखोन्दो।";
         break;
       case AppLanguage.nepali:
-        textToRead = "शुभ प्रभात $_patientDisplayName। आजको मुख्य गतिविधि स्मरण मिलान (Memory Match) हो। "
+        textToRead = "$timeGreeting $_patientDisplayName। आजको मुख्य गतिविधि स्मरण मिलान (Memory Match) हो। "
             "तपाईंले $_totalSessions सत्रहरू पूरा गर्नुभएको छ र औसत शुद्धता ${_avgAccuracy.toStringAsFixed(0)} प्रतिशत छ।";
         break;
       case AppLanguage.mizo:
-        textToRead = "Chibai zing chibai $_patientDisplayName. Vawiin thiltih ber chu Hriatrengna Inmilh (Memory Match) a ni. "
+        textToRead = "$timeGreeting $_patientDisplayName. Vawiin thiltih ber chu Hriatrengna Inmilh (Memory Match) a ni. "
             "Session $_totalSessions i zo tawh a, i ti tha hle mai (${_avgAccuracy.toStringAsFixed(0)}%).";
         break;
       case AppLanguage.english:
       default:
-        textToRead = "Good morning $_patientDisplayName. Today's focus is the Memory Match Activity, "
+        textToRead = "$timeGreeting $_patientDisplayName. Today's focus is the Memory Match Activity, "
             "designed for gentle cognitive engagement at difficulty level $_currentDifficultyLevel. "
             "You have completed $_totalSessions sessions with an average accuracy of ${_avgAccuracy.toStringAsFixed(0)} percent.";
         break;
@@ -425,7 +426,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      LocalizationService.tr('good_morning'),
+                      LocalizationService.getTimeGreeting(),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 16.0,
                         fontWeight: FontWeight.w600,

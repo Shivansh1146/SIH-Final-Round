@@ -79,9 +79,25 @@ class LocalizationService {
     return dict[key] ?? _translations[AppLanguage.english]![key] ?? key;
   }
 
+  static String getTimeGreeting([AppLanguage? overrideLang]) {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 12) {
+      return tr('good_morning', overrideLang);
+    } else if (hour >= 12 && hour < 17) {
+      return tr('good_afternoon', overrideLang);
+    } else if (hour >= 17 && hour < 21) {
+      return tr('good_evening', overrideLang);
+    } else {
+      return tr('good_night', overrideLang);
+    }
+  }
+
   static final Map<AppLanguage, Map<String, String>> _translations = {
     AppLanguage.english: {
       'good_morning': 'Good morning,',
+      'good_afternoon': 'Good afternoon,',
+      'good_evening': 'Good evening,',
+      'good_night': 'Good night,',
       'calm_quote': 'A calm start makes room for a good memory.',
       'listen': 'Listen',
       'adjust': 'Adjust',
@@ -119,6 +135,9 @@ class LocalizationService {
     },
     AppLanguage.hindi: {
       'good_morning': 'शुभ प्रभात,',
+      'good_afternoon': 'शुभ दोपहर,',
+      'good_evening': 'शुभ संध्या,',
+      'good_night': 'शुभ रात्रि,',
       'calm_quote': 'एक शांत शुरुआत अच्छी याददाश्त और सुकून लाती है।',
       'listen': 'सुनें',
       'adjust': 'समायोजित करें',
@@ -156,6 +175,9 @@ class LocalizationService {
     },
     AppLanguage.assamese: {
       'good_morning': 'শুভ প্ৰভাত,',
+      'good_afternoon': 'শুভ অপৰাহ্ণ,',
+      'good_evening': 'শুভ সন্ধিয়া,',
+      'good_night': 'শুভ ৰাত্ৰি,',
       'calm_quote': 'এটা শান্ত আৰম্ভণিয়ে ভাল স্মৃতি আৰু শান্তি আনে।',
       'listen': 'শুনক',
       'adjust': 'সমন্বয়',
@@ -193,6 +215,9 @@ class LocalizationService {
     },
     AppLanguage.bengali: {
       'good_morning': 'সুপ্রভাত,',
+      'good_afternoon': 'শুভ অপরাহ্ন,',
+      'good_evening': 'শুভ সন্ধ্যা,',
+      'good_night': 'শুভ রাত্রি,',
       'calm_quote': 'একটি শান্ত সকাল ভালো স্মৃতি ও প্রশান্তি এনে দেয়।',
       'listen': 'শুনুন',
       'adjust': 'সমন্বয়',
@@ -230,6 +255,9 @@ class LocalizationService {
     },
     AppLanguage.manipuri: {
       'good_morning': 'নুমিৎ খাবল,',
+      'good_afternoon': 'নুমিৎ য়ুংবা,',
+      'good_evening': 'নুমিদাং ওইরে,',
+      'good_night': 'নুমিদাংগী খুরুমজরি,',
       'calm_quote': 'শান্তি ওইবা হৌদোক অসিনা নুংশিরবা নিংশিংবা অমসুং পোথাফম পীরি।',
       'listen': 'তাবিয়ু',
       'adjust': 'শেমজিনবা',
@@ -267,6 +295,9 @@ class LocalizationService {
     },
     AppLanguage.bodo: {
       'good_morning': 'फुंबिलिनि खुलुमबाय,',
+      'good_afternoon': 'सानजौफुनि खुलुमबाय,',
+      'good_evening': 'बेलासिनि खुलुमबाय,',
+      'good_night': 'होरनि खुलुमबाय,',
       'calm_quote': 'गोजोनै जागायजेननाया मोजां गोसोखांथि आरो गोजोनथि लाबोयो।',
       'listen': 'खोनासं',
       'adjust': 'गोरोबहो',
@@ -304,6 +335,9 @@ class LocalizationService {
     },
     AppLanguage.nepali: {
       'good_morning': 'शुभ प्रभात,',
+      'good_afternoon': 'शुभ दिउँसो,',
+      'good_evening': 'शुभ साँझ,',
+      'good_night': 'शुभ रात्रि,',
       'calm_quote': 'शान्त शुरुवातले राम्रो स्मरण र मानसिक शान्ति ल्याउँछ।',
       'listen': 'सुन्नुहोस्',
       'adjust': 'मिलाउनुहोस्',
@@ -341,6 +375,9 @@ class LocalizationService {
     },
     AppLanguage.mizo: {
       'good_morning': 'Chibai zing chibai,',
+      'good_afternoon': 'Chhun chibai,',
+      'good_evening': 'Tlaizawng chibai,',
+      'good_night': 'Muthak chibai,',
       'calm_quote': 'Bultanna nunnem hian hriatrengna tha leh rilru damna a thlen.',
       'listen': 'Ngaithla rawh',
       'adjust': 'Siamrem rawh',
