@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 
 class AppSidebar extends StatelessWidget {
   final bool isCaregiver;
+  final bool isDoctor;
   final int selectedIndex;
   final ValueChanged<int> onSelectIndex;
   final VoidCallback? onResetData;
@@ -16,7 +17,8 @@ class AppSidebar extends StatelessWidget {
 
   const AppSidebar({
     super.key,
-    required this.isCaregiver,
+    this.isCaregiver = false,
+    this.isDoctor = false,
     required this.selectedIndex,
     required this.onSelectIndex,
     this.onResetData,
@@ -49,14 +51,18 @@ class AppSidebar extends StatelessWidget {
 
 
                   // Primary Navigation Menu Items
-                  if (!isCaregiver) ...[
+                  if (isDoctor) ...[
+                    _buildNavItem(context, 0, Icons.assignment_outlined, 'Patient Reports'),
+                    _buildNavItem(context, 1, Icons.rate_review_outlined, 'Clinical Feedback'),
+                    _buildNavItem(context, 2, Icons.analytics_outlined, 'Biomarkers & ML'),
+                  ] else if (isCaregiver) ...[
+                    _buildNavItem(context, 0, Icons.dashboard_outlined, LocalizationService.tr('overview', lang)),
+                    _buildNavItem(context, 1, Icons.calendar_today_outlined, LocalizationService.tr('care_plan', lang)),
+                  ] else ...[
                     _buildNavItem(context, 0, Icons.home_outlined, LocalizationService.tr('home', lang)),
                     _buildNavItem(context, 1, Icons.psychology_outlined, LocalizationService.tr('games', lang)),
                     _buildNavItem(context, 2, Icons.alarm_outlined, LocalizationService.tr('reminders', lang)),
                     _buildNavItem(context, 3, Icons.bar_chart_rounded, LocalizationService.tr('progress', lang)),
-                  ] else ...[
-                    _buildNavItem(context, 0, Icons.dashboard_outlined, LocalizationService.tr('overview', lang)),
-                    _buildNavItem(context, 1, Icons.calendar_today_outlined, LocalizationService.tr('care_plan', lang)),
                   ],
 
                   const SizedBox(height: 24),

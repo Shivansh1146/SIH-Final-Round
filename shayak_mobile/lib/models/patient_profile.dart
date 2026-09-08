@@ -309,3 +309,133 @@ class PatientProfile {
     return 'SAH-$part1-$part2';
   }
 }
+
+/// Clinical Doctor Feedback & Prescribed Care Directives
+class DoctorFeedback {
+  final String id;
+  final String patientId;
+  final String doctorName;
+  final String hospitalOrClinic;
+  final String specialty;
+  final String clinicalImpression; // 'Stable & Responsive', 'Positive Cognitive Trajectory', 'Mild Attentional Fluctuations', 'Review Recommended'
+  final String feedbackNotes;
+  final List<String> prescribedDirectives;
+  final String recommendedDifficulty; // 'Level 1 (Gentle)', 'Level 2 (Moderate)', etc.
+  final DateTime submittedAt;
+
+  DoctorFeedback({
+    required this.id,
+    required this.patientId,
+    required this.doctorName,
+    required this.hospitalOrClinic,
+    required this.specialty,
+    required this.clinicalImpression,
+    required this.feedbackNotes,
+    required this.prescribedDirectives,
+    required this.recommendedDifficulty,
+    required this.submittedAt,
+  });
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'patientId': patientId,
+        'doctorName': doctorName,
+        'hospitalOrClinic': hospitalOrClinic,
+        'specialty': specialty,
+        'clinicalImpression': clinicalImpression,
+        'feedbackNotes': feedbackNotes,
+        'prescribedDirectives': prescribedDirectives,
+        'recommendedDifficulty': recommendedDifficulty,
+        'submittedAt': submittedAt.toIso8601String(),
+      };
+
+  factory DoctorFeedback.fromMap(Map<dynamic, dynamic> map) {
+    return DoctorFeedback(
+      id: map['id'] ?? '',
+      patientId: map['patientId'] ?? '',
+      doctorName: map['doctorName'] ?? 'Dr. A. Sharma, MD',
+      hospitalOrClinic: map['hospitalOrClinic'] ?? 'AIIMS Guwahati / Clinical Neurosciences',
+      specialty: map['specialty'] ?? 'Geriatric Neurologist',
+      clinicalImpression: map['clinicalImpression'] ?? 'Stable & Responsive',
+      feedbackNotes: map['feedbackNotes'] ?? '',
+      prescribedDirectives: (map['prescribedDirectives'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      recommendedDifficulty: map['recommendedDifficulty'] ?? 'Level 2 (Moderate)',
+      submittedAt: DateTime.tryParse(map['submittedAt'] ?? '') ?? DateTime.now(),
+    );
+  }
+
+  // ── Hive Persistence for Doctor Feedback ──
+  static final ValueNotifier<int> feedbackNotifier = ValueNotifier<int>(0);
+
+  static List<DoctorFeedback> loadAllFeedback() {
+    try {
+      final box = Hive.box('user_preferences');
+      final saved = box.get('doctor_feedback_list');
+      if (saved != null && saved is List && saved.isNotEmpty) {
+        return saved.map((e) => DoctorFeedback.fromMap(Map<dynamic, dynamic>.from(e))).toList();
+      }
+    } catch (_) {}
+
+    final seeded = defaultSeedFeedback;
+    saveAllFeedback(seeded);
+    return seeded;
+  }
+
+  static List<DoctorFeedback> getFeedbackForPatient(String patientId) {
+    final all = loadAllFeedback();
+    return all.where((f) => f.patientId == patientId).toList()
+      ..sort((a, b) => b.submittedAt.compareTo(a.submittedAt));
+  }
+
+  static void saveAllFeedback(List<DoctorFeedback> list) {
+    try {
+      final box = Hive.box('user_preferences');
+      final maps = list.map((e) => e.toMap()).toList();
+      box.put('doctor_feedback_list', maps);
+      feedbackNotifier.value++;
+    } catch (_) {}
+  }
+
+  static void addFeedback(DoctorFeedback feedback) {
+    final all = loadAllFeedback();
+    all.insert(0, feedback);
+    saveAllFeedback(all);
+  }
+
+  static List<DoctorFeedback> get defaultSeedFeedback => [
+        DoctorFeedback(
+          id: 'df-1',
+          patientId: 'patient-ramesh',
+          doctorName: 'Dr. Debabrata Goswami, DM',
+          hospitalOrClinic: 'Assam Medical College & Hospital',
+          specialty: 'Cognitive Neurology & Movement Disorders',
+          clinicalImpression: 'Stable & Responsive to Routine',
+          feedbackNotes: 'Patient exhibits consistent engagement with memory recall games (average accuracy above 78%). Kinematic tremor variance has remained well stabilized with the ESP32 active utensil. Recommend maintaining the current cognitive exercise cadence.',
+          prescribedDirectives: [
+            'Maintain daily 15-minute Memory Match and Memory Story sessions.',
+            'Keep ESP32 utensil sensor calibrated before meal times.',
+            'Continue Donepezil 5mg once daily after breakfast.',
+            'Schedule follow-up review in 8 weeks.'
+          ],
+          recommendedDifficulty: 'Level 2 (Moderate)',
+          submittedAt: DateTime.now().subtract(const Duration(days: 2, hours: 4)),
+        ),
+        DoctorFeedback(
+          id: 'df-2',
+          patientId: 'patient-monalisa',
+          doctorName: 'Dr. Priya Sengupta, MD',
+          hospitalOrClinic: 'Guwahati Neurological Institute',
+          specialty: 'Geriatric Psychiatry',
+          clinicalImpression: 'Mild Attentional Fluctuations',
+          feedbackNotes: 'Mild procedural sequence hesitations observed in morning routines. Reminiscence therapy (Memory Lane) shows strong emotional grounding and positive autobiographical speech recall.',
+          prescribedDirectives: [
+            'Prioritize Memory Lane and Local Language Naming games in the morning hours.',
+            'Ensure caregiver assistance during complex procedural sequences.',
+            'Hydration check: at least 1.8 liters daily.'
+          ],
+          recommendedDifficulty: 'Level 1 (Gentle)',
+          submittedAt: DateTime.now().subtract(const Duration(days: 4, hours: 2)),
+        ),
+      ];
+}
+

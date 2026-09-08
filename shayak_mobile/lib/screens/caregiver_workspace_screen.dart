@@ -908,16 +908,99 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
               ),
               const SizedBox(width: 6),
               Text(
-                LocalizationService.tr('live_auto_sync', lang),
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 10.0,
-                  fontWeight: FontWeight.w800,
+                '· Active node',
+                style: GoogleFonts.inter(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
                   color: AppTheme.forestGreen,
-                  letterSpacing: 0.6,
                 ),
               ),
             ],
           ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Doctor's Active Clinical Prescription & Directives Banner
+        ValueListenableBuilder<int>(
+          valueListenable: DoctorFeedback.feedbackNotifier,
+          builder: (context, _, __) {
+            final feedbacks = DoctorFeedback.getFeedbackForPatient(patientId);
+            if (feedbacks.isEmpty) return const SizedBox.shrink();
+            final latest = feedbacks.first;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFBFDBFE), width: 1.2),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.medical_services_rounded, size: 18, color: Color(0xFF1D4ED8)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "Doctor's Prescribed Directives (${latest.doctorName})",
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF1E3A8A),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(100),
+                          border: Border.all(color: const Color(0xFF93C5FD)),
+                        ),
+                        child: Text(
+                          latest.clinicalImpression,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF1D4ED8),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    latest.feedbackNotes,
+                    style: GoogleFonts.inter(fontSize: 12.5, height: 1.45, color: const Color(0xFF334155)),
+                  ),
+                  if (latest.prescribedDirectives.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    ...latest.prescribedDirectives.map((d) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.check_circle_outline_rounded, size: 14, color: Color(0xFF2563EB)),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  d,
+                                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )),
+                  ],
+                ],
+              ),
+            );
+          },
         ),
 
         const SizedBox(height: 18),

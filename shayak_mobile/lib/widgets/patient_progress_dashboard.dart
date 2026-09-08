@@ -656,6 +656,141 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
                 ],
               ),
             ),
+
+            const SizedBox(height: 22),
+
+            // Doctor's Clinical Feedback & Prescriptions Card
+            ValueListenableBuilder<int>(
+              valueListenable: DoctorFeedback.feedbackNotifier,
+              builder: (context, _, __) {
+                final feedbackList = DoctorFeedback.getFeedbackForPatient(widget.patientId);
+                if (feedbackList.isEmpty) return const SizedBox.shrink();
+                final latest = feedbackList.first;
+
+                return Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(isMobile ? 18.0 : 24.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24.0),
+                    border: Border.all(color: const Color(0xFFBFDBFE), width: 1.4),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF1D4ED8).withOpacity(0.04),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEFF6FF),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: const Color(0xFFDBEAFE)),
+                            ),
+                            child: const Icon(Icons.medical_services_rounded, size: 20, color: Color(0xFF1D4ED8)),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Doctor's Clinical Notes & Care Directives",
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 16.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppTheme.textPrimary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  '${latest.doctorName} · ${latest.specialty}',
+                                  style: GoogleFonts.inter(fontSize: 12.0, color: AppTheme.textSecondary),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEFF6FF),
+                              borderRadius: BorderRadius.circular(100),
+                              border: Border.all(color: const Color(0xFFBFDBFE)),
+                            ),
+                            child: Text(
+                              latest.clinicalImpression,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF1D4ED8),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Text(
+                          latest.feedbackNotes,
+                          style: GoogleFonts.inter(
+                            fontSize: 13.5,
+                            height: 1.5,
+                            color: const Color(0xFF334155),
+                          ),
+                        ),
+                      ),
+                      if (latest.prescribedDirectives.isNotEmpty) ...[
+                        const SizedBox(height: 14),
+                        Text(
+                          'Prescribed Action Items & Directives:',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ...latest.prescribedDirectives.map((directive) => Padding(
+                              padding: const EdgeInsets.only(bottom: 6.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(Icons.check_circle_rounded, size: 16, color: Color(0xFF1D4ED8)),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      directive,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 12.5,
+                                        color: const Color(0xFF1E293B),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            ),
           ],
         );
       },

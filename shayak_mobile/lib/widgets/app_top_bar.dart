@@ -5,7 +5,7 @@ import '../services/localization_service.dart';
 import '../services/audio_narration_service.dart';
 import '../theme/app_theme.dart';
 
-enum AppViewMode { landing, patient, caregiver, register }
+enum AppViewMode { landing, patient, caregiver, register, doctor }
 
 class AppTopBar extends StatelessWidget {
   final AppViewMode currentMode;
@@ -565,58 +565,141 @@ class AppTopBar extends StatelessWidget {
                         ],
                       ),
                     ),
-                  ),
-
-                if (!isMobile) ...[
+                   if (!isMobile) ...[
                   const SizedBox(width: 6),
-                  if (currentMode == AppViewMode.patient)
-                    OutlinedButton.icon(
-                      onPressed: () => onModeChanged(AppViewMode.caregiver),
-                      icon: const Icon(Icons.person_outline_rounded, size: 14, color: AppTheme.textPrimary),
-                      label: Text(
-                        LocalizationService.tr('caregiver'),
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
+                  // Mode Buttons: Patient, Caregiver, Doctor
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(color: AppTheme.surfaceBorder),
+                    ),
+                    padding: const EdgeInsets.all(2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildModeTab(
+                          label: LocalizationService.tr('patient'),
+                          icon: Icons.person_rounded,
+                          isSelected: currentMode == AppViewMode.patient,
+                          onTap: () => onModeChanged(AppViewMode.patient),
+                        ),
+                        _buildModeTab(
+                          label: LocalizationService.tr('caregiver'),
+                          icon: Icons.favorite_rounded,
+                          isSelected: currentMode == AppViewMode.caregiver,
+                          onTap: () => onModeChanged(AppViewMode.caregiver),
+                        ),
+                        _buildModeTab(
+                          label: 'Doctor',
+                          icon: Icons.medical_services_rounded,
+                          isSelected: currentMode == AppViewMode.doctor,
+                          onTap: () => onModeChanged(AppViewMode.doctor),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else ...[
+                  const SizedBox(width: 4),
+                  PopupMenuButton<AppViewMode>(
+                    onSelected: onModeChanged,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    color: Colors.white,
+                    elevation: 6,
+                    offset: const Offset(0, 42),
+                    itemBuilder: (ctx) => [
+                      PopupMenuItem(
+                        value: AppViewMode.patient,
+                        child: Row(
+                          children: [
+                            Icon(Icons.person_rounded, size: 16, color: currentMode == AppViewMode.patient ? AppTheme.forestGreen : AppTheme.textSecondary),
+                            const SizedBox(width: 8),
+                            Text('Patient View', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: currentMode == AppViewMode.patient ? FontWeight.w700 : FontWeight.w500)),
+                          ],
                         ),
                       ),
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        side: const BorderSide(color: AppTheme.surfaceBorder),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        shape: RoundedRectangleBorder(
+                      PopupMenuItem(
+                        value: AppViewMode.caregiver,
+                        child: Row(
+                          children: [
+                            Icon(Icons.favorite_rounded, size: 16, color: currentMode == AppViewMode.caregiver ? AppTheme.forestGreen : AppTheme.textSecondary),
+                            const SizedBox(width: 8),
+                            Text('Caregiver Portal', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: currentMode == AppViewMode.caregiver ? FontWeight.w700 : FontWeight.w500)),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: AppViewMode.doctor,
+                        child: Row(
+                          children: [
+                            Icon(Icons.medical_services_rounded, size: 16, color: currentMode == AppViewMode.doctor ? const Color(0xFF1D4ED8) : AppTheme.textSecondary),
+                            const SizedBox(width: 8),
+                            Text('Doctor Portal', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: currentMode == AppViewMode.doctor ? FontWeight.w700 : FontWeight.w500)),
+                          ],
+                        ),
+                      ),
+                    ],
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(100),
+                          border: Border.all(color: AppTheme.surfaceBorder),
                         ),
-                      ),
-                    )
-                  else
-                    OutlinedButton.icon(
-                      onPressed: () => onModeChanged(AppViewMode.patient),
-                      icon: const Icon(Icons.person_outline_rounded, size: 14, color: AppTheme.textPrimary),
-                      label: Text(
-                        LocalizationService.tr('patient'),
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        side: const BorderSide(color: AppTheme.surfaceBorder),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(100),
+                        child: Icon(
+                          currentMode == AppViewMode.doctor
+                              ? Icons.medical_services_rounded
+                              : (currentMode == AppViewMode.caregiver ? Icons.favorite_rounded : Icons.person_rounded),
+                          size: 16,
+                          color: currentMode == AppViewMode.doctor ? const Color(0xFF1D4ED8) : AppTheme.forestGreen,
                         ),
                       ),
                     ),
+                  ],
                 ],
               ],
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildModeTab({
+    required String label,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(100),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.forestGreen : Colors.transparent,
+          borderRadius: BorderRadius.circular(100),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 13,
+              color: isSelected ? Colors.white : AppTheme.textSecondary,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12.0,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected ? Colors.white : AppTheme.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -264,6 +264,20 @@ class _LandingScreenState extends State<LandingScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
               ),
             ),
+            OutlinedButton.icon(
+              onPressed: () => widget.onNavigate(AppViewMode.doctor),
+              icon: const Icon(Icons.medical_services_rounded, size: 16, color: Color(0xFF1D4ED8)),
+              label: Text(
+                'Doctor Portal',
+                style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
+              ),
+              style: OutlinedButton.styleFrom(
+                backgroundColor: const Color(0xFFEFF6FF),
+                side: const BorderSide(color: Color(0xFFBFDBFE), width: 1.5),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+              ),
+            ),
             TextButton(
               onPressed: () {
                 PatientProfile.clearFromHive();
@@ -309,6 +323,20 @@ class _LandingScreenState extends State<LandingScreen> {
           style: OutlinedButton.styleFrom(
             backgroundColor: Colors.white,
             side: const BorderSide(color: AppTheme.surfaceBorder, width: 1.5),
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+          ),
+        ),
+        OutlinedButton.icon(
+          onPressed: () => widget.onNavigate(AppViewMode.doctor),
+          icon: const Icon(Icons.medical_services_rounded, size: 16, color: Color(0xFF1D4ED8)),
+          label: Text(
+            'Doctor Portal',
+            style: GoogleFonts.plusJakartaSans(fontSize: 15.0, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
+          ),
+          style: OutlinedButton.styleFrom(
+            backgroundColor: const Color(0xFFEFF6FF),
+            side: const BorderSide(color: Color(0xFFBFDBFE), width: 1.5),
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
           ),
