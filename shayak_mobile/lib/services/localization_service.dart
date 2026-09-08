@@ -73,6 +73,28 @@ class LocalizationService {
     }
   }
 
+  static String getCaregiverCallSpeech(AppLanguage lang) {
+    switch (lang) {
+      case AppLanguage.hindi:
+        return 'देखभालकर्ता अनीता कुमार को कॉल किया जा रहा है। कृपया प्रतीक्षा करें।';
+      case AppLanguage.assamese:
+        return 'কেয়াৰগিভাৰ অনিতা কুমাৰক ফোন কৰা হৈছে। অনুগ্ৰহ কৰি অপেক্ষা কৰক।';
+      case AppLanguage.bengali:
+        return 'কেয়ারগিভার অনিতা কুমারকে কল করা হচ্ছে। দয়া করে কিছুক্ষণ অপেক্ষা করুন।';
+      case AppLanguage.manipuri:
+        return 'কেয়ারগিভার অনিতা কুমারদা কোল তৌরি। চানবিদুনা মতম খরা ঙাইবিউ।';
+      case AppLanguage.bodo:
+        return 'सामलायगिरि अनिता कुमारनो कल खालामदों। अननानै एसे सम नेथ’।';
+      case AppLanguage.nepali:
+        return 'हेरचाहकर्ता अनिता कुमारलाई फोन गरिँदैछ। कृपया केही बेर पर्खनुहोस्।';
+      case AppLanguage.mizo:
+        return 'Enkawltu Anita Kumar kan bia mek e. Khawngaihin lo nghak lawk rawh.';
+      case AppLanguage.english:
+      default:
+        return 'Calling Caregiver Anita Kumar. Please hold on a moment.';
+    }
+  }
+
   static String tr(String key, [AppLanguage? overrideLang]) {
     final lang = overrideLang ?? languageNotifier.value;
     final dict = _translations[lang] ?? _translations[AppLanguage.english]!;

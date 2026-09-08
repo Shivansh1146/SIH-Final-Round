@@ -221,115 +221,120 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 850;
 
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: AppTheme.background,
-      drawer: isMobile
-          ? Drawer(
-              backgroundColor: AppTheme.background,
-              child: AppSidebar(
-                isCaregiver: false,
-                selectedIndex: _sidebarIndex,
-                onSelectIndex: (idx) {
-                  setState(() => _sidebarIndex = idx);
-                },
-                onResetData: _resetData,
-              ),
-            )
-          : null,
-      bottomNavigationBar: isMobile
-          ? Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  top: BorderSide(color: AppTheme.surfaceBorder, width: 1.0),
-                ),
-              ),
-              child: NavigationBar(
-                selectedIndex: _sidebarIndex.clamp(0, 3),
-                onDestinationSelected: (idx) {
-                  setState(() => _sidebarIndex = idx);
-                },
-                backgroundColor: Colors.white,
-                indicatorColor: AppTheme.sageLight,
-                elevation: 3,
-                height: 64,
-                labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-                destinations: const [
-                  NavigationDestination(
-                    icon: Icon(Icons.home_outlined),
-                    selectedIcon: Icon(Icons.home_rounded, color: AppTheme.forestGreen),
-                    label: 'Home',
+    return ValueListenableBuilder<AppLanguage>(
+      valueListenable: LocalizationService.languageNotifier,
+      builder: (context, lang, _) {
+        return Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: AppTheme.background,
+          drawer: isMobile
+              ? Drawer(
+                  backgroundColor: AppTheme.background,
+                  child: AppSidebar(
+                    isCaregiver: false,
+                    selectedIndex: _sidebarIndex,
+                    onSelectIndex: (idx) {
+                      setState(() => _sidebarIndex = idx);
+                    },
+                    onResetData: _resetData,
                   ),
-                  NavigationDestination(
-                    icon: Icon(Icons.psychology_outlined),
-                    selectedIcon: Icon(Icons.psychology_rounded, color: AppTheme.forestGreen),
-                    label: 'Games',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.alarm_outlined),
-                    selectedIcon: Icon(Icons.alarm_rounded, color: AppTheme.forestGreen),
-                    label: 'Reminders',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.bar_chart_rounded),
-                    selectedIcon: Icon(Icons.bar_chart_rounded, color: AppTheme.forestGreen),
-                    label: 'Progress',
-                  ),
-                ],
-              ),
-            )
-          : null,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Top Bar
-            AppTopBar(
-              currentMode: AppViewMode.patient,
-              onModeChanged: widget.onNavigate,
-              onMenuPressed: isMobile ? () => _scaffoldKey.currentState?.openDrawer() : null,
-            ),
-
-            // Sidebar + Content Row
-            Expanded(
-              child: Row(
-                children: [
-                  // Left Navigation Sidebar (Desktop & Tablet only)
-                  if (!isMobile)
-                    AppSidebar(
-                      isCaregiver: false,
-                      selectedIndex: _sidebarIndex,
-                      onSelectIndex: (idx) {
-                        setState(() => _sidebarIndex = idx);
-                      },
-                      onResetData: _resetData,
+                )
+              : null,
+          bottomNavigationBar: isMobile
+              ? Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    border: Border(
+                      top: BorderSide(color: AppTheme.surfaceBorder, width: 1.0),
                     ),
-
-                  // Main Content Area
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isMobile ? 18.0 : 36.0,
-                        vertical: isMobile ? 16.0 : 24.0,
+                  ),
+                  child: NavigationBar(
+                    selectedIndex: _sidebarIndex.clamp(0, 3),
+                    onDestinationSelected: (idx) {
+                      setState(() => _sidebarIndex = idx);
+                    },
+                    backgroundColor: Colors.white,
+                    indicatorColor: AppTheme.sageLight,
+                    elevation: 3,
+                    height: 64,
+                    labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+                    destinations: [
+                      NavigationDestination(
+                        icon: const Icon(Icons.home_outlined),
+                        selectedIcon: const Icon(Icons.home_rounded, color: AppTheme.forestGreen),
+                        label: LocalizationService.tr('home', lang),
                       ),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 960),
-                          child: _buildSelectedView(context),
+                      NavigationDestination(
+                        icon: const Icon(Icons.psychology_outlined),
+                        selectedIcon: const Icon(Icons.psychology_rounded, color: AppTheme.forestGreen),
+                        label: LocalizationService.tr('games', lang),
+                      ),
+                      NavigationDestination(
+                        icon: const Icon(Icons.alarm_outlined),
+                        selectedIcon: const Icon(Icons.alarm_rounded, color: AppTheme.forestGreen),
+                        label: LocalizationService.tr('reminders', lang),
+                      ),
+                      NavigationDestination(
+                        icon: const Icon(Icons.bar_chart_rounded),
+                        selectedIcon: const Icon(Icons.bar_chart_rounded, color: AppTheme.forestGreen),
+                        label: LocalizationService.tr('progress', lang),
+                      ),
+                    ],
+                  ),
+                )
+              : null,
+          body: SafeArea(
+            child: Column(
+              children: [
+                // Top Bar
+                AppTopBar(
+                  currentMode: AppViewMode.patient,
+                  onModeChanged: widget.onNavigate,
+                  onMenuPressed: isMobile ? () => _scaffoldKey.currentState?.openDrawer() : null,
+                ),
+
+                // Sidebar + Content Row
+                Expanded(
+                  child: Row(
+                    children: [
+                      // Left Navigation Sidebar (Desktop & Tablet only)
+                      if (!isMobile)
+                        AppSidebar(
+                          isCaregiver: false,
+                          selectedIndex: _sidebarIndex,
+                          onSelectIndex: (idx) {
+                            setState(() => _sidebarIndex = idx);
+                          },
+                          onResetData: _resetData,
+                        ),
+
+                      // Main Content Area
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 18.0 : 36.0,
+                            vertical: isMobile ? 16.0 : 24.0,
+                          ),
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 960),
+                              child: _buildSelectedView(context, lang),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildSelectedView(BuildContext context) {
+  Widget _buildSelectedView(BuildContext context, AppLanguage lang) {
     switch (_sidebarIndex) {
       case 1:
         return _buildGamesHubView(context);
@@ -339,11 +344,11 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         return _buildProgressView(context);
       case 0:
       default:
-        return _buildPatientHomeContent(context);
+        return _buildPatientHomeContent(context, lang);
     }
   }
 
-  Widget _buildPatientHomeContent(BuildContext context) {
+  Widget _buildPatientHomeContent(BuildContext context, AppLanguage lang) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isCompact = screenWidth < 520;
 
@@ -511,7 +516,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         const SizedBox(height: 24),
 
         // Hero Today's Activity Banner
-        _buildHeroActivityBanner(context),
+        _buildHeroActivityBanner(context, lang),
 
         const SizedBox(height: 24),
 
@@ -523,17 +528,17 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: _buildRemindersCard(context)),
+                  Expanded(child: _buildRemindersCard(context, lang)),
                   const SizedBox(width: 20),
-                  Expanded(child: _buildNeedHelpCard(context)),
+                  Expanded(child: _buildNeedHelpCard(context, lang)),
                 ],
               );
             } else {
               return Column(
                 children: [
-                  _buildRemindersCard(context),
+                  _buildRemindersCard(context, lang),
                   const SizedBox(height: 18),
-                  _buildNeedHelpCard(context),
+                  _buildNeedHelpCard(context, lang),
                 ],
               );
             }
@@ -543,7 +548,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     );
   }
 
-  Widget _buildHeroActivityBanner(BuildContext context) {
+  Widget _buildHeroActivityBanner(BuildContext context, AppLanguage lang) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isCompact = constraints.maxWidth < 560;
@@ -598,7 +603,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                               const Icon(Icons.auto_awesome_rounded, size: 12, color: Colors.white),
                               const SizedBox(width: 6),
                               Text(
-                                LocalizationService.tr('todays_activity'),
+                                LocalizationService.tr('todays_activity', lang),
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.w800,
@@ -611,7 +616,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          LocalizationService.tr('memory_match'),
+                          LocalizationService.tr('memory_match', lang),
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: isCompact ? 24.0 : 30.0,
                             fontWeight: FontWeight.w800,
@@ -621,7 +626,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          LocalizationService.tr('memory_match_sub'),
+                          LocalizationService.tr('memory_match_sub', lang),
                           style: GoogleFonts.inter(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w400,
@@ -641,7 +646,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                                 const Icon(Icons.access_time_rounded, size: 14, color: Colors.white70),
                                 const SizedBox(width: 6),
                                 Text(
-                                  LocalizationService.tr('about_5_mins'),
+                                  LocalizationService.tr('about_5_mins', lang),
                                   style: GoogleFonts.inter(fontSize: 12.0, color: Colors.white70, fontWeight: FontWeight.w500),
                                 ),
                               ],
@@ -725,7 +730,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     );
   }
 
-  Widget _buildRemindersCard(BuildContext context) {
+  Widget _buildRemindersCard(BuildContext context, AppLanguage lang) {
     final allReminders = ReminderService.instance.reminders;
     final pending = allReminders.where((r) => !r.isCompleted).toList();
     final totalCount = allReminders.length;
@@ -749,7 +754,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   Row(
                     children: [
                       Text(
-                        LocalizationService.tr('today'),
+                        LocalizationService.tr('today', lang),
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w800,
@@ -766,7 +771,9 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                             borderRadius: BorderRadius.circular(100),
                           ),
                           child: Text(
-                            pending.isEmpty ? LocalizationService.tr('all_done') : '${pending.length} ${LocalizationService.tr('pending')}',
+                            pending.isEmpty
+                                ? LocalizationService.tr('all_done', lang)
+                                : '${pending.length} ${LocalizationService.tr('pending', lang)}',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
@@ -779,7 +786,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    LocalizationService.tr('reminders'),
+                    LocalizationService.tr('reminders', lang),
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 18.0,
                       fontWeight: FontWeight.w800,
@@ -1004,31 +1011,38 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     );
   }
 
-  Widget _buildNeedHelpCard(BuildContext context) {
+  Widget _buildNeedHelpCard(BuildContext context, AppLanguage lang) {
     return Container(
       padding: const EdgeInsets.all(22.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20.0),
         border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 34,
+            height: 34,
             decoration: const BoxDecoration(
               color: AppTheme.pastelYellow,
               shape: BoxShape.circle,
             ),
             child: const Center(
-              child: Text('?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.warmTerracotta)),
+              child: Text('?', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppTheme.warmTerracotta)),
             ),
           ),
           const SizedBox(height: 12),
           Text(
-            LocalizationService.tr('need_help'),
+            LocalizationService.tr('need_help', lang),
             style: GoogleFonts.plusJakartaSans(
               fontSize: 18.0,
               fontWeight: FontWeight.w800,
@@ -1037,7 +1051,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            LocalizationService.tr('need_help_sub'),
+            LocalizationService.tr('need_help_sub', lang),
             style: GoogleFonts.inter(
               fontSize: 13.0,
               fontWeight: FontWeight.w400,
@@ -1045,20 +1059,23 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 14),
-          OutlinedButton.icon(
-            onPressed: () => _showCaregiverCallDialog(context),
-            icon: const Icon(Icons.phone_in_talk_rounded, size: 15, color: AppTheme.forestGreen),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () => _showCaregiverCallDialog(context, lang),
+            icon: const Icon(Icons.phone_in_talk_rounded, size: 16, color: Colors.white),
             label: Text(
-              '${LocalizationService.tr('call_caregiver')} Anita',
+              '${LocalizationService.tr('call_caregiver', lang)} Anita',
               style: GoogleFonts.plusJakartaSans(
-                fontSize: 13.0,
+                fontSize: 13.5,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.forestGreen,
+                color: Colors.white,
               ),
             ),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppTheme.surfaceBorder),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.forestGreen,
+              foregroundColor: Colors.white,
+              elevation: 2,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
             ),
           ),
@@ -1067,11 +1084,11 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     );
   }
 
-  void _showCaregiverCallDialog(BuildContext context) {
-    final currentLang = LocalizationService.instance.currentLanguage;
+  void _showCaregiverCallDialog(BuildContext context, AppLanguage lang) {
+    // Speak in the patient's active native language immediately
     AudioNarrationService.instance.speak(
-      'Calling Caregiver Anita Kumar. Please hold on a moment.',
-      language: currentLang,
+      LocalizationService.getCaregiverCallSpeech(lang),
+      language: lang,
     );
 
     showDialog(
@@ -1091,23 +1108,33 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   Stack(
                     alignment: Alignment.center,
                     children: [
-                      Container(
-                        width: 90,
-                        height: 90,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppTheme.sageLight.withOpacity(0.6),
-                        ),
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.8, end: 1.2),
+                        duration: const Duration(milliseconds: 1000),
+                        curve: Curves.easeInOut,
+                        builder: (context, scale, child) {
+                          return Transform.scale(
+                            scale: scale,
+                            child: Container(
+                              width: 86,
+                              height: 86,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppTheme.forestGreen.withOpacity(0.18),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                       Container(
-                        width: 72,
-                        height: 72,
+                        width: 68,
+                        height: 68,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
                           color: AppTheme.forestGreen,
                         ),
                         child: const Center(
-                          child: Icon(Icons.person_rounded, size: 40, color: Colors.white),
+                          child: Icon(Icons.person_rounded, size: 38, color: Colors.white),
                         ),
                       ),
                     ],
@@ -1126,6 +1153,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                     'Primary Caregiver · +91 98450 12345',
                     style: GoogleFonts.inter(
                       fontSize: 13,
+                      fontWeight: FontWeight.w500,
                       color: AppTheme.textSecondary,
                     ),
                   ),
@@ -1151,7 +1179,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Calling · Connecting to audio...',
+                          'Calling · Connecting audio bridge...',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -1173,35 +1201,66 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                         onPressed: () {
                           AudioNarrationService.instance.stop();
                           Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Call session ended.', style: GoogleFonts.inter()),
+                              backgroundColor: AppTheme.forestGreen,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
                         },
-                        icon: const Icon(Icons.call_end_rounded, color: Colors.white, size: 18),
+                        icon: const Icon(Icons.call_end_rounded, color: Colors.white, size: 16),
                         label: const Text('End Call'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.alertCoral,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
 
-                      // View Caregiver Portal Button
+                      // Direct Phone Dial Simulation
                       OutlinedButton.icon(
                         onPressed: () {
                           AudioNarrationService.instance.stop();
                           Navigator.pop(ctx);
-                          widget.onNavigate(AppViewMode.caregiver);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('📞 Direct line dialed: +91 98450 12345 (Anita Kumar)', style: GoogleFonts.inter()),
+                              backgroundColor: AppTheme.forestGreen,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
                         },
-                        icon: const Icon(Icons.dashboard_rounded, size: 16, color: AppTheme.forestGreen),
-                        label: const Text('Caregiver View'),
+                        icon: const Icon(Icons.phone_enabled_rounded, size: 16, color: AppTheme.forestGreen),
+                        label: const Text('Direct Dial'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppTheme.forestGreen,
                           side: const BorderSide(color: AppTheme.forestGreen),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 10),
+                  // Caregiver Workspace Link
+                  TextButton.icon(
+                    onPressed: () {
+                      AudioNarrationService.instance.stop();
+                      Navigator.pop(ctx);
+                      widget.onNavigate(AppViewMode.caregiver);
+                    },
+                    icon: const Icon(Icons.dashboard_rounded, size: 15, color: AppTheme.textSecondary),
+                    label: Text(
+                      'Open Caregiver Workspace',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
                   ),
                 ],
               ),
