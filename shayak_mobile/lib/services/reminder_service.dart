@@ -133,7 +133,7 @@ class ReminderService extends ChangeNotifier {
   void _triggerReminderAlert(BuildContext context, ReminderItem item) {
     if (!context.mounted) return;
 
-    final patientName = PatientProfile.load()?.fullName.split(' ').first ?? 'Patient';
+    final patientName = PatientProfile.loadFromHive()?.fullName.split(' ').first ?? 'Patient';
 
     // Real-time audio narration for the alert
     final alertSpeechText = 'Hello $patientName. It is ${item.formattedTime}, time for ${item.title}. ${item.notes ?? ''}';

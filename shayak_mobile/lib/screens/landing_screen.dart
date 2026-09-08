@@ -402,7 +402,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
               // Inner Card: Next Activity
               InkWell(
-                onTap: () => onNavigate(AppViewMode.patient),
+                onTap: () => widget.onNavigate(AppViewMode.patient),
                 borderRadius: BorderRadius.circular(20),
                 child: Container(
                   width: double.infinity,
@@ -503,7 +503,7 @@ class _LandingScreenState extends State<LandingScreen> {
                       color: AppTheme.warmPeach,
                       emoji: '💊',
                       label: 'Medicine',
-                      onTap: () => onNavigate(AppViewMode.patient),
+                      onTap: () => widget.onNavigate(AppViewMode.patient),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -512,7 +512,7 @@ class _LandingScreenState extends State<LandingScreen> {
                       color: AppTheme.pastelBlue,
                       emoji: '🍽',
                       label: 'Lunch',
-                      onTap: () => onNavigate(AppViewMode.patient),
+                      onTap: () => widget.onNavigate(AppViewMode.patient),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -521,7 +521,7 @@ class _LandingScreenState extends State<LandingScreen> {
                       color: AppTheme.pastelPink,
                       emoji: '🧠',
                       label: 'Activity',
-                      onTap: () => onNavigate(AppViewMode.patient),
+                      onTap: () => widget.onNavigate(AppViewMode.patient),
                     ),
                   ),
                 ],

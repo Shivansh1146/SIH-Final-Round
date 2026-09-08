@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/session_service.dart';
 import '../theme/app_theme.dart';
 
 class MemoryMatchScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
   bool _isChecking = false;
   int _matchesFound = 0;
   int _moves = 0;
+  late DateTime _gameStartTime;
 
   @override
   void initState() {
@@ -38,6 +40,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
       _isChecking = false;
       _matchesFound = 0;
       _moves = 0;
+      _gameStartTime = DateTime.now();
     });
   }
 
@@ -90,7 +93,36 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
     }
   }
 
+  void _saveSessionResult() {
+    final patientId = SessionService.activePatientId ?? 'unknown';
+    // Accuracy: matched pairs out of total pairs, penalised by wrong moves
+    final totalPairs = _emojis.length;
+    final wrongMoves = (_moves - totalPairs).clamp(0, 100);
+    final accuracy = (totalPairs / (totalPairs + wrongMoves)).clamp(0.0, 1.0);
+    // Response time: total elapsed / number of moves (floor at 0.5s)
+    final elapsed =
+        DateTime.now().difference(_gameStartTime).inMilliseconds / 1000.0;
+    final responseSec = _moves > 0
+        ? (elapsed / _moves).clamp(0.5, 30.0)
+        : 3.0;
+    SessionService.instance.saveSession(GameSession(
+      sessionId: SessionService.generateId(patientId, 'memory_match'),
+      patientId: patientId,
+      gameType: 'memory_match',
+      playedAt: DateTime.now(),
+      accuracyRatio: accuracy,
+      responseTimeSec: responseSec,
+      totalMoves: _moves,
+      extras: {
+        'matchesFound': _matchesFound,
+        'totalPairs': totalPairs,
+        'elapsedSec': elapsed,
+      },
+    ));
+  }
+
   void _showCelebrationDialog() {
+    _saveSessionResult(); // ← persist result before showing dialog
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -112,7 +144,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Wonderful job, Ramesh!',
+              'Wonderful job!',
               style: GoogleFonts.plusJakartaSans(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.forestGreen),
               textAlign: TextAlign.center,
             ),

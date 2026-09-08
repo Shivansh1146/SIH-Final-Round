@@ -533,7 +533,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
   void _playScheduleAudio() {
     final pending = _items.where((e) => !e.isCompleted).toList();
-    final name = PatientProfile.load()?.fullName.split(' ').first ?? 'Patient';
+    final name = PatientProfile.loadFromHive()?.fullName.split(' ').first ?? 'Patient';
 
     final StringBuffer speechText = StringBuffer();
     speechText.write('Hello $name. Here is your schedule for today. ');

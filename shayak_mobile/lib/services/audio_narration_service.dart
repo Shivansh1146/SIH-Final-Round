@@ -74,7 +74,7 @@ class AudioNarrationService extends ChangeNotifier {
     }
 
     _currentlySpeakingText = text;
-    final targetLang = language ?? PatientProfile.load()?.language ?? AppLanguage.english;
+    final targetLang = language ?? PatientProfile.loadFromHive()?.preferredLanguage ?? AppLanguage.english;
     final localeTag = _mapLanguageToLocale(targetLang);
 
     try {

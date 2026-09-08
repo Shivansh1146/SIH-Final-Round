@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/assessment_point.dart';
+import '../services/session_service.dart';
 import '../theme/app_theme.dart';
 
 /// ============================================================================
@@ -68,6 +69,33 @@ class _ClockCanvasScreenState extends State<ClockCanvasScreen> {
 
   void _submitDrawing(DrawingAssessmentSummary summary) async {
     setState(() => _isAnalyzing = true);
+
+    // ── Persist session data to SessionService ──────────────────────────
+    final patientId = SessionService.activePatientId ?? 'unknown';
+    // Derive an accuracy proxy: lower jitter & hesitations = higher accuracy
+    final jitter = summary.tremorJitterVariance.clamp(0.0, 50.0);
+    final hesitations = summary.totalHesitations.clamp(0, 20);
+    final rawAccuracy = 1.0 - (jitter / 50.0 * 0.5 + hesitations / 20.0 * 0.5);
+    final accuracy = rawAccuracy.clamp(0.0, 1.0);
+    // Response time proxy: mean velocity -> lower = slower
+    final meanVel = summary.averageVelocity.clamp(0.01, 5.0);
+    final responseSec = (3.0 / meanVel).clamp(0.5, 15.0);
+    SessionService.instance.saveSession(GameSession(
+      sessionId: SessionService.generateId(patientId, 'clock_drawing'),
+      patientId: patientId,
+      gameType: 'clock_drawing',
+      playedAt: DateTime.now(),
+      accuracyRatio: accuracy,
+      responseTimeSec: responseSec,
+      totalMoves: summary.strokes.length,
+      extras: {
+        'strokeCount': summary.strokes.length,
+        'meanVelocity': summary.averageVelocity,
+        'hesitations': summary.totalHesitations,
+        'tremorVariance': summary.tremorJitterVariance,
+      },
+    ));
+
     await Future.delayed(const Duration(milliseconds: 600));
 
     if (!mounted) return;
