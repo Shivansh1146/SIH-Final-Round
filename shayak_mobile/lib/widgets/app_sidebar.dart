@@ -54,8 +54,7 @@ class AppSidebar extends StatelessWidget {
                   if (isDoctor) ...[
                     _buildNavItem(context, 0, Icons.assignment_outlined, 'Patient Reports'),
                     _buildNavItem(context, 1, Icons.rate_review_outlined, 'Clinical Feedback'),
-                    _buildNavItem(context, 2, Icons.analytics_outlined, 'Biomarkers & ML'),
-                    _buildNavItem(context, 3, Icons.event_available_outlined, 'Appointments'),
+                    _buildNavItem(context, 2, Icons.event_available_outlined, 'Appointments'),
                   ] else if (isCaregiver) ...[
                     _buildNavItem(context, 0, Icons.dashboard_outlined, LocalizationService.tr('overview', lang)),
                     _buildNavItem(context, 1, Icons.calendar_today_outlined, LocalizationService.tr('care_plan', lang)),

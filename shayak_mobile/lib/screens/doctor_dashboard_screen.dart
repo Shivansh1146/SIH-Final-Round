@@ -26,7 +26,7 @@ class DoctorDashboardScreen extends StatefulWidget {
 
 class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  int _sidebarIndex = 0; // 0: Patient Reports, 1: Clinical Feedback, 2: Biomarkers & ML
+  int _sidebarIndex = 0; // 0: Patient Reports, 1: Clinical Feedback, 2: Appointments
 
   // Active Patient Profile
   late String _activePatientId;
@@ -283,7 +283,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
           : null,
       bottomNavigationBar: isMobile
           ? NavigationBar(
-              selectedIndex: _sidebarIndex.clamp(0, 3),
+              selectedIndex: _sidebarIndex.clamp(0, 2),
               onDestinationSelected: (idx) {
                 setState(() => _sidebarIndex = idx);
               },
@@ -300,11 +300,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                   icon: Icon(Icons.rate_review_outlined),
                   selectedIcon: Icon(Icons.rate_review_rounded, color: Color(0xFF1D4ED8)),
                   label: 'Feedback',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.analytics_outlined),
-                  selectedIcon: Icon(Icons.analytics_rounded, color: Color(0xFF1D4ED8)),
-                  label: 'Biomarkers',
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.event_available_outlined),
@@ -355,8 +350,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                 _buildReportsTab(isMobile)
                               else if (_sidebarIndex == 1)
                                 _buildFeedbackTab(isMobile)
-                              else if (_sidebarIndex == 2)
-                                _buildBiomarkersTab(isMobile)
                               else
                                 _buildAppointmentsTab(isMobile),
                             ],
@@ -1006,7 +999,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                         ],
                       ),
                       TextButton.icon(
-                        onPressed: () => setState(() => _sidebarIndex = 3),
+                        onPressed: () => setState(() => _sidebarIndex = 2),
                         icon: const Icon(Icons.calendar_today_rounded, size: 14, color: Color(0xFF059669)),
                         label: Text(
                           'View All',
