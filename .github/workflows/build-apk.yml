@@ -32,6 +32,9 @@ jobs:
       - name: Accept Android Licenses
         run: yes | flutter doctor --android-licenses || true
 
+      - name: Make Gradle wrapper executable
+        run: chmod +x shayak_mobile/android/gradlew || true
+
       - name: Get Flutter dependencies
         working-directory: ./shayak_mobile
         run: flutter pub get
