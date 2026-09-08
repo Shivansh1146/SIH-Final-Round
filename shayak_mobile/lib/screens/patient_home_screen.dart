@@ -22,6 +22,7 @@ class PatientHomeScreen extends StatefulWidget {
 }
 
 class _PatientHomeScreenState extends State<PatientHomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _sidebarIndex = 0;
   bool _isPlayingAudio = false;
 
@@ -108,23 +109,33 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   }
 
   Future<void> _playListenAudio() async {
-    final text = 'Good morning, $_patientDisplayName. Today\'s gentle activities include Memory Match and the Clock Contour drawing. Find matching pairs and draw at your own calm pace. Current level is $_currentDifficultyLevel. Anita is available anytime you need assistance.';
+    if (_isPlayingAudio) {
+      await AudioNarrationService.instance.stop();
+      setState(() => _isPlayingAudio = false);
+      return;
+    }
 
     setState(() => _isPlayingAudio = true);
-    await AudioNarrationService.instance.speak(text, language: AppLanguage.english);
-    if (mounted) {
-      setState(() => _isPlayingAudio = false);
-    }
+    final textToRead = "Good morning $_patientDisplayName. Today's focus is the Memory Match Activity, "
+        "designed for gentle cognitive engagement at difficulty level $_currentDifficultyLevel. "
+        "You have completed $_totalSessions sessions with an average accuracy of ${_avgAccuracy.toStringAsFixed(0)} percent.";
+    await AudioNarrationService.instance.speak(textToRead);
+    if (mounted) setState(() => _isPlayingAudio = false);
   }
 
   void _resetData() {
-    _fetchBackendPatientData();
+    setState(() {
+      _currentDifficultyLevel = 'Level 2 (Moderate)';
+      _isAdaptiveMode = true;
+      _totalSessions = 13;
+      _avgAccuracy = 76.0;
+      _stabilityScore = 84.0;
+      _recentSessions = [];
+    });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Demo activity & backend data refreshed.', style: GoogleFonts.inter()),
+        content: Text('Demo session state reset to default baseline.', style: GoogleFonts.inter()),
         backgroundColor: AppTheme.forestGreen,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -152,8 +163,68 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 850;
+
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: AppTheme.background,
+      drawer: isMobile
+          ? Drawer(
+              backgroundColor: AppTheme.background,
+              child: AppSidebar(
+                isCaregiver: false,
+                selectedIndex: _sidebarIndex,
+                onSelectIndex: (idx) {
+                  setState(() => _sidebarIndex = idx);
+                },
+                onResetData: _resetData,
+              ),
+            )
+          : null,
+      bottomNavigationBar: isMobile
+          ? Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  top: BorderSide(color: AppTheme.surfaceBorder, width: 1.0),
+                ),
+              ),
+              child: NavigationBar(
+                selectedIndex: _sidebarIndex.clamp(0, 3),
+                onDestinationSelected: (idx) {
+                  setState(() => _sidebarIndex = idx);
+                },
+                backgroundColor: Colors.white,
+                indicatorColor: AppTheme.sageLight,
+                elevation: 3,
+                height: 64,
+                labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+                destinations: const [
+                  NavigationDestination(
+                    icon: Icon(Icons.home_outlined),
+                    selectedIcon: Icon(Icons.home_rounded, color: AppTheme.forestGreen),
+                    label: 'Home',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.psychology_outlined),
+                    selectedIcon: Icon(Icons.psychology_rounded, color: AppTheme.forestGreen),
+                    label: 'Games',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.alarm_outlined),
+                    selectedIcon: Icon(Icons.alarm_rounded, color: AppTheme.forestGreen),
+                    label: 'Reminders',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.bar_chart_rounded),
+                    selectedIcon: Icon(Icons.bar_chart_rounded, color: AppTheme.forestGreen),
+                    label: 'Progress',
+                  ),
+                ],
+              ),
+            )
+          : null,
       body: SafeArea(
         child: Column(
           children: [
@@ -161,26 +232,31 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             AppTopBar(
               currentMode: AppViewMode.patient,
               onModeChanged: widget.onNavigate,
+              onMenuPressed: isMobile ? () => _scaffoldKey.currentState?.openDrawer() : null,
             ),
 
             // Sidebar + Content Row
             Expanded(
               child: Row(
                 children: [
-                  // Left Navigation Sidebar
-                  AppSidebar(
-                    isCaregiver: false,
-                    selectedIndex: _sidebarIndex,
-                    onSelectIndex: (idx) {
-                      setState(() => _sidebarIndex = idx);
-                    },
-                    onResetData: _resetData,
-                  ),
+                  // Left Navigation Sidebar (Desktop & Tablet only)
+                  if (!isMobile)
+                    AppSidebar(
+                      isCaregiver: false,
+                      selectedIndex: _sidebarIndex,
+                      onSelectIndex: (idx) {
+                        setState(() => _sidebarIndex = idx);
+                      },
+                      onResetData: _resetData,
+                    ),
 
                   // Main Content Area
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 36.0, vertical: 24.0),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 18.0 : 36.0,
+                        vertical: isMobile ? 16.0 : 24.0,
+                      ),
                       child: Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 960),
@@ -213,98 +289,169 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   }
 
   Widget _buildPatientHomeContent(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 520;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Greeting Header & Action Buttons Row
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        // Greeting Header & Action Buttons
+        if (isCompact) ...[
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'Good morning,',
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 16.0,
+                      fontSize: 15.0,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Text(
-                        _patientDisplayName,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 34.0,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.forestGreen,
-                          letterSpacing: -0.5,
-                        ),
+                  OutlinedButton.icon(
+                    onPressed: _playListenAudio,
+                    icon: Icon(
+                      _isPlayingAudio ? Icons.volume_up_rounded : Icons.volume_down_rounded,
+                      size: 15,
+                      color: AppTheme.forestGreen,
+                    ),
+                    label: Text(
+                      'Listen',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.forestGreen,
                       ),
-                      const SizedBox(width: 8),
-                      const Text('🌿', style: TextStyle(fontSize: 28)),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'A calm start makes room for a good memory.',
-                    style: GoogleFonts.inter(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w400,
-                      color: AppTheme.textSecondary,
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: AppTheme.surfaceBorder),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
                     ),
                   ),
                 ],
               ),
-            ),
-
-            // Right Actions: Listen & Adjust
-            Row(
-              children: [
-                OutlinedButton.icon(
-                  onPressed: _playListenAudio,
-                  icon: Icon(
-                    _isPlayingAudio ? Icons.volume_up_rounded : Icons.volume_down_rounded,
-                    size: 16,
-                    color: AppTheme.forestGreen,
-                  ),
-                  label: Text(
-                    'Listen',
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  Text(
+                    _patientDisplayName,
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 28.0,
+                      fontWeight: FontWeight.w800,
                       color: AppTheme.forestGreen,
+                      letterSpacing: -0.5,
                     ),
                   ),
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    side: const BorderSide(color: AppTheme.surfaceBorder),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                  ),
+                  const SizedBox(width: 8),
+                  const Text('🌿', style: TextStyle(fontSize: 24)),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'A calm start makes room for a good memory.',
+                style: GoogleFonts.inter(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w400,
+                  color: AppTheme.textSecondary,
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppTheme.surfaceBorder),
-                  ),
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.tune_rounded, size: 17, color: AppTheme.textSecondary),
-                    onPressed: () {},
-                  ),
+              ),
+            ],
+          ),
+        ] else ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Good morning,',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Text(
+                          _patientDisplayName,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 34.0,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.forestGreen,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('🌿', style: TextStyle(fontSize: 28)),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'A calm start makes room for a good memory.',
+                      style: GoogleFonts.inter(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w400,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+
+              // Right Actions: Listen & Adjust
+              Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _playListenAudio,
+                    icon: Icon(
+                      _isPlayingAudio ? Icons.volume_up_rounded : Icons.volume_down_rounded,
+                      size: 16,
+                      color: AppTheme.forestGreen,
+                    ),
+                    label: Text(
+                      'Listen',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.forestGreen,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: AppTheme.surfaceBorder),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppTheme.surfaceBorder),
+                    ),
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(Icons.tune_rounded, size: 17, color: AppTheme.textSecondary),
+                      onPressed: () {},
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
 
         const SizedBox(height: 24),
 
@@ -980,7 +1127,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           title: 'Memory Match Activity',
           description: 'Turn over gentle pairs of everyday items at your own comfortable pace.',
           duration: '5 minutes',
-          difficulty: 'Adaptive (Level 2)',
+          difficulty: '$_currentDifficultyLevel${_isAdaptiveMode ? " (AI Adaptive)" : ""}',
           buttonColor: AppTheme.forestGreen,
           buttonText: 'Play Memory Match',
           onPlay: _startMemoryMatch,
@@ -995,7 +1142,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           title: 'Clock Contour Assessment',
           description: 'Draw a clock circle, write numbers 1 to 12, and set the hands to 10 past 11 with stylus / touch.',
           duration: '3-5 minutes',
-          difficulty: 'Diagnostic Contour',
+          difficulty: 'AI Adaptive (Levels 1-3)',
           buttonColor: AppTheme.warmTerracotta,
           buttonText: 'Start Clock Drawing',
           onPlay: _startClockDrawing,

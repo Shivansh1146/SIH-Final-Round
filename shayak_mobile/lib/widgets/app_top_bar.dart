@@ -8,11 +8,13 @@ enum AppViewMode { landing, patient, caregiver, register }
 class AppTopBar extends StatelessWidget {
   final AppViewMode currentMode;
   final ValueChanged<AppViewMode> onModeChanged;
+  final VoidCallback? onMenuPressed;
 
   const AppTopBar({
     super.key,
     required this.currentMode,
     required this.onModeChanged,
+    this.onMenuPressed,
   });
 
   void _showProfileSwitcherModal(BuildContext context) {
@@ -61,11 +63,11 @@ class AppTopBar extends StatelessWidget {
                               margin: const EdgeInsets.only(bottom: 8),
                               decoration: BoxDecoration(
                                 color: isActive
-                                    ? AppTheme.sageLight.withOpacity(0.5)
+                                    ? AppTheme.sageLight.withValues(alpha: 0.5)
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: isActive ? AppTheme.sageBorder : AppTheme.surfaceBorder.withOpacity(0.5),
+                                  color: isActive ? AppTheme.sageBorder : AppTheme.surfaceBorder.withValues(alpha: 0.5),
                                 ),
                               ),
                               child: ListTile(
@@ -91,29 +93,35 @@ class AppTopBar extends StatelessWidget {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     if (isActive)
-                                      const Icon(
-                                        Icons.check_rounded,
-                                        color: AppTheme.forestGreen,
-                                        size: 18,
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.forestGreen,
+                                          borderRadius: BorderRadius.circular(100),
+                                        ),
+                                        child: Text(
+                                          'ACTIVE',
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w800,
+                                            color: Colors.white,
+                                          ),
+                                        ),
                                       ),
-                                    const SizedBox(width: 8),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete_outline_rounded,
-                                        color: AppTheme.textLight,
-                                        size: 18,
+                                    if (!isActive)
+                                      IconButton(
+                                        icon: const Icon(Icons.delete_outline_rounded, size: 18, color: AppTheme.warmTerracotta),
+                                        tooltip: 'Delete profile',
+                                        onPressed: () {
+                                          PatientProfile.deleteProfileFromHive(p.id);
+                                          setDialogState(() {});
+                                        },
                                       ),
-                                      tooltip: 'Delete Profile',
-                                      onPressed: () {
-                                        PatientProfile.deleteProfileFromHive(p.id);
-                                        setDialogState(() {});
-                                      },
-                                    ),
                                   ],
                                 ),
                                 onTap: () {
                                   PatientProfile.setActiveProfile(p.id);
-                                  Navigator.pop(dialogCtx);
+                                  if (ctx.mounted) Navigator.pop(dialogCtx);
                                 },
                               ),
                             );
@@ -122,55 +130,28 @@ class AppTopBar extends StatelessWidget {
                       ),
                     ),
 
-                    const Divider(height: 24, color: AppTheme.surfaceBorder),
+                    const SizedBox(height: 16),
+                    const Divider(color: AppTheme.surfaceBorder, height: 1),
+                    const SizedBox(height: 16),
 
-                    // Action: Register New Patient
-                    InkWell(
-                      onTap: () {
-                        Navigator.pop(dialogCtx);
-                        onModeChanged(AppViewMode.register);
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.person_add_outlined, color: AppTheme.forestGreen, size: 18),
-                            const SizedBox(width: 10),
-                            Text(
-                              '+ Register New Patient',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.forestGreen,
-                              ),
-                            ),
-                          ],
+                    // Add New Patient Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(dialogCtx);
+                          onModeChanged(AppViewMode.register);
+                        },
+                        icon: const Icon(Icons.person_add_rounded, size: 16),
+                        label: Text(
+                          'Register New Patient',
+                          style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700),
                         ),
-                      ),
-                    ),
-
-                    // Action: Manage & Delete IDs
-                    InkWell(
-                      onTap: () {
-                        setDialogState(() {});
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.people_outline_rounded, color: AppTheme.textSecondary, size: 18),
-                            const SizedBox(width: 10),
-                            Text(
-                              'Manage & Delete IDs',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
-                          ],
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.forestGreen,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
                         ),
                       ),
                     ),
@@ -187,7 +168,8 @@ class AppTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 680;
+    final isMobile = screenWidth < 768;
+    final isTiny = screenWidth < 420;
 
     return ValueListenableBuilder<String?>(
       valueListenable: PatientProfile.activeProfileNotifier,
@@ -196,8 +178,8 @@ class AppTopBar extends StatelessWidget {
         final patientName = profile?.fullName ?? 'Ramesh Kumar';
 
         return Container(
-          height: isMobile ? 64 : 72,
-          padding: EdgeInsets.symmetric(horizontal: isMobile ? 16.0 : 28.0),
+          height: isMobile ? 60 : 72,
+          padding: EdgeInsets.symmetric(horizontal: isMobile ? 12.0 : 28.0),
           decoration: const BoxDecoration(
             color: AppTheme.background,
             border: Border(
@@ -206,23 +188,36 @@ class AppTopBar extends StatelessWidget {
           ),
           child: Row(
             children: [
+              // Hamburger Menu (Mobile)
+              if (onMenuPressed != null) ...[
+                IconButton(
+                  icon: const Icon(Icons.menu_rounded, color: AppTheme.forestGreen, size: 22),
+                  onPressed: onMenuPressed,
+                  tooltip: 'Open menu',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                ),
+                const SizedBox(width: 4),
+              ],
+
               // Logo & Branding
               InkWell(
                 onTap: () => onModeChanged(AppViewMode.landing),
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.all(4.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: isMobile ? 32 : 38,
-                        height: isMobile ? 32 : 38,
+                        width: isMobile ? 30 : 38,
+                        height: isMobile ? 30 : 38,
                         decoration: BoxDecoration(
                           color: AppTheme.forestGreen,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.forestGreen.withOpacity(0.25),
+                              color: AppTheme.forestGreen.withValues(alpha: 0.25),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -232,11 +227,11 @@ class AppTopBar extends StatelessWidget {
                           child: Icon(
                             Icons.eco_rounded,
                             color: Colors.white,
-                            size: isMobile ? 16 : 20,
+                            size: isMobile ? 15 : 20,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 8),
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,7 +242,7 @@ class AppTopBar extends StatelessWidget {
                                 TextSpan(
                                   text: 'SAHAYAK',
                                   style: GoogleFonts.plusJakartaSans(
-                                    fontSize: isMobile ? 15 : 17,
+                                    fontSize: isMobile ? 14.5 : 17,
                                     fontWeight: FontWeight.w800,
                                     color: AppTheme.forestGreen,
                                     letterSpacing: 0.5,
@@ -256,7 +251,7 @@ class AppTopBar extends StatelessWidget {
                                 TextSpan(
                                   text: '—AI',
                                   style: GoogleFonts.plusJakartaSans(
-                                    fontSize: isMobile ? 15 : 17,
+                                    fontSize: isMobile ? 14.5 : 17,
                                     fontWeight: FontWeight.w800,
                                     color: AppTheme.warmTerracotta,
                                     letterSpacing: 0.5,
@@ -284,7 +279,7 @@ class AppTopBar extends StatelessWidget {
 
               const Spacer(),
 
-              // Right Status & Actions (Mobile Adaptive)
+              // Right Status & Actions
               if (currentMode == AppViewMode.landing) ...[
                 if (!isMobile)
                   Container(
@@ -310,8 +305,8 @@ class AppTopBar extends StatelessWidget {
                     onPressed: () => onModeChanged(AppViewMode.patient),
                   ),
               ] else ...[
-                // Status Pill with Green Dot (Clickable for Switcher)
-                if (screenWidth > 540) ...[
+                // Profile Switcher Pill / Chip
+                if (screenWidth > 600)
                   InkWell(
                     onTap: () => _showProfileSwitcherModal(context),
                     borderRadius: BorderRadius.circular(100),
@@ -323,6 +318,7 @@ class AppTopBar extends StatelessWidget {
                         border: Border.all(color: AppTheme.surfaceBorder),
                       ),
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
                             width: 7,
@@ -350,27 +346,71 @@ class AppTopBar extends StatelessWidget {
                         ],
                       ),
                     ),
+                  )
+                else
+                  InkWell(
+                    onTap: () => _showProfileSwitcherModal(context),
+                    borderRadius: BorderRadius.circular(100),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(100),
+                        border: Border.all(color: AppTheme.surfaceBorder),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: const BoxDecoration(
+                              color: AppTheme.statusGreen,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: isTiny ? 60 : 75),
+                            child: Text(
+                              patientName.split(' ').first,
+                              style: GoogleFonts.inter(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textSecondary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 14,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                ],
+
+                const SizedBox(width: 6),
 
                 // Mode Switcher Button
                 if (currentMode == AppViewMode.patient)
                   OutlinedButton.icon(
                     onPressed: () => onModeChanged(AppViewMode.caregiver),
-                    icon: const Icon(Icons.person_outline_rounded, size: 15, color: AppTheme.textPrimary),
+                    icon: const Icon(Icons.person_outline_rounded, size: 14, color: AppTheme.textPrimary),
                     label: Text(
-                      isMobile ? 'Caregiver' : 'Caregiver view',
+                      'Caregiver',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: isMobile ? 12.0 : 13.5,
-                        fontWeight: FontWeight.w600,
+                        fontSize: isMobile ? 11.5 : 13.0,
+                        fontWeight: FontWeight.w700,
                         color: AppTheme.textPrimary,
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.white,
                       side: const BorderSide(color: AppTheme.surfaceBorder),
-                      padding: EdgeInsets.symmetric(horizontal: isMobile ? 10 : 16, vertical: isMobile ? 6 : 10),
+                      padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 14, vertical: isMobile ? 6 : 8),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(100),
                       ),
@@ -379,19 +419,19 @@ class AppTopBar extends StatelessWidget {
                 else
                   OutlinedButton.icon(
                     onPressed: () => onModeChanged(AppViewMode.patient),
-                    icon: const Icon(Icons.person_outline_rounded, size: 15, color: AppTheme.textPrimary),
+                    icon: const Icon(Icons.person_outline_rounded, size: 14, color: AppTheme.textPrimary),
                     label: Text(
-                      isMobile ? 'Patient' : 'Patient app',
+                      'Patient',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: isMobile ? 12.0 : 13.5,
-                        fontWeight: FontWeight.w600,
+                        fontSize: isMobile ? 11.5 : 13.0,
+                        fontWeight: FontWeight.w700,
                         color: AppTheme.textPrimary,
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.white,
                       side: const BorderSide(color: AppTheme.surfaceBorder),
-                      padding: EdgeInsets.symmetric(horizontal: isMobile ? 10 : 16, vertical: isMobile ? 6 : 10),
+                      padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 14, vertical: isMobile ? 6 : 8),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(100),
                       ),

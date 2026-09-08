@@ -240,10 +240,79 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     }
   }
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 850;
+
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: AppTheme.background,
+      drawer: isMobile
+          ? Drawer(
+              backgroundColor: AppTheme.background,
+              child: AppSidebar(
+                isCaregiver: true,
+                selectedIndex: _sidebarIndex,
+                onSelectIndex: (idx) {
+                  setState(() => _sidebarIndex = idx);
+                },
+                onResetData: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Caregiver cache cleared and resynced.', style: GoogleFonts.inter()),
+                      backgroundColor: AppTheme.forestGreen,
+                    ),
+                  );
+                },
+              ),
+            )
+          : null,
+      bottomNavigationBar: isMobile
+          ? Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  top: BorderSide(color: AppTheme.surfaceBorder, width: 1.0),
+                ),
+              ),
+              child: NavigationBar(
+                selectedIndex: _sidebarIndex.clamp(0, 3),
+                onDestinationSelected: (idx) {
+                  setState(() => _sidebarIndex = idx);
+                },
+                backgroundColor: Colors.white,
+                indicatorColor: AppTheme.sageLight,
+                elevation: 3,
+                height: 64,
+                labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+                destinations: const [
+                  NavigationDestination(
+                    icon: Icon(Icons.dashboard_outlined),
+                    selectedIcon: Icon(Icons.dashboard_rounded, color: AppTheme.forestGreen),
+                    label: 'Overview',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.auto_awesome_outlined),
+                    selectedIcon: Icon(Icons.auto_awesome_rounded, color: AppTheme.forestGreen),
+                    label: 'Decisions',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.calendar_today_outlined),
+                    selectedIcon: Icon(Icons.calendar_today_rounded, color: AppTheme.forestGreen),
+                    label: 'Care Plan',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.sensors_rounded),
+                    selectedIcon: Icon(Icons.sensors_rounded, color: AppTheme.forestGreen),
+                    label: 'ESP32',
+                  ),
+                ],
+              ),
+            )
+          : null,
       body: SafeArea(
         child: Column(
           children: [
@@ -251,31 +320,36 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
             AppTopBar(
               currentMode: AppViewMode.caregiver,
               onModeChanged: widget.onNavigate,
+              onMenuPressed: isMobile ? () => _scaffoldKey.currentState?.openDrawer() : null,
             ),
 
             // Sidebar + Main Workspace
             Expanded(
               child: Row(
                 children: [
-                  AppSidebar(
-                    isCaregiver: true,
-                    selectedIndex: _sidebarIndex,
-                    onSelectIndex: (idx) {
-                      setState(() => _sidebarIndex = idx);
-                    },
-                    onResetData: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Caregiver cache cleared and resynced.', style: GoogleFonts.inter()),
-                          backgroundColor: AppTheme.forestGreen,
-                        ),
-                      );
-                    },
-                  ),
+                  if (!isMobile)
+                    AppSidebar(
+                      isCaregiver: true,
+                      selectedIndex: _sidebarIndex,
+                      onSelectIndex: (idx) {
+                        setState(() => _sidebarIndex = idx);
+                      },
+                      onResetData: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Caregiver cache cleared and resynced.', style: GoogleFonts.inter()),
+                            backgroundColor: AppTheme.forestGreen,
+                          ),
+                        );
+                      },
+                    ),
 
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 36.0, vertical: 24.0),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 18.0 : 36.0,
+                        vertical: isMobile ? 16.0 : 24.0,
+                      ),
                       child: Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 960),
