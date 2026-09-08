@@ -556,7 +556,8 @@ class AppTopBar extends StatelessWidget {
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
-                                   const Icon(
+                          ),
+                          const Icon(
                             Icons.keyboard_arrow_down_rounded,
                             size: 13,
                             color: AppTheme.textSecondary,
