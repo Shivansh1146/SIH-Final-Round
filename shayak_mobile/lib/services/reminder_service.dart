@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'audio_narration_service.dart';
+import 'localization_service.dart';
 
 class ReminderService extends ChangeNotifier {
   static final ReminderService instance = ReminderService._internal();
@@ -115,9 +116,16 @@ class ReminderService extends ChangeNotifier {
   }
 
   void speakReminder(ReminderItem item) {
+    final lang = LocalizationService.instance.currentLanguage;
     final patientName = PatientProfile.loadFromHive()?.fullName.split(' ').first ?? 'Patient';
-    final text = 'Hello $patientName. It is ${item.formattedTime}, time for ${item.title}. ${item.notes ?? ''}';
-    AudioNarrationService.instance.speak(text);
+    final text = LocalizationService.buildReminderSpokenSentence(
+      patientName: patientName,
+      timeStr: item.formattedTime,
+      rawTitle: item.title,
+      rawNotes: item.notes,
+      overrideLang: lang,
+    );
+    AudioNarrationService.instance.speak(text, language: lang);
   }
 
   void triggerTestAlert(BuildContext context) {
@@ -208,11 +216,21 @@ class ReminderService extends ChangeNotifier {
   void _triggerReminderAlert(BuildContext context, ReminderItem item) {
     if (!context.mounted) return;
 
+    final lang = LocalizationService.instance.currentLanguage;
     final patientName = PatientProfile.loadFromHive()?.fullName.split(' ').first ?? 'Patient';
 
     // Real-time audio narration for the alert
-    final alertSpeechText = 'Hello $patientName. It is ${item.formattedTime}, time for ${item.title}. ${item.notes ?? ''}';
-    AudioNarrationService.instance.speak(alertSpeechText);
+    final alertSpeechText = LocalizationService.buildReminderSpokenSentence(
+      patientName: patientName,
+      timeStr: item.formattedTime,
+      rawTitle: item.title,
+      rawNotes: item.notes,
+      overrideLang: lang,
+    );
+    AudioNarrationService.instance.speak(alertSpeechText, language: lang);
+
+    final displayTitle = LocalizationService.trReminderTitle(item.title, lang);
+    final displayNotes = LocalizationService.trReminderNotes(item.notes, lang);
 
     showDialog(
       context: context,
@@ -246,7 +264,7 @@ class ReminderService extends ChangeNotifier {
                 borderRadius: BorderRadius.circular(100),
               ),
               child: Text(
-                'REMINDER ALERT • ${item.formattedTime}',
+                '${LocalizationService.tr('reminders', lang).toUpperCase()} • ${item.formattedTime}',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -258,7 +276,7 @@ class ReminderService extends ChangeNotifier {
             const SizedBox(height: 12),
 
             Text(
-              'Hello $patientName, it\'s time for:',
+              '${LocalizationService.getTimeGreeting(lang)} $patientName',
               style: GoogleFonts.inter(
                 fontSize: 14,
                 color: AppTheme.textSecondary,
@@ -267,7 +285,7 @@ class ReminderService extends ChangeNotifier {
             ),
             const SizedBox(height: 6),
             Text(
-              item.title,
+              displayTitle,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
@@ -276,7 +294,7 @@ class ReminderService extends ChangeNotifier {
               textAlign: TextAlign.center,
             ),
 
-            if (item.notes != null && item.notes!.isNotEmpty) ...[
+            if (displayNotes.isNotEmpty) ...[
               const SizedBox(height: 10),
               Container(
                 width: double.infinity,
@@ -292,7 +310,7 @@ class ReminderService extends ChangeNotifier {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        item.notes!,
+                        displayNotes,
                         style: GoogleFonts.inter(fontSize: 12.5, color: AppTheme.textPrimary),
                       ),
                     ),
@@ -314,7 +332,7 @@ class ReminderService extends ChangeNotifier {
                       Navigator.pop(alertCtx);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Snoozed "${item.title}" for 10 minutes.', style: GoogleFonts.inter()),
+                          content: Text('Snoozed "$displayTitle" for 10 minutes.', style: GoogleFonts.inter()),
                           backgroundColor: AppTheme.forestGreen,
                           behavior: SnackBarBehavior.floating,
                         ),
@@ -342,7 +360,7 @@ class ReminderService extends ChangeNotifier {
                       Navigator.pop(alertCtx);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('✓ Marked "${item.title}" as completed!', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                          content: Text('✓ Marked "$displayTitle" as completed!', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
                           backgroundColor: AppTheme.forestGreen,
                           behavior: SnackBarBehavior.floating,
                         ),
@@ -350,7 +368,7 @@ class ReminderService extends ChangeNotifier {
                     },
                     icon: const Icon(Icons.check_circle_rounded, size: 18),
                     label: Text(
-                      'I Completed This',
+                      '✓ Done',
                       style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 13),
                     ),
                     style: ElevatedButton.styleFrom(

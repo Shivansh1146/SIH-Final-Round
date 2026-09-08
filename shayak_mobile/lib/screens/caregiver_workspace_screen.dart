@@ -9,6 +9,7 @@ import '../theme/app_theme.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/app_sidebar.dart';
 import '../services/session_service.dart';
+import '../services/localization_service.dart';
 import '../models/patient_profile.dart';
 
 class CaregiverWorkspaceScreen extends StatefulWidget {
@@ -451,11 +452,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
   }
 
   String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour >= 5 && hour < 12) return 'Good morning';
-    if (hour >= 12 && hour < 17) return 'Good afternoon';
-    if (hour >= 17 && hour < 21) return 'Good evening';
-    return 'Good night';
+    return LocalizationService.getTimeGreeting().replaceAll(',', '').trim();
   }
 
   String _getFormattedSyncTime() {

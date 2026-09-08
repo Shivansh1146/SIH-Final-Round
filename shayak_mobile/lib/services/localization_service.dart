@@ -92,6 +92,177 @@ class LocalizationService {
     }
   }
 
+  static String trReminderTitle(String title, [AppLanguage? overrideLang]) {
+    final t = title.toLowerCase().trim();
+    if (t.contains('morning') && (t.contains('med') || t.contains('dawa') || t.contains('medicine'))) {
+      return tr('rem_morning_medicine', overrideLang);
+    }
+    if (t.contains('hydrat') || t.contains('water') || t.contains('pani')) {
+      return tr('rem_hydration', overrideLang);
+    }
+    if (t.contains('lunch') || t.contains('vitamin') || t.contains('meal')) {
+      return tr('rem_lunch', overrideLang);
+    }
+    if (t.contains('memory') || t.contains('match') || t.contains('game')) {
+      return tr('rem_memory_game', overrideLang);
+    }
+    if (t.contains('walk') || t.contains('garden') || t.contains('evening')) {
+      return tr('rem_evening_walk', overrideLang);
+    }
+    if (t.contains('night') && (t.contains('med') || t.contains('medicine'))) {
+      return tr('rem_night_medicine', overrideLang);
+    }
+    return title;
+  }
+
+  static String trReminderNotes(String? notes, [AppLanguage? overrideLang]) {
+    if (notes == null || notes.isEmpty) return '';
+    final n = notes.toLowerCase().trim();
+    if (n.contains('warm water') || n.contains('breakfast')) {
+      return tr('rem_morning_medicine_notes', overrideLang);
+    }
+    if (n.contains('glass') || n.contains('fresh water')) {
+      return tr('rem_hydration_notes', overrideLang);
+    }
+    if (n.contains('wholesome') || n.contains('nutritious')) {
+      return tr('rem_lunch_notes', overrideLang);
+    }
+    if (n.contains('5-minute') || n.contains('cognitive')) {
+      return tr('rem_memory_game_notes', overrideLang);
+    }
+    if (n.contains('15-minute') || n.contains('stroll') || n.contains('fresh air')) {
+      return tr('rem_evening_walk_notes', overrideLang);
+    }
+    if (n.contains('before going') || n.contains('bed')) {
+      return tr('rem_night_medicine_notes', overrideLang);
+    }
+    return notes;
+  }
+
+  static String buildReminderSpokenSentence({
+    required String patientName,
+    required String timeStr,
+    required String rawTitle,
+    String? rawNotes,
+    AppLanguage? overrideLang,
+  }) {
+    final lang = overrideLang ?? languageNotifier.value;
+    final title = trReminderTitle(rawTitle, lang);
+    final notes = trReminderNotes(rawNotes, lang);
+
+    switch (lang) {
+      case AppLanguage.hindi:
+        return 'नमस्ते $patientName। समय $timeStr हो गया है, $title का समय है। $notes';
+      case AppLanguage.assamese:
+        return 'নমস্কাৰ $patientName। এতিয়া $timeStr বাজিছে, $title-ৰ সময় হৈছে। $notes';
+      case AppLanguage.bengali:
+        return 'নমস্কার $patientName। এখন $timeStr বাজে, $title-এর সময় হয়েছে। $notes';
+      case AppLanguage.manipuri:
+        return 'খুরুমজরি $patientName। মতম $timeStr তারি, $title তৌনবগী মতমনি। $notes';
+      case AppLanguage.bodo:
+        return 'खुलुमबाय $patientName। दा $timeStr जाबाय, $title नि समा जाबाय। $notes';
+      case AppLanguage.nepali:
+        return 'नमस्ते $patientName। अहिले $timeStr बज्यो, $title को समय भएको छ। $notes';
+      case AppLanguage.mizo:
+        return 'Chibai $patientName. Dar $timeStr a ri ta, $title a hun e. $notes';
+      case AppLanguage.english:
+      default:
+        return 'Hello $patientName. It is $timeStr, time for $title. $notes';
+    }
+  }
+
+  static String buildScheduleSpokenSentence({
+    required String patientName,
+    required List<Map<String, String>> items,
+    AppLanguage? overrideLang,
+  }) {
+    final lang = overrideLang ?? languageNotifier.value;
+    if (items.isEmpty) {
+      switch (lang) {
+        case AppLanguage.hindi:
+          return 'नमस्ते $patientName। आज के सभी कार्य पूरे हो चुके हैं। बहुत बढ़िया!';
+        case AppLanguage.assamese:
+          return 'নমস্কাৰ $patientName। আজিৰ সকলো কাম সম্পূৰ্ণ হৈছে। অতি উত্তম!';
+        case AppLanguage.bengali:
+          return 'নমস্কার $patientName। আজকের সমস্ত কাজ সম্পন্ন হয়েছে। অসাধারণ!';
+        case AppLanguage.manipuri:
+          return 'খুরুমজরি $patientName। ঙসিগী পুম্নমক লোইশিনখ্রে। য়াম্না ফরে!';
+        case AppLanguage.bodo:
+          return 'खुलुमबाय $patientName। दिनैनि गासै हाबाफोरा जोबबाय। जोबोद मोजां!';
+        case AppLanguage.nepali:
+          return 'नमस्ते $patientName। आजका सबै कामहरू पूरा भएका छन्। धेरै राम्रो!';
+        case AppLanguage.mizo:
+          return 'Chibai $patientName. Vawiina hnathawh tur zawng zawng a zo tawh. A ropui hle mai!';
+        case AppLanguage.english:
+        default:
+          return 'Hello $patientName. All reminders for today are completed. Wonderful job!';
+      }
+    }
+
+    final buffer = StringBuffer();
+    switch (lang) {
+      case AppLanguage.hindi:
+        buffer.write('नमस्ते $patientName। आज का आपका कार्यक्रम इस प्रकार है: ');
+        for (final item in items) {
+          final t = trReminderTitle(item['title'] ?? '', lang);
+          buffer.write('${item['time']} पर $t। ');
+        }
+        break;
+      case AppLanguage.assamese:
+        buffer.write('নমস্কাৰ $patientName। আজিৰ আপোনাৰ কাৰ্যসূচী এনেধৰণৰ: ');
+        for (final item in items) {
+          final t = trReminderTitle(item['title'] ?? '', lang);
+          buffer.write('${item['time']} বজাত $t। ');
+        }
+        break;
+      case AppLanguage.bengali:
+        buffer.write('নমস্কার $patientName। আজকের আপনার সময়সূচী হলো: ');
+        for (final item in items) {
+          final t = trReminderTitle(item['title'] ?? '', lang);
+          buffer.write('${item['time']}-এ $t। ');
+        }
+        break;
+      case AppLanguage.manipuri:
+        buffer.write('খুরুমজরি $patientName। ঙসিগী মতম লেপপা অসুম্না লৈ: ');
+        for (final item in items) {
+          final t = trReminderTitle(item['title'] ?? '', lang);
+          buffer.write('${item['time']} দা $t। ');
+        }
+        break;
+      case AppLanguage.bodo:
+        buffer.write('खुलुमबाय $patientName। दिनैनि नोंथांनि सम फारिलाइया बेबादि: ');
+        for (final item in items) {
+          final t = trReminderTitle(item['title'] ?? '', lang);
+          buffer.write('${item['time']} आव $t। ');
+        }
+        break;
+      case AppLanguage.nepali:
+        buffer.write('नमस्ते $patientName। आजको तपाईंको तालिका यस प्रकार छ: ');
+        for (final item in items) {
+          final t = trReminderTitle(item['title'] ?? '', lang);
+          buffer.write('${item['time']} मा $t। ');
+        }
+        break;
+      case AppLanguage.mizo:
+        buffer.write('Chibai $patientName. Vawiina i hun ruahman chu hetiang a ni: ');
+        for (final item in items) {
+          final t = trReminderTitle(item['title'] ?? '', lang);
+          buffer.write('Dar ${item['time']}-ah $t. ');
+        }
+        break;
+      case AppLanguage.english:
+      default:
+        buffer.write('Hello $patientName. Here is your schedule for today: ');
+        for (final item in items) {
+          final t = trReminderTitle(item['title'] ?? '', lang);
+          buffer.write('$t scheduled for ${item['time']}. ');
+        }
+        break;
+    }
+    return buffer.toString();
+  }
+
+
   static final Map<AppLanguage, Map<String, String>> _translations = {
     AppLanguage.english: {
       'good_morning': 'Good morning,',
@@ -132,6 +303,18 @@ class LocalizationService {
       'patient': 'Patient',
       'switch_language': 'Change Language',
       'select_language': 'Select Preferred Language',
+      'rem_morning_medicine': 'Morning medicine',
+      'rem_morning_medicine_notes': 'Take with warm water after breakfast',
+      'rem_hydration': 'Morning hydration & water',
+      'rem_hydration_notes': 'A glass of fresh water',
+      'rem_lunch': 'Lunch & vitamins',
+      'rem_lunch_notes': 'Wholesome nutritious lunch',
+      'rem_memory_game': 'Memory Match game activity',
+      'rem_memory_game_notes': 'Daily 5-minute cognitive exercise',
+      'rem_evening_walk': 'Evening garden walk',
+      'rem_evening_walk_notes': 'Gentle 15-minute stroll in fresh air',
+      'rem_night_medicine': 'Night medicine',
+      'rem_night_medicine_notes': 'Before going to bed',
     },
     AppLanguage.hindi: {
       'good_morning': 'शुभ प्रभात,',
@@ -172,6 +355,18 @@ class LocalizationService {
       'patient': 'मरीज',
       'switch_language': 'भाषा बदलें',
       'select_language': 'पसंदीदा भाषा चुनें',
+      'rem_morning_medicine': 'सुबह की दवा (Morning medicine)',
+      'rem_morning_medicine_notes': 'नाश्ते के बाद गुनगुने पानी के साथ लें',
+      'rem_hydration': 'सुबह का पानी और ताजगी (Hydration)',
+      'rem_hydration_notes': 'एक गिलास ताजा पानी पिएं',
+      'rem_lunch': 'दोपहर का भोजन व विटामिन (Lunch)',
+      'rem_lunch_notes': 'पौष्टिक व सुपाच्य दोपहर का खाना',
+      'rem_memory_game': 'स्मृति मिलान खेल (Memory Match)',
+      'rem_memory_game_notes': 'दैनिक 5 मिनट का दिमागी अभ्यास',
+      'rem_evening_walk': 'शाम की बागवानी व टहलना (Garden Walk)',
+      'rem_evening_walk_notes': 'ताजी हवा में 15 मिनट की हल्की सैर',
+      'rem_night_medicine': 'रात की दवा (Night medicine)',
+      'rem_night_medicine_notes': 'सोने से पहले लें',
     },
     AppLanguage.assamese: {
       'good_morning': 'শুভ প্ৰভাত,',
@@ -212,6 +407,18 @@ class LocalizationService {
       'patient': 'ৰোগী',
       'switch_language': 'ভাষা সলনি কৰক',
       'select_language': 'পছন্দৰ ভাষা বাছনি কৰক',
+      'rem_morning_medicine': 'ৰাতিপুৱাৰ ঔষধ (Morning medicine)',
+      'rem_morning_medicine_notes': 'জলপান খোৱাৰ পিছত কুহুমীয়া পানীৰে খাব',
+      'rem_hydration': 'ৰাতিপুৱাৰ পানী খোৱা (Hydration)',
+      'rem_hydration_notes': 'এগিলাচ সতেজ পানী খাওক',
+      'rem_lunch': 'দুপৰীয়াৰ আহাৰ আৰু ভিটামিন (Lunch)',
+      'rem_lunch_notes': 'পুষ্টিকৰ দুপৰীয়াৰ আহাৰ',
+      'rem_memory_game': 'স্মৃতি মিলন খেল (Memory Match)',
+      'rem_memory_game_notes': 'দৈনিক ৫ মিনিটৰ স্মৃতি অনুশীলন',
+      'rem_evening_walk': 'সন্ধিয়াৰ খোজ কঢ়া (Evening Walk)',
+      'rem_evening_walk_notes': 'সতেজ বতাহত ১৫ মিনিটৰ শান্ত খোজ',
+      'rem_night_medicine': 'ৰাতিৰ ঔষধ (Night medicine)',
+      'rem_night_medicine_notes': 'শোৱাৰ আগতে খাব',
     },
     AppLanguage.bengali: {
       'good_morning': 'সুপ্রভাত,',
@@ -252,6 +459,18 @@ class LocalizationService {
       'patient': 'রোগী',
       'switch_language': 'ভাষা পরিবর্তন করুন',
       'select_language': 'পছন্দের ভাষা নির্বাচন করুন',
+      'rem_morning_medicine': 'সকালের ওষুধ (Morning medicine)',
+      'rem_morning_medicine_notes': 'প্রাতরাশের পর হালকা গরম জল দিয়ে খাবেন',
+      'rem_hydration': 'সকালের জলপান (Hydration)',
+      'rem_hydration_notes': 'এক গ্লাস তাজা জল পান করুন',
+      'rem_lunch': 'দুপুরের খাবার ও ভিটামিন (Lunch)',
+      'rem_lunch_notes': 'পুষ্টিকর দুপুরের খাবার',
+      'rem_memory_game': 'স্মৃতি মেলানো খেলা (Memory Match)',
+      'rem_memory_game_notes': 'প্রতিদিনের ৫ মিনিটের মস্তিষ্কের ব্যায়াম',
+      'rem_evening_walk': 'সন্ধ্যার সান্ধ্যভ্রমণ (Evening Walk)',
+      'rem_evening_walk_notes': 'তাজা বাতাসে ১৫ মিনিটের শান্ত হাঁটা',
+      'rem_night_medicine': 'রাতের ওষুধ (Night medicine)',
+      'rem_night_medicine_notes': 'ঘুমানোর আগে খাবেন',
     },
     AppLanguage.manipuri: {
       'good_morning': 'নুমিৎ খাবল,',
@@ -292,6 +511,18 @@ class LocalizationService {
       'patient': 'অনা-লায়েংবা',
       'switch_language': 'লোন হোংদোকপিয়ু',
       'select_language': 'পাম্বা লোন খনবিয়ু',
+      'rem_morning_medicine': 'অয়ুক্কী হিদাক (Morning medicine)',
+      'rem_morning_medicine_notes': 'চাক চাবা মতুংদা ঈশিং শাবা অমগা থকপিয়ু',
+      'rem_hydration': 'অয়ুক্কী ঈশিং থকপা (Hydration)',
+      'rem_hydration_notes': 'গ্লাস অমা তাজা ঈশিং থকপিয়ু',
+      'rem_lunch': 'নুংথিলগী চাক অমসুং ভিটামিন (Lunch)',
+      'rem_lunch_notes': 'মচীন-মনাও হৈবা নুংথিলগী চাক',
+      'rem_memory_game': 'নিংশিংবা চাংয়েং শান্নবা (Memory Match)',
+      'rem_memory_game_notes': 'নুমিৎ খুদিংগী মিনিট ৫গী শান্নবা',
+      'rem_evening_walk': 'নুমিদাংগী খোঙনা চৎপা (Evening Walk)',
+      'rem_evening_walk_notes': 'অফবা নুংশিত্তা মিনিট ১৫ খোঙনা চৎপা',
+      'rem_night_medicine': 'অহিংগী হিদাক (Night medicine)',
+      'rem_night_medicine_notes': 'তুমদ্রিঙৈগী মমাংদা থকপিয়ু',
     },
     AppLanguage.bodo: {
       'good_morning': 'फुंबिलिनि खुलुमबाय,',
@@ -332,6 +563,18 @@ class LocalizationService {
       'patient': 'साग्लोबग्रा',
       'switch_language': 'राव सोलाय',
       'select_language': 'राव सायख',
+      'rem_morning_medicine': 'फुंबिलिनि मुलि (Morning medicine)',
+      'rem_morning_medicine_notes': 'फुंनि जाखांनानै गुदुं दैजों लो',
+      'rem_hydration': 'फुंबिलिनि दै लोनाय (Hydration)',
+      'rem_hydration_notes': 'गोथां दै ग्लाससे लो',
+      'rem_lunch': 'सानजौफुनि ओंखाम आरो भिटामिन (Lunch)',
+      'rem_lunch_notes': 'पुष्टिकोर सानजौफुनि ओंखाम',
+      'rem_memory_game': 'गोसोखांथि गोरोबनाय गेलेनाय (Memory Match)',
+      'rem_memory_game_notes': 'सानफ्रोमबो ५ मिनिटनि गोसो आनजाद',
+      'rem_evening_walk': 'बेलासिनि बागान दावबायनाय (Evening Walk)',
+      'rem_evening_walk_notes': 'बार मोजांआव १५ मिनिट लासै दावबाय',
+      'rem_night_medicine': 'होरनि मुलि (Night medicine)',
+      'rem_night_medicine_notes': 'उन्दुनायनि सिगां लो',
     },
     AppLanguage.nepali: {
       'good_morning': 'शुभ प्रभात,',
@@ -372,6 +615,18 @@ class LocalizationService {
       'patient': 'बिरामी',
       'switch_language': 'भाषा बदल्नुहोस्',
       'select_language': 'भाषा चयन गर्नुहोस्',
+      'rem_morning_medicine': 'बिहानको औषधि (Morning medicine)',
+      'rem_morning_medicine_notes': 'बिहानको खाजा पछि मनतातो पानीसँग लिनुहोस्',
+      'rem_hydration': 'बिहानको पानी (Hydration)',
+      'rem_hydration_notes': 'एक गिलास ताजा पानी पिउनुहोस्',
+      'rem_lunch': 'दिउँसोको खाना र भिटामिन (Lunch)',
+      'rem_lunch_notes': 'पौष्टिक र सन्तुलित दिउँसोको खाना',
+      'rem_memory_game': 'स्मरण मिलान खेल (Memory Match)',
+      'rem_memory_game_notes': 'दैनिक ५ मिनेटको मानसिक अभ्यास',
+      'rem_evening_walk': 'साँझको बगैंचा पैदल यात्रा (Garden Walk)',
+      'rem_evening_walk_notes': 'ताजा हावामा १५ मिनेटको शान्त हिँडाइ',
+      'rem_night_medicine': 'रातको औषधि (Night medicine)',
+      'rem_night_medicine_notes': 'सुत्नु अघि लिनुहोस्',
     },
     AppLanguage.mizo: {
       'good_morning': 'Chibai zing chibai,',
@@ -412,6 +667,18 @@ class LocalizationService {
       'patient': 'Damlo',
       'switch_language': 'Tawng thlakna',
       'select_language': 'Tawng duhzawng thlang rawh',
+      'rem_morning_medicine': 'Zing damdawi (Morning medicine)',
+      'rem_morning_medicine_notes': 'Tukṭhuan ei zawhah tui lum nen ei rawh',
+      'rem_hydration': 'Zing tui in (Hydration)',
+      'rem_hydration_notes': 'Tui thianghlim no khat in rawh',
+      'rem_lunch': 'Chhunchaw leh vitamins (Lunch)',
+      'rem_lunch_notes': 'Chhunchaw ṭha leh hrisel',
+      'rem_memory_game': 'Hriatrengna Inmilh Infiamna (Memory Match)',
+      'rem_memory_game_notes': 'Ni tina minute 5 rilru sawizawina',
+      'rem_evening_walk': 'Tlai kal chhuah (Evening Walk)',
+      'rem_evening_walk_notes': 'Boruak thianghlima minute 15 kal velna',
+      'rem_night_medicine': 'Zan damdawi (Night medicine)',
+      'rem_night_medicine_notes': 'Mut dawnah ei rawh',
     },
   };
 }

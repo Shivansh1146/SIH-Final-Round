@@ -359,7 +359,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Good morning,',
+                    LocalizationService.getTimeGreeting(),
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 15.0,
                       fontWeight: FontWeight.w600,
@@ -374,7 +374,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                       color: AppTheme.forestGreen,
                     ),
                     label: Text(
-                      'Listen',
+                      LocalizationService.tr('listen'),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w700,
@@ -408,7 +408,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'A calm start makes room for a good memory.',
+                LocalizationService.tr('calm_quote'),
                 style: GoogleFonts.inter(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w400,
@@ -869,6 +869,9 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           else ...[
             ...allReminders.take(4).map((rem) {
               final isDone = rem.isCompleted;
+              final displayTitle = LocalizationService.trReminderTitle(rem.title);
+              final displayNotes = LocalizationService.trReminderNotes(rem.notes);
+
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: Container(
@@ -902,7 +905,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  willComplete ? '✓ Completed "${rem.title}" 🌸' : 'Marked "${rem.title}" as pending',
+                                  willComplete ? '✓ Completed "$displayTitle" 🌸' : 'Marked "$displayTitle" as pending',
                                   style: GoogleFonts.inter(fontWeight: FontWeight.w600),
                                 ),
                                 backgroundColor: willComplete ? AppTheme.forestGreen : AppTheme.warmTerracotta,
@@ -916,7 +919,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                rem.title,
+                                displayTitle,
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w700,
@@ -934,13 +937,13 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                                       color: isDone ? AppTheme.textLight : AppTheme.warmTerracotta,
                                     ),
                                   ),
-                                  if (rem.notes != null && rem.notes!.isNotEmpty) ...[
+                                  if (displayNotes.isNotEmpty) ...[
                                     const SizedBox(width: 6),
-                                    Text('·', style: TextStyle(color: AppTheme.textLight, fontSize: 12)),
+                                    const Text('·', style: TextStyle(color: AppTheme.textLight, fontSize: 12)),
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
-                                        rem.notes!,
+                                        displayNotes,
                                         style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textLight),
                                         overflow: TextOverflow.ellipsis,
                                       ),
