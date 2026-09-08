@@ -39,8 +39,72 @@ class ReminderService extends ChangeNotifier {
         _reminders = saved
             .map((e) => ReminderItem.fromMap(Map<dynamic, dynamic>.from(e)))
             .toList();
+        _sortReminders();
         notifyListeners();
         return;
+      }
+
+      // Check if caregiver set care plan items
+      final savedCarePlan = box.get('care_plan_items');
+      if (savedCarePlan != null && savedCarePlan is List && savedCarePlan.isNotEmpty) {
+        final mergedList = <ReminderItem>[];
+        for (int i = 0; i < savedCarePlan.length; i++) {
+          final item = savedCarePlan[i];
+          if (item is Map) {
+            final title = item['title']?.toString() ?? 'Routine Activity';
+            final timeStr = item['time']?.toString() ?? '09:00 AM';
+            final isActive = item['active'] == true;
+            final type = item['type']?.toString() ?? 'Medication';
+            final freq = item['freq']?.toString() ?? '';
+
+            int hour = 8;
+            int minute = 0;
+            try {
+              final parts = timeStr.split(' ');
+              final hm = parts[0].split(':');
+              hour = int.tryParse(hm[0]) ?? 8;
+              minute = int.tryParse(hm[1]) ?? 0;
+              if (parts.length > 1 && parts[1].toUpperCase() == 'PM' && hour < 12) {
+                hour += 12;
+              } else if (parts.length > 1 && parts[1].toUpperCase() == 'AM' && hour == 12) {
+                hour = 0;
+              }
+            } catch (_) {}
+
+            String emoji = '💊';
+            ReminderCategory category = ReminderCategory.medicine;
+            if (type == 'Cognitive' || title.toLowerCase().contains('game') || title.toLowerCase().contains('pattern')) {
+              emoji = '🧠';
+              category = ReminderCategory.activity;
+            } else if (type == 'Dietary' || title.toLowerCase().contains('snack') || title.toLowerCase().contains('fruit') || title.toLowerCase().contains('water')) {
+              emoji = title.toLowerCase().contains('water') ? '💧' : '🥗';
+              category = ReminderCategory.hydration;
+            } else if (type == 'Motor Care' || title.toLowerCase().contains('stabilization') || title.toLowerCase().contains('walk')) {
+              emoji = title.toLowerCase().contains('walk') ? '🚶' : '🦾';
+              category = ReminderCategory.walk;
+            }
+
+            if (isActive) {
+              mergedList.add(
+                ReminderItem(
+                  id: 'cp-$i-${title.hashCode}',
+                  title: title,
+                  time: TimeOfDay(hour: hour, minute: minute),
+                  category: category,
+                  emoji: emoji,
+                  notes: freq,
+                  isCompleted: false,
+                ),
+              );
+            }
+          }
+        }
+        if (mergedList.isNotEmpty) {
+          _reminders = mergedList;
+          _sortReminders();
+          saveReminders();
+          return;
+        }
       }
     } catch (e) {
       debugPrint('[ReminderService] Error loading: $e');
@@ -48,6 +112,17 @@ class ReminderService extends ChangeNotifier {
 
     _reminders = ReminderItem.defaultReminders;
     saveReminders();
+  }
+
+  void speakReminder(ReminderItem item) {
+    final patientName = PatientProfile.loadFromHive()?.fullName.split(' ').first ?? 'Patient';
+    final text = 'Hello $patientName. It is ${item.formattedTime}, time for ${item.title}. ${item.notes ?? ''}';
+    AudioNarrationService.instance.speak(text);
+  }
+
+  void triggerTestAlert(BuildContext context) {
+    final item = _reminders.isNotEmpty ? _reminders.first : ReminderItem.defaultReminders.first;
+    _triggerReminderAlert(context, item);
   }
 
   void saveReminders() {

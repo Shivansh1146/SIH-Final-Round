@@ -30,14 +30,12 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   // Live Backend Patient State
   String _patientId = 'PT-9042';
   String _patientDisplayName = 'Ramesh';
-  String _patientFullName = 'Ramesh Kumar';
   String _currentDifficultyLevel = 'Level 2 (Moderate)';
   bool _isAdaptiveMode = true;
   int _totalSessions = 13;
   double _avgAccuracy = 76.0;
   double _stabilityScore = 84.0;
   List<dynamic> _recentSessions = [];
-  bool _isLoadingBackend = false;
 
   @override
   void initState() {
@@ -71,7 +69,6 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     final active = PatientProfile.loadFromHive();
     if (active != null) {
       setState(() {
-        _patientFullName = active.fullName;
         _patientDisplayName = active.fullName.split(' ').first;
         _patientId = active.id.isNotEmpty ? active.id : 'PT-9042';
       });
@@ -81,7 +78,6 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
   Future<void> _fetchBackendPatientData() async {
     if (!mounted) return;
-    setState(() => _isLoadingBackend = true);
 
     try {
       final backendId = _patientId.startsWith('patient-') ? 'PT-9042' : _patientId;
@@ -98,15 +94,10 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               _stabilityScore = (data['latest_evaluation']['postural_stability_score'] as num?)?.toDouble() ?? 84.0;
             }
             _recentSessions = data['recent_sessions'] ?? [];
-            _isLoadingBackend = false;
           });
         }
-      } else {
-        if (mounted) setState(() => _isLoadingBackend = false);
       }
-    } catch (_) {
-      if (mounted) setState(() => _isLoadingBackend = false);
-    }
+    } catch (_) {}
   }
 
   Future<void> _playListenAudio() async {
@@ -750,14 +741,46 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   ),
                 ],
               ),
-              Row(
+              Wrap(
+                spacing: 4,
                 children: [
+                  // Test Alarm Quick Preview
+                  Tooltip(
+                    message: 'Preview Voice Alarm Alert',
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        ReminderService.instance.triggerTestAlert(context);
+                      },
+                      icon: const Icon(Icons.notifications_active_rounded, size: 14, color: AppTheme.warmTerracotta),
+                      label: Text(
+                        'Test Alarm 🔔',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.warmTerracotta,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppTheme.pastelYellow),
+                        backgroundColor: AppTheme.pastelYellow.withOpacity(0.3),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                      ),
+                    ),
+                  ),
                   TextButton(
                     onPressed: () => setState(() => _sidebarIndex = 2),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                     child: Text(
                       'View all ($totalCount)',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13.0,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.forestGreen,
                       ),
@@ -797,39 +820,51 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               ),
             )
           else ...[
-            ...allReminders.take(3).map((rem) {
+            ...allReminders.take(4).map((rem) {
               final isDone = rem.isCompleted;
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
-                child: InkWell(
-                  onTap: () {
-                    ReminderService.instance.toggleComplete(rem.id);
-                  },
-                  borderRadius: BorderRadius.circular(14),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: isDone ? AppTheme.background.withOpacity(0.6) : AppTheme.background,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: isDone ? AppTheme.surfaceBorder : AppTheme.sageBorder.withOpacity(0.5),
-                      ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isDone ? AppTheme.background.withOpacity(0.6) : AppTheme.background,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isDone ? AppTheme.surfaceBorder : AppTheme.sageBorder.withOpacity(0.5),
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            color: isDone ? Colors.white : AppTheme.sageLight,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Center(
-                            child: Text(rem.emoji, style: const TextStyle(fontSize: 17)),
-                          ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: isDone ? Colors.white : AppTheme.sageLight,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
+                        child: Center(
+                          child: Text(rem.emoji, style: const TextStyle(fontSize: 17)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () {
+                            final willComplete = !rem.isCompleted;
+                            ReminderService.instance.toggleComplete(rem.id);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  willComplete ? '✓ Completed "${rem.title}" 🌸' : 'Marked "${rem.title}" as pending',
+                                  style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                                ),
+                                backgroundColor: willComplete ? AppTheme.forestGreen : AppTheme.warmTerracotta,
+                                duration: const Duration(seconds: 2),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            );
+                          },
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -842,31 +877,73 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                                   decoration: isDone ? TextDecoration.lineThrough : null,
                                 ),
                               ),
-                              Text(
-                                rem.formattedTime,
-                                style: GoogleFonts.inter(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w500,
-                                  color: isDone ? AppTheme.textLight : AppTheme.warmTerracotta,
-                                ),
+                              Row(
+                                children: [
+                                  Text(
+                                    rem.formattedTime,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDone ? AppTheme.textLight : AppTheme.warmTerracotta,
+                                    ),
+                                  ),
+                                  if (rem.notes != null && rem.notes!.isNotEmpty) ...[
+                                    const SizedBox(width: 6),
+                                    Text('·', style: TextStyle(color: AppTheme.textLight, fontSize: 12)),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        rem.notes!,
+                                        style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textLight),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                             ],
                           ),
                         ),
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          icon: Icon(
-                            isDone ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                            color: isDone ? AppTheme.forestGreen : AppTheme.textSecondary,
-                            size: 22,
-                          ),
-                          onPressed: () {
-                            ReminderService.instance.toggleComplete(rem.id);
-                          },
+                      ),
+                      // TTS Speak icon button
+                      IconButton(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        constraints: const BoxConstraints(),
+                        tooltip: 'Listen to reminder',
+                        icon: const Icon(Icons.volume_up_rounded, size: 20, color: AppTheme.forestGreen),
+                        onPressed: () {
+                          ReminderService.instance.speakReminder(rem);
+                        },
+                      ),
+                      const SizedBox(width: 6),
+                      // Checkbox toggle button
+                      IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: isDone ? 'Mark Incomplete' : 'Mark Complete',
+                        icon: Icon(
+                          isDone ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                          color: isDone ? AppTheme.forestGreen : AppTheme.textSecondary,
+                          size: 24,
                         ),
-                      ],
-                    ),
+                        onPressed: () {
+                          final willComplete = !rem.isCompleted;
+                          ReminderService.instance.toggleComplete(rem.id);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                willComplete ? '✓ Completed "${rem.title}" 🌸' : 'Marked "${rem.title}" as pending',
+                                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                              ),
+                              backgroundColor: willComplete ? AppTheme.forestGreen : AppTheme.warmTerracotta,
+                              duration: const Duration(seconds: 2),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
               );

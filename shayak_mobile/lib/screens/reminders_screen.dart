@@ -660,15 +660,37 @@ class _RemindersScreenState extends State<RemindersScreen> {
               ),
             ),
 
-            // Add Reminder Button & Audio Reader
-            Row(
+            // Add Reminder Button & Audio Reader & Test Alarm
+            Wrap(
+              spacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
+                OutlinedButton.icon(
+                  onPressed: () => ReminderService.instance.triggerTestAlert(context),
+                  icon: const Icon(Icons.notifications_active_rounded, size: 15, color: AppTheme.warmTerracotta),
+                  label: Text(
+                    'Test Alarm 🔔',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: isMobile ? 11.5 : 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.warmTerracotta,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppTheme.pastelYellow),
+                    backgroundColor: AppTheme.pastelYellow.withOpacity(0.3),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isMobile ? 10 : 14,
+                      vertical: isMobile ? 8 : 10,
+                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                  ),
+                ),
                 IconButton(
                   icon: const Icon(Icons.volume_up_rounded, color: AppTheme.forestGreen),
                   tooltip: 'Listen to Schedule',
                   onPressed: _playScheduleAudio,
                 ),
-                const SizedBox(width: 4),
                 ElevatedButton.icon(
                   onPressed: () => _showReminderModal(),
                   icon: const Icon(Icons.add_rounded, size: 18),
@@ -937,13 +959,21 @@ class _RemindersScreenState extends State<RemindersScreen> {
                         ),
                       ),
 
+                      // Voice Narration Speaker Button
+                      IconButton(
+                        icon: const Icon(Icons.volume_up_rounded, size: 20, color: AppTheme.forestGreen),
+                        tooltip: 'Listen to this reminder',
+                        onPressed: () => ReminderService.instance.speakReminder(item),
+                      ),
+                      const SizedBox(width: 2),
+
                       // Edit Button
                       IconButton(
                         icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.textSecondary),
                         tooltip: 'Edit Reminder',
                         onPressed: () => _showReminderModal(item),
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 6),
 
                       // Large Accessible Checkbox Toggle
                       InkWell(
