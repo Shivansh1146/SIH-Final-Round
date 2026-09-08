@@ -21,6 +21,7 @@ class CaregiverWorkspaceScreen extends StatefulWidget {
 class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
   int _sidebarIndex = 0;
   bool _isSyncing = false;
+  DateTime _lastSyncTime = DateTime.now();
   Map<String, dynamic>? _aiEvaluationData;
   bool _isLoadingAi = false;
 
@@ -142,20 +143,29 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     );
   }
 
-  void _simulateSync() {
+  void _simulateSync() async {
     setState(() => _isSyncing = true);
-    Future.delayed(const Duration(milliseconds: 700), () {
-      if (mounted) {
-        setState(() => _isSyncing = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Session data synchronized with local edge node.', style: GoogleFonts.inter()),
-            backgroundColor: AppTheme.forestGreen,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    });
+    try {
+      await http.get(Uri.parse('http://127.0.0.1:8000/api/v1/patient/PT-9042/history')).timeout(const Duration(seconds: 2));
+    } catch (_) {}
+    SessionService.instance.ensureDemoDataSeeded(forceRefresh: true);
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (mounted) {
+      setState(() {
+        _isSyncing = false;
+        _lastSyncTime = DateTime.now();
+      });
+      final hour12 = _lastSyncTime.hour % 12 == 0 ? 12 : _lastSyncTime.hour % 12;
+      final ampm = _lastSyncTime.hour >= 12 ? 'pm' : 'am';
+      final minStr = _lastSyncTime.minute.toString().padLeft(2, '0');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('✓ Session data synchronized with local edge node ($hour12:$minStr $ampm).', style: GoogleFonts.inter()),
+          backgroundColor: AppTheme.forestGreen,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   Future<void> _fetchAiDecisions() async {
@@ -392,7 +402,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
   }
 
   String _getFormattedSyncTime() {
-    final now = DateTime.now();
+    final now = _lastSyncTime;
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     final month = months[now.month - 1];
     final hour12 = now.hour % 12 == 0 ? 12 : now.hour % 12;
@@ -489,29 +499,112 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
               ),
             ),
 
-            // Dropdown & Simulate Sync
+            // Interactive Dropdown & Simulate Sync
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(100),
-                    border: Border.all(color: AppTheme.surfaceBorder),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        patientName,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
+                PopupMenuButton<String>(
+                  onSelected: (selectedId) {
+                    PatientProfile.setActiveProfile(selectedId);
+                    setState(() {});
+                    _fetchPatientDifficulty();
+                    final updatedProfile = PatientProfile.loadFromHive();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Active patient switched to ${updatedProfile?.fullName ?? selectedId}',
+                          style: GoogleFonts.inter(),
                         ),
+                        backgroundColor: AppTheme.forestGreen,
+                        behavior: SnackBarBehavior.floating,
                       ),
-                      const SizedBox(width: 6),
-                      const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppTheme.textSecondary),
-                    ],
+                    );
+                  },
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  color: Colors.white,
+                  elevation: 6,
+                  offset: const Offset(0, 42),
+                  itemBuilder: (ctx) {
+                    final allProfiles = PatientProfile.loadAllFromHive();
+                    return allProfiles.map((p) {
+                      final isCurrent = p.id == patientId;
+                      return PopupMenuItem<String>(
+                        value: p.id,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                color: isCurrent ? AppTheme.forestGreen : AppTheme.sageLight,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  p.fullName.isNotEmpty ? p.fullName[0] : 'P',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: isCurrent ? Colors.white : AppTheme.forestGreen,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    p.fullName,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 13.5,
+                                      fontWeight: isCurrent ? FontWeight.w800 : FontWeight.w600,
+                                      color: isCurrent ? AppTheme.forestGreen : AppTheme.textPrimary,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Age ${p.age} · ${p.diagnosis ?? "Cognitive Monitoring"}',
+                                    style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textSecondary),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (isCurrent)
+                              const Icon(Icons.check_rounded, color: AppTheme.forestGreen, size: 18),
+                          ],
+                        ),
+                      );
+                    }).toList();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(color: AppTheme.surfaceBorder),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.02),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          patientName,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppTheme.textSecondary),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
