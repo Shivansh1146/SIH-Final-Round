@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../models/patient_profile.dart';
 import '../services/localization_service.dart';
 import '../services/audio_narration_service.dart';
@@ -290,40 +291,216 @@ class AppSidebar extends StatelessWidget {
   void _showAccessibilityDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text('Accessibility Settings', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800)),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(Icons.format_size_rounded, color: AppTheme.forestGreen),
-              title: Text('Text Size Scaling'),
-              subtitle: Text('Comfortable 125% magnification active'),
-              trailing: Icon(Icons.check_circle_rounded, color: AppTheme.statusGreen),
-            ),
-            ListTile(
-              leading: Icon(Icons.contrast_rounded, color: AppTheme.forestGreen),
-              title: Text('High Contrast Outlines'),
-              subtitle: Text('2px clear borders on interactive elements'),
-              trailing: Icon(Icons.check_circle_rounded, color: AppTheme.statusGreen),
-            ),
-            ListTile(
-              leading: Icon(Icons.vibration_rounded, color: AppTheme.forestGreen),
-              title: Text('Tremor Dampening Filter'),
-              subtitle: Text('Active IMU low-pass sensor filter'),
-              trailing: Icon(Icons.check_circle_rounded, color: AppTheme.statusGreen),
-            ),
-          ],
+      builder: (ctx) {
+        Box? prefBox;
+        try {
+          if (Hive.isBoxOpen('user_preferences')) {
+            prefBox = Hive.box('user_preferences');
+          }
+        } catch (_) {}
+
+        bool textScaling = prefBox?.get('accessibility_text_scale', defaultValue: true) ?? true;
+        bool highContrast = prefBox?.get('accessibility_high_contrast', defaultValue: true) ?? true;
+        bool tremorFilter = prefBox?.get('accessibility_tremor_filter', defaultValue: true) ?? true;
+        bool voicePrompts = prefBox?.get('accessibility_voice_prompts', defaultValue: true) ?? true;
+
+        return StatefulBuilder(
+          builder: (dialogCtx, setDialogState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              actionsPadding: const EdgeInsets.fromLTRB(16, 8, 20, 20),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.forestGreen.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.accessibility_new_rounded, color: AppTheme.forestGreen, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Accessibility Settings',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 19,
+                            color: AppTheme.forestGreen,
+                          ),
+                        ),
+                        Text(
+                          'Personalize visual & motor assistance',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              content: SizedBox(
+                width: 440,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildAccessibilitySwitchTile(
+                        icon: Icons.format_size_rounded,
+                        title: 'Text Size Scaling',
+                        subtitle: textScaling ? 'Comfortable 125% magnification active' : 'Standard 100% text scaling',
+                        value: textScaling,
+                        onChanged: (val) {
+                          setDialogState(() => textScaling = val);
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      _buildAccessibilitySwitchTile(
+                        icon: Icons.contrast_rounded,
+                        title: 'High Contrast Outlines',
+                        subtitle: highContrast ? '2px clear borders on interactive elements' : 'Standard theme borders',
+                        value: highContrast,
+                        onChanged: (val) {
+                          setDialogState(() => highContrast = val);
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      _buildAccessibilitySwitchTile(
+                        icon: Icons.vibration_rounded,
+                        title: 'Tremor Dampening Filter',
+                        subtitle: tremorFilter ? 'Active IMU low-pass sensor filter' : 'Filter disabled (raw touch)',
+                        value: tremorFilter,
+                        onChanged: (val) {
+                          setDialogState(() => tremorFilter = val);
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      _buildAccessibilitySwitchTile(
+                        icon: Icons.record_voice_over_rounded,
+                        title: 'Voice Narration Prompts',
+                        subtitle: voicePrompts ? 'Spoken guidance & reminders enabled' : 'Visual cues only',
+                        value: voicePrompts,
+                        onChanged: (val) {
+                          setDialogState(() => voicePrompts = val);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text('Cancel', style: GoogleFonts.inter(color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    if (prefBox != null) {
+                      await prefBox.put('accessibility_text_scale', textScaling);
+                      await prefBox.put('accessibility_high_contrast', highContrast);
+                      await prefBox.put('accessibility_tremor_filter', tremorFilter);
+                      await prefBox.put('accessibility_voice_prompts', voicePrompts);
+                    }
+
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Row(
+                            children: [
+                              Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                              SizedBox(width: 8),
+                              Text('Accessibility preferences saved successfully!'),
+                            ],
+                          ),
+                          backgroundColor: AppTheme.forestGreen,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      );
+                    }
+
+                    if (voicePrompts) {
+                      AudioNarrationService.instance.speak(
+                        'Accessibility settings saved. Visual magnification, high contrast, and tremor dampening filters are updated.',
+                      );
+                    }
+
+                    if (ctx.mounted) {
+                      Navigator.pop(ctx);
+                    }
+                  },
+                  icon: const Icon(Icons.check_rounded, size: 18),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.forestGreen,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  label: Text('Save Settings', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildAccessibilitySwitchTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: value ? AppTheme.sageLight.withOpacity(0.5) : const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: value ? AppTheme.forestGreen.withOpacity(0.3) : AppTheme.surfaceBorder,
+          width: 1.2,
         ),
-        actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx),
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.forestGreen),
-            child: const Text('Save Settings'),
+      ),
+      child: SwitchListTile.adaptive(
+        value: value,
+        onChanged: onChanged,
+        activeColor: AppTheme.forestGreen,
+        secondary: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: value ? AppTheme.forestGreen.withOpacity(0.12) : Colors.grey.withOpacity(0.1),
+            shape: BoxShape.circle,
           ),
-        ],
+          child: Icon(
+            icon,
+            color: value ? AppTheme.forestGreen : AppTheme.textSecondary,
+            size: 20,
+          ),
+        ),
+        title: Text(
+          title,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 14.5,
+            fontWeight: FontWeight.w700,
+            color: value ? AppTheme.forestGreen : AppTheme.textPrimary,
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            color: AppTheme.textSecondary,
+          ),
+        ),
       ),
     );
   }
