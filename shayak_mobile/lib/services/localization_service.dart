@@ -95,6 +95,28 @@ class LocalizationService {
     }
   }
 
+  static String getCaregiverVoiceGreeting(AppLanguage lang, [String patientName = 'Ramesh']) {
+    switch (lang) {
+      case AppLanguage.hindi:
+        return 'नमस्ते $patientName जी! मैं अनीता कुमार बोल रही हूँ। मैं आपकी बात सुन रही हूँ, बताइए क्या सहायता चाहिए?';
+      case AppLanguage.assamese:
+        return 'নমস্কাৰ $patientName ডাঙৰীয়া! মই অনিতা কুমাৰ। মই আপোনাৰ লগত আছোঁ, আপোনাক কেনেকৈ সহায় কৰিব পাৰোঁ?';
+      case AppLanguage.bengali:
+        return 'নমস্কার $patientName বাবু! আমি অনিতা কুমার বলছি। আমি আপনার সাথে আছি, বলুন কীভাবে সাহায্য করতে পারি?';
+      case AppLanguage.manipuri:
+        return 'খুরুমজরি $patientName জী! ঐ অনিতা কুমারনি। নহাকপু করম্না মতেং পাংগদগে?';
+      case AppLanguage.bodo:
+        return 'खुलुमबाय $patientName! आं अनिता कुमार। आं नोंथांनि रावखौ खोनादों, नोंथांनो मा हेफाजाब नांगौ?';
+      case AppLanguage.nepali:
+        return 'नमस्ते $patientName जी! म अनिता कुमार बोल्दैछु। म तपाईँको साथमा छु, कसरी सहयोग गर्न सक्छु?';
+      case AppLanguage.mizo:
+        return 'Chibai $patientName! Anita Kumar ka ni e. I kiangah ka awm a, engtin nge ka puih theih ang che?';
+      case AppLanguage.english:
+      default:
+        return 'Hello $patientName! This is Anita Kumar. I can hear you clearly. How can I assist you right now?';
+    }
+  }
+
   static String tr(String key, [AppLanguage? overrideLang]) {
     final lang = overrideLang ?? languageNotifier.value;
     final dict = _translations[lang] ?? _translations[AppLanguage.english]!;

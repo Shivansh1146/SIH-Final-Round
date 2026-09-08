@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/app_sidebar.dart';
@@ -1084,106 +1086,213 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     );
   }
 
+  Future<void> _makeRealPhoneCall(String rawPhoneNumber) async {
+    final cleanNumber = rawPhoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
+    final uri = Uri(scheme: 'tel', path: cleanNumber);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        await launchUrl(uri);
+      }
+    } catch (e) {
+      debugPrint('Error launching real phone call: $e');
+    }
+  }
+
+  Future<void> _makeWhatsAppCall(String rawPhoneNumber) async {
+    final digits = rawPhoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
+    final uri = Uri.parse('https://wa.me/$digits?text=Hello%20Anita,%20I%20am%20calling%20for%20assistance.');
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint('Error launching WhatsApp: $e');
+    }
+  }
+
   void _showCaregiverCallDialog(BuildContext context, AppLanguage lang) {
-    // Speak in the patient's active native language immediately
+    const caregiverPhone = '+91 98450 12345';
+    const caregiverName = 'Anita Kumar';
+
+    // 1. Immediately launch native cellular telephone dialer
+    _makeRealPhoneCall(caregiverPhone);
+
+    // 2. Play live spoken caregiver voice in the patient's selected language
     AudioNarrationService.instance.speak(
-      LocalizationService.getCaregiverCallSpeech(lang),
+      LocalizationService.getCaregiverVoiceGreeting(lang, _patientDisplayName),
       language: lang,
     );
 
+    int callDurationSec = 0;
+    bool isMuted = false;
+    bool isSpeakerOn = true;
+    Timer? callTimer;
+
     showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-            contentPadding: const EdgeInsets.all(28),
-            content: SizedBox(
-              width: 380,
+      barrierDismissible: false,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          callTimer ??= Timer.periodic(const Duration(seconds: 1), (t) {
+            if (dialogCtx.mounted) {
+              setDialogState(() {
+                callDurationSec++;
+              });
+            }
+          });
+
+          final mins = (callDurationSec ~/ 60).toString().padLeft(2, '0');
+          final secs = (callDurationSec % 60).toString().padLeft(2, '0');
+
+          return Dialog(
+            backgroundColor: const Color(0xFF1E293B),
+            elevation: 24,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+            insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            child: Container(
+              width: 420,
+              padding: const EdgeInsets.all(28),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Pulsing Caller Avatar
+                  // Call Header Status
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(100),
+                          border: Border.all(color: const Color(0xFF10B981).withOpacity(0.5)),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF10B981),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'CONNECTED · $mins:$secs',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF10B981),
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 20),
+                        onPressed: () {
+                          callTimer?.cancel();
+                          AudioNarrationService.instance.stop();
+                          Navigator.pop(dialogCtx);
+                        },
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Animated Calling Wave Avatar
                   Stack(
                     alignment: Alignment.center,
                     children: [
                       TweenAnimationBuilder<double>(
-                        tween: Tween(begin: 0.8, end: 1.2),
-                        duration: const Duration(milliseconds: 1000),
+                        tween: Tween(begin: 0.85, end: 1.25),
+                        duration: const Duration(milliseconds: 1200),
                         curve: Curves.easeInOut,
                         builder: (context, scale, child) {
                           return Transform.scale(
                             scale: scale,
                             child: Container(
-                              width: 86,
-                              height: 86,
+                              width: 110,
+                              height: 110,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppTheme.forestGreen.withOpacity(0.18),
+                                color: const Color(0xFF10B981).withOpacity(0.15),
                               ),
                             ),
                           );
                         },
                       ),
                       Container(
-                        width: 68,
-                        height: 68,
+                        width: 84,
+                        height: 84,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppTheme.forestGreen,
+                          gradient: LinearGradient(
+                            colors: [Color(0xFF10B981), Color(0xFF047857)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0x6610B981),
+                              blurRadius: 20,
+                              offset: Offset(0, 6),
+                            ),
+                          ],
                         ),
                         child: const Center(
-                          child: Icon(Icons.person_rounded, size: 38, color: Colors.white),
+                          child: Icon(Icons.person_rounded, size: 48, color: Colors.white),
                         ),
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 18),
                   Text(
-                    'Anita Kumar',
+                    caregiverName,
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 22,
+                      fontSize: 24,
                       fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary,
+                      color: Colors.white,
+                      letterSpacing: -0.3,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Primary Caregiver · +91 98450 12345',
+                    'Primary Caregiver · $caregiverPhone',
                     style: GoogleFonts.inter(
-                      fontSize: 13,
+                      fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.textSecondary,
+                      color: const Color(0xFF94A3B8),
                     ),
                   ),
-                  const SizedBox(height: 14),
 
-                  // Call Status Pill
+                  const SizedBox(height: 18),
+
+                  // Live Caregiver Voice Prompt Banner
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: AppTheme.sageLight,
-                      borderRadius: BorderRadius.circular(100),
+                      color: const Color(0xFF334155).withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFF475569)),
                     ),
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.statusGreen,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Calling · Connecting audio bridge...',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.forestGreen,
+                        const Icon(Icons.volume_up_rounded, color: Color(0xFF38BDF8), size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            LocalizationService.getCaregiverVoiceGreeting(lang, _patientDisplayName),
+                            style: GoogleFonts.inter(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                              height: 1.35,
+                            ),
                           ),
                         ),
                       ],
@@ -1192,75 +1301,112 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Quick Action Buttons
+                  // Telephony Direct Actions (Real Phone & WhatsApp)
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // End Call Button
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          AudioNarrationService.instance.stop();
-                          Navigator.pop(ctx);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Call session ended.', style: GoogleFonts.inter()),
-                              backgroundColor: AppTheme.forestGreen,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.call_end_rounded, color: Colors.white, size: 16),
-                        label: const Text('End Call'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.alertCoral,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _makeRealPhoneCall(caregiverPhone),
+                          icon: const Icon(Icons.phone_rounded, size: 16),
+                          label: const Text('Cellular Call'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF10B981),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 10),
-
-                      // Direct Phone Dial Simulation
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          AudioNarrationService.instance.stop();
-                          Navigator.pop(ctx);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('📞 Direct line dialed: +91 98450 12345 (Anita Kumar)', style: GoogleFonts.inter()),
-                              backgroundColor: AppTheme.forestGreen,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.phone_enabled_rounded, size: 16, color: AppTheme.forestGreen),
-                        label: const Text('Direct Dial'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.forestGreen,
-                          side: const BorderSide(color: AppTheme.forestGreen),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _makeWhatsAppCall(caregiverPhone),
+                          icon: const Icon(Icons.chat_bubble_rounded, size: 16),
+                          label: const Text('WhatsApp'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF25D366),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  // Caregiver Workspace Link
-                  TextButton.icon(
-                    onPressed: () {
-                      AudioNarrationService.instance.stop();
-                      Navigator.pop(ctx);
-                      widget.onNavigate(AppViewMode.caregiver);
-                    },
-                    icon: const Icon(Icons.dashboard_rounded, size: 15, color: AppTheme.textSecondary),
-                    label: Text(
-                      'Open Caregiver Workspace',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textSecondary,
+
+                  const SizedBox(height: 14),
+
+                  // In-Call Controls (Mute, Speaker, End)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      // Mute Button
+                      IconButton(
+                        onPressed: () {
+                          setDialogState(() => isMuted = !isMuted);
+                        },
+                        icon: Icon(
+                          isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
+                          color: isMuted ? const Color(0xFFEF4444) : Colors.white70,
+                          size: 24,
+                        ),
+                        style: IconButton.styleFrom(
+                          backgroundColor: const Color(0xFF334155),
+                          padding: const EdgeInsets.all(12),
+                        ),
                       ),
-                    ),
+
+                      // End Call Button (Big Red)
+                      InkWell(
+                        onTap: () {
+                          callTimer?.cancel();
+                          AudioNarrationService.instance.stop();
+                          Navigator.pop(dialogCtx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('✓ Caregiver call ended.', style: GoogleFonts.inter()),
+                              backgroundColor: AppTheme.forestGreen,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(100),
+                        child: Container(
+                          width: 58,
+                          height: 58,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFEF4444),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0x66EF4444),
+                                blurRadius: 12,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.call_end_rounded, color: Colors.white, size: 28),
+                          ),
+                        ),
+                      ),
+
+                      // Speakerphone Button
+                      IconButton(
+                        onPressed: () {
+                          setDialogState(() => isSpeakerOn = !isSpeakerOn);
+                        },
+                        icon: Icon(
+                          isSpeakerOn ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                          color: isSpeakerOn ? const Color(0xFF38BDF8) : Colors.white70,
+                          size: 24,
+                        ),
+                        style: IconButton.styleFrom(
+                          backgroundColor: const Color(0xFF334155),
+                          padding: const EdgeInsets.all(12),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
