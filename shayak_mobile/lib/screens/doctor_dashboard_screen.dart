@@ -1221,7 +1221,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
           ),
           Text(
             'SHAP: ${shapVal > 0 ? "+$shapVal" : "$shapVal"}',
-            style: GoogleFonts.mono(
+            style: GoogleFonts.jetBrainsMono(
               fontSize: 12,
               fontWeight: FontWeight.w700,
               color: isElevating ? const Color(0xFFDC2626) : const Color(0xFF16A34A),

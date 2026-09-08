@@ -556,8 +556,7 @@ class AppTopBar extends StatelessWidget {
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          const Icon(
+                                   const Icon(
                             Icons.keyboard_arrow_down_rounded,
                             size: 13,
                             color: AppTheme.textSecondary,
@@ -565,7 +564,9 @@ class AppTopBar extends StatelessWidget {
                         ],
                       ),
                     ),
-                   if (!isMobile) ...[
+                  ),
+
+                if (!isMobile) ...[
                   const SizedBox(width: 6),
                   // Mode Buttons: Patient, Caregiver, Doctor
                   Container(
@@ -639,23 +640,22 @@ class AppTopBar extends StatelessWidget {
                         ),
                       ),
                     ],
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(100),
-                          border: Border.all(color: AppTheme.surfaceBorder),
-                        ),
-                        child: Icon(
-                          currentMode == AppViewMode.doctor
-                              ? Icons.medical_services_rounded
-                              : (currentMode == AppViewMode.caregiver ? Icons.favorite_rounded : Icons.person_rounded),
-                          size: 16,
-                          color: currentMode == AppViewMode.doctor ? const Color(0xFF1D4ED8) : AppTheme.forestGreen,
-                        ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(100),
+                        border: Border.all(color: AppTheme.surfaceBorder),
+                      ),
+                      child: Icon(
+                        currentMode == AppViewMode.doctor
+                            ? Icons.medical_services_rounded
+                            : (currentMode == AppViewMode.caregiver ? Icons.favorite_rounded : Icons.person_rounded),
+                        size: 16,
+                        color: currentMode == AppViewMode.doctor ? const Color(0xFF1D4ED8) : AppTheme.forestGreen,
                       ),
                     ),
-                  ],
+                  ),
                 ],
               ],
             ],
