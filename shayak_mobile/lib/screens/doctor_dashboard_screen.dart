@@ -251,14 +251,81 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     );
   }
 
-  void _addDirective() {
-    final text = _newDirectiveController.text.trim();
+  void _addDirective([String? customText]) {
+    final text = (customText ?? _newDirectiveController.text).trim();
     if (text.isNotEmpty) {
       setState(() {
         _currentDirectives.add(text);
-        _newDirectiveController.clear();
+        if (customText == null) {
+          _newDirectiveController.clear();
+        }
       });
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_rounded, color: Colors.greenAccent, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Added directive: "$text"',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF0F172A),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.info_outline_rounded, color: Colors.amberAccent, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Please type a directive or tap a quick suggestion below.',
+                  style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF1E293B),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
     }
+  }
+
+  Widget _buildSuggestionChip(String label) {
+    return ActionChip(
+      avatar: const Icon(Icons.add_rounded, size: 14, color: Color(0xFF1D4ED8)),
+      label: Text(
+        label,
+        style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF1E40AF)),
+      ),
+      backgroundColor: const Color(0xFFEFF6FF),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFFBFDBFE)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      onPressed: () {
+        final cleanText = label.replaceFirst(RegExp(r'^[\W]+'), '').trim();
+        _addDirective(cleanText.isNotEmpty ? cleanText : label);
+      },
+    );
   }
 
   @override
@@ -1397,6 +1464,30 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const Icon(Icons.tips_and_updates_rounded, size: 14, color: Color(0xFFD97706)),
+              const SizedBox(width: 6),
+              Text(
+                'Quick Tap Suggestions:',
+                style: GoogleFonts.plusJakartaSans(fontSize: 11.5, fontWeight: FontWeight.w700, color: const Color(0xFF64748B)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              _buildSuggestionChip('📖 Daily 15-min Memory Story'),
+              _buildSuggestionChip('🥄 Calibrate ESP32 utensil before meals'),
+              _buildSuggestionChip('💧 1.8L daily hydration tracking'),
+              _buildSuggestionChip('🚶 20-min morning walk'),
+              _buildSuggestionChip('📅 Follow-up in 4 weeks'),
+            ],
+          ),
+          const SizedBox(height: 12),
 
           if (_currentDirectives.isNotEmpty) ...[
             const SizedBox(height: 12),
