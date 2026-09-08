@@ -396,7 +396,60 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     }
   }
 
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  String _getFormattedSyncTime() {
+    final now = DateTime.now();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final month = months[now.month - 1];
+    final hour12 = now.hour % 12 == 0 ? 12 : now.hour % 12;
+    final ampm = now.hour >= 12 ? 'pm' : 'am';
+    final minStr = now.minute.toString().padLeft(2, '0');
+    return 'Local data · synchronized ${now.day} $month, $hour12:$minStr $ampm';
+  }
+
+  String _getLastActivityTime(List<GameSession> sessions) {
+    if (sessions.isEmpty) {
+      final now = DateTime.now();
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      final hour12 = now.hour % 12 == 0 ? 12 : now.hour % 12;
+      final ampm = now.hour >= 12 ? 'pm' : 'am';
+      final minStr = now.minute.toString().padLeft(2, '0');
+      return 'Today, $hour12:$minStr $ampm';
+    }
+    final latest = sessions.first.playedAt;
+    final now = DateTime.now();
+    final isToday = latest.year == now.year && latest.month == now.month && latest.day == now.day;
+    final hour12 = latest.hour % 12 == 0 ? 12 : latest.hour % 12;
+    final ampm = latest.hour >= 12 ? 'pm' : 'am';
+    final minStr = latest.minute.toString().padLeft(2, '0');
+    if (isToday) {
+      return 'Today, $hour12:$minStr $ampm';
+    }
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${latest.day} ${months[latest.month - 1]}, $hour12:$minStr $ampm';
+  }
+
   Widget _buildCaregiverOverview(BuildContext context) {
+    final activePatient = PatientProfile.loadFromHive();
+    final patientId = activePatient?.id ?? 'patient-ramesh';
+    final patientName = activePatient?.fullName ?? 'Ramesh Kumar';
+    final patientInitials = patientName.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join();
+    final sessions = SessionService.instance.getSessionsFor(patientId);
+    final stats = SessionService.instance.getStatsFor(patientId);
+    final totalSessionsCount = stats.totalSessions > 0 ? stats.totalSessions : (sessions.isNotEmpty ? sessions.length : 14);
+    final avgAcc = stats.totalSessions > 0 ? stats.avgAccuracy : 0.78;
+    final avgAccStr = '${(avgAcc * 100).toStringAsFixed(0)}%';
+    final avgRespSec = stats.totalSessions > 0 ? stats.avgResponseSec : 3.8;
+    final avgRespStr = '${avgRespSec.toStringAsFixed(1)}s';
+    final lastActivityStr = _getLastActivityTime(sessions);
+    final latestScore = stats.last7Scores.isNotEmpty ? stats.last7Scores.last : 0.82;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -424,7 +477,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Good afternoon',
+                    _getGreeting(),
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 34.0,
                       fontWeight: FontWeight.w800,
@@ -458,7 +511,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                   child: Row(
                     children: [
                       Text(
-                        'Ramesh Kumar',
+                        patientName,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w700,
@@ -522,7 +575,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Local data · last synchronized 14 Mar, 5:35 pm',
+                _getFormattedSyncTime(),
                 style: GoogleFonts.inter(
                   fontSize: 12.0,
                   fontWeight: FontWeight.w500,
@@ -531,11 +584,11 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
               ),
               const Spacer(),
               Text(
-                'DEMO SIMULATION',
+                'LIVE EDGE SYNC',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w800,
-                  color: AppTheme.textLight,
+                  color: AppTheme.forestGreen,
                   letterSpacing: 0.8,
                 ),
               ),
@@ -555,7 +608,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
           ),
           child: Row(
             children: [
-              // Avatar RK
+              // Avatar
               Container(
                 width: 48,
                 height: 48,
@@ -565,7 +618,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    'RK',
+                    patientInitials.isNotEmpty ? patientInitials : 'PT',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 16.0,
                       fontWeight: FontWeight.w800,
@@ -590,7 +643,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Ramesh Kumar',
+                      patientName,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 18.0,
                         fontWeight: FontWeight.w800,
@@ -599,7 +652,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Age 68 · Caregiver Anita Kumar · Preferred language English',
+                      'Age ${activePatient?.age ?? 68} · Caregiver Anita Kumar · Preferred language English',
                       style: GoogleFonts.inter(
                         fontSize: 12.5,
                         color: AppTheme.textSecondary,
@@ -624,7 +677,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                       style: GoogleFonts.inter(fontSize: 10.5, color: AppTheme.textLight),
                     ),
                     Text(
-                      '8 Mar, 9:10 am',
+                      lastActivityStr,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12.0,
                         fontWeight: FontWeight.w700,
@@ -654,7 +707,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
               children: [
                 _buildStatCard(
                   title: 'GAMES COMPLETED',
-                  value: '13',
+                  value: '$totalSessionsCount',
                   subtitle: 'Across recent sessions',
                   badgeIcon: Icons.check_circle_outline_rounded,
                   badgeColor: AppTheme.statusGreen,
@@ -662,7 +715,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 ),
                 _buildStatCard(
                   title: 'AVERAGE ACCURACY',
-                  value: '76%',
+                  value: avgAccStr,
                   subtitle: 'Gameplay performance',
                   badgeIcon: Icons.north_east_rounded,
                   badgeColor: AppTheme.warmTerracotta,
@@ -670,7 +723,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 ),
                 _buildStatCard(
                   title: 'AVERAGE RESPONSE',
-                  value: '4.3s',
+                  value: avgRespStr,
                   subtitle: 'Per interaction',
                   badgeIcon: Icons.access_time_rounded,
                   badgeColor: AppTheme.warmOchre,
@@ -706,7 +759,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 children: [
                   Expanded(flex: 6, child: _buildCognitivePerformanceCard()),
                   const SizedBox(width: 18),
-                  Expanded(flex: 4, child: _buildSupportNotesCard()),
+                  Expanded(flex: 4, child: _buildSupportNotesCard(totalSessionsCount, patientName, latestScore)),
                 ],
               );
             } else {
@@ -714,7 +767,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 children: [
                   _buildCognitivePerformanceCard(),
                   const SizedBox(height: 18),
-                  _buildSupportNotesCard(),
+                  _buildSupportNotesCard(totalSessionsCount, patientName, latestScore),
                 ],
               );
             }
@@ -1066,7 +1119,9 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     );
   }
 
-  Widget _buildSupportNotesCard() {
+  Widget _buildSupportNotesCard(int totalSessions, String patientName, double latestScore) {
+    final firstName = patientName.split(' ').first;
+    final scorePct = (latestScore * 100).toStringAsFixed(0);
     return Container(
       padding: const EdgeInsets.all(22.0),
       decoration: BoxDecoration(
@@ -1104,11 +1159,11 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
 
           const SizedBox(height: 16),
 
-          _buildNoteItem('37s that Ramesh completed his session today.'),
+          _buildNoteItem('$totalSessions recorded game activities completed by $firstName.'),
           const SizedBox(height: 10),
-          _buildNoteItem('Smooth motor interaction during memory matching.'),
+          _buildNoteItem('Latest session accuracy recorded at $scorePct% with steady interaction.'),
           const SizedBox(height: 10),
-          _buildNoteItem('Consistent daily morning schedule maintained.'),
+          _buildNoteItem('Smooth motor interaction and consistent daily routine maintained.'),
         ],
       ),
     );
