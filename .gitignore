@@ -1,0 +1,22 @@
+# Environments & Python
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Flutter / Dart
+shayak_mobile/.dart_tool/
+shayak_mobile/.flutter-plugins
+shayak_mobile/.flutter-plugins-dependencies
+shayak_mobile/build/
+shayak_mobile/.pub-cache/
+shayak_mobile/.pub/
+*.apk
+*.aab
+
+# IDE & OS
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
