@@ -23,6 +23,10 @@ from app.models import (
     PatientSessionRecord,
     PatientDifficultyUpdateRequest,
     LongitudinalPatientHistory,
+    DoctorAppointmentModel,
+    AppointmentFeedbackRequest,
+    DoctorFeedbackModel,
+    MedicalNotesRequest,
 )
 from app.ml_engine import ml_engine, FEATURE_METADATA
 
@@ -278,6 +282,133 @@ def record_patient_session(patient_id: str, session: PatientSessionRecord):
         "is_adaptive": diff_state.get("is_adaptive", True),
         "total_sessions": len(ml_engine.patient_sessions[patient_id]),
     }
+
+
+# ============================================================================
+# APPOINTMENT & CLINICAL FEEDBACK ENDPOINTS
+# ============================================================================
+
+# In-memory stores with realistic initial clinical seeds
+appointments_store: list[dict] = [
+    {
+        "id": "apt-1",
+        "patient_id": "patient-ramesh",
+        "patient_name": "Ramesh Kumar",
+        "doctor_name": "Dr. Debabrata Goswami, DM",
+        "clinic_or_hospital": "Assam Medical College & Hospital",
+        "appointment_type": "In-Person Neuro Consultation",
+        "scheduled_date": "2026-09-12T11:00:00Z",
+        "time_slot": "11:00 AM",
+        "caregiver_name": "Anita Kumar",
+        "caregiver_phone": "+91 98450 12345",
+        "reason_for_visit": "Bi-monthly cognitive progression review and ESP32 kinematic utensil stability check.",
+        "status": "Confirmed",
+        "doctor_feedback_for_caregiver": "Confirmed for 11:00 AM. Please bring the ESP32 utensil usage logs and ensure Ramesh had a light breakfast.",
+        "booked_at": datetime.now(timezone.utc).isoformat(),
+    },
+    {
+        "id": "apt-2",
+        "patient_id": "patient-monalisa",
+        "patient_name": "Monalisa Barua",
+        "doctor_name": "Dr. Priya Sengupta, MD",
+        "clinic_or_hospital": "Guwahati Neurological Institute",
+        "appointment_type": "Telehealth Video Review",
+        "scheduled_date": "2026-09-14T14:30:00Z",
+        "time_slot": "02:30 PM",
+        "caregiver_name": "Pranab Barua",
+        "caregiver_phone": "+91 94350 12345",
+        "reason_for_visit": "Follow-up on morning routine orientation and Memory Lane recall progress.",
+        "status": "Confirmed",
+        "doctor_feedback_for_caregiver": None,
+        "booked_at": datetime.now(timezone.utc).isoformat(),
+    },
+]
+
+clinical_feedback_store: list[dict] = [
+    {
+        "id": "df-1",
+        "patient_id": "patient-ramesh",
+        "doctor_name": "Dr. Debabrata Goswami, DM",
+        "hospital_or_clinic": "Assam Medical College & Hospital",
+        "specialty": "Cognitive Neurology & Movement Disorders",
+        "clinical_impression": "Stable & Responsive to Routine",
+        "feedback_notes": "Patient exhibits consistent engagement with memory recall games (average accuracy above 78%). Kinematic tremor variance has remained well stabilized with the ESP32 active utensil. Recommend maintaining the current cognitive exercise cadence.",
+        "prescribed_directives": [
+            "Maintain daily 15-minute Memory Match and Memory Story sessions.",
+            "Keep ESP32 utensil sensor calibrated before meal times.",
+            "Continue Donepezil 5mg once daily after breakfast.",
+            "Schedule follow-up review in 8 weeks.",
+        ],
+        "recommended_difficulty": "Level 2 (Moderate)",
+        "submitted_at": datetime.now(timezone.utc).isoformat(),
+    }
+]
+
+patient_medical_notes_store: dict[str, str] = {
+    "patient-ramesh": "Hypertension controlled on Amlodipine 5mg. Mild short-term memory lapses noticed since 6 months. High adherence to memory training and active utensil usage.",
+    "patient-monalisa": "Autobiographical reminiscing (Memory Lane) highly effective. Attentional fluctuations in mornings. No history of stroke or focal neurological deficits.",
+    "patient-tenzin": "Postural tremors stabilized with adaptive utensil. Gait evaluation shows slight bradykinesia. Recommend daily balance and visual search drills.",
+}
+
+
+@app.get("/api/v1/appointments", tags=["Appointments"], summary="List all appointments")
+def get_all_appointments(patient_id: str | None = None):
+    if patient_id:
+        return [a for a in appointments_store if a["patient_id"] == patient_id]
+    return appointments_store
+
+
+@app.post("/api/v1/appointments", status_code=status.HTTP_201_CREATED, tags=["Appointments"], summary="Book a new doctor appointment")
+def book_appointment(appointment: DoctorAppointmentModel):
+    appt_dict = appointment.model_dump()
+    appointments_store.insert(0, appt_dict)
+    return {"status": "booked", "appointment": appt_dict}
+
+
+@app.patch("/api/v1/appointments/{appointment_id}/feedback", tags=["Appointments"], summary="Send doctor feedback to caregiver for this appointment")
+def update_appointment_feedback(appointment_id: str, payload: AppointmentFeedbackRequest):
+    for a in appointments_store:
+        if a["id"] == appointment_id:
+            a["doctor_feedback_for_caregiver"] = payload.doctor_feedback_for_caregiver
+            if payload.status:
+                a["status"] = payload.status
+            return {"status": "updated", "appointment": a}
+    raise HTTPException(status_code=404, detail="Appointment not found")
+
+
+@app.patch("/api/v1/appointments/{appointment_id}/status", tags=["Appointments"], summary="Update appointment status")
+def update_appointment_status(appointment_id: str, new_status: str):
+    for a in appointments_store:
+        if a["id"] == appointment_id:
+            a["status"] = new_status
+            return {"status": "updated", "appointment": a}
+    raise HTTPException(status_code=404, detail="Appointment not found")
+
+
+@app.get("/api/v1/feedback", tags=["Clinical Feedback"], summary="Get clinical feedback history")
+def get_clinical_feedback(patient_id: str | None = None):
+    if patient_id:
+        return [f for f in clinical_feedback_store if f["patient_id"] == patient_id]
+    return clinical_feedback_store
+
+
+@app.post("/api/v1/feedback", status_code=status.HTTP_201_CREATED, tags=["Clinical Feedback"], summary="Submit physician clinical feedback")
+def submit_clinical_feedback(feedback: DoctorFeedbackModel):
+    fb_dict = feedback.model_dump()
+    clinical_feedback_store.insert(0, fb_dict)
+    return {"status": "recorded", "feedback": fb_dict}
+
+
+@app.get("/api/v1/patient/{patient_id}/notes", tags=["Medical Notes"], summary="Get doctor notes for patient")
+def get_patient_medical_notes(patient_id: str):
+    notes = patient_medical_notes_store.get(patient_id, "")
+    return {"patient_id": patient_id, "medical_notes": notes}
+
+
+@app.put("/api/v1/patient/{patient_id}/notes", tags=["Medical Notes"], summary="Update doctor notes for patient")
+def update_patient_medical_notes(patient_id: str, payload: MedicalNotesRequest):
+    patient_medical_notes_store[patient_id] = payload.medical_notes
+    return {"status": "saved", "patient_id": patient_id, "medical_notes": payload.medical_notes}
 
 
 if __name__ == "__main__":

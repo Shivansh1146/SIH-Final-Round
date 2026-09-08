@@ -173,3 +173,43 @@ class LongitudinalPatientHistory(BaseModel):
     latest_evaluation: ClinicalEvaluationResponse | None = None
 
 
+class DoctorAppointmentModel(BaseModel):
+    id: str
+    patient_id: str
+    patient_name: str
+    doctor_name: str
+    clinic_or_hospital: str
+    appointment_type: str
+    scheduled_date: str
+    time_slot: str
+    caregiver_name: str
+    caregiver_phone: str
+    reason_for_visit: str
+    status: str = "Confirmed"
+    doctor_feedback_for_caregiver: str | None = None
+    booked_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
+class AppointmentFeedbackRequest(BaseModel):
+    doctor_feedback_for_caregiver: str
+    status: str | None = None
+
+
+class DoctorFeedbackModel(BaseModel):
+    id: str
+    patient_id: str
+    doctor_name: str
+    hospital_or_clinic: str
+    specialty: str
+    clinical_impression: str
+    feedback_notes: str
+    prescribed_directives: List[str] = Field(default_factory=list)
+    recommended_difficulty: str = "Level 2 (Moderate)"
+    submitted_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
+class MedicalNotesRequest(BaseModel):
+    medical_notes: str
+
+
+

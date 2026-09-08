@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:http/http.dart' as http;
+import '../services/api_config.dart';
 
 /// All supported UI languages for SAHAYAK-AI (English, Hindi, and NER North-Eastern Region Languages)
 enum AppLanguage {
@@ -437,6 +440,26 @@ class DoctorFeedback {
     final all = loadAllFeedback();
     all.insert(0, feedback);
     saveAllFeedback(all);
+
+    // Sync to backend
+    try {
+      http.post(
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/feedback'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'id': feedback.id,
+          'patient_id': feedback.patientId,
+          'doctor_name': feedback.doctorName,
+          'hospital_or_clinic': feedback.hospitalOrClinic,
+          'specialty': feedback.specialty,
+          'clinical_impression': feedback.clinicalImpression,
+          'feedback_notes': feedback.feedbackNotes,
+          'prescribed_directives': feedback.prescribedDirectives,
+          'recommended_difficulty': feedback.recommendedDifficulty,
+          'submitted_at': feedback.submittedAt.toIso8601String(),
+        }),
+      ).timeout(const Duration(seconds: 3));
+    } catch (_) {}
   }
 
   static List<DoctorFeedback> get defaultSeedFeedback => [
@@ -586,6 +609,30 @@ class DoctorAppointment {
     final all = loadAllAppointments();
     all.insert(0, appointment);
     saveAllAppointments(all);
+
+    // Sync to backend
+    try {
+      http.post(
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/appointments'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'id': appointment.id,
+          'patient_id': appointment.patientId,
+          'patient_name': appointment.patientName,
+          'doctor_name': appointment.doctorName,
+          'clinic_or_hospital': appointment.clinicOrHospital,
+          'appointment_type': appointment.appointmentType,
+          'scheduled_date': appointment.scheduledDate.toIso8601String(),
+          'time_slot': appointment.timeSlot,
+          'caregiver_name': appointment.caregiverName,
+          'caregiver_phone': appointment.caregiverPhone,
+          'reason_for_visit': appointment.reasonForVisit,
+          'status': appointment.status,
+          'doctor_feedback_for_caregiver': appointment.doctorFeedbackForCaregiver,
+          'booked_at': appointment.bookedAt.toIso8601String(),
+        }),
+      ).timeout(const Duration(seconds: 3));
+    } catch (_) {}
   }
 
   static void updateStatus(String appointmentId, String newStatus) {
@@ -610,6 +657,13 @@ class DoctorAppointment {
         bookedAt: old.bookedAt,
       );
       saveAllAppointments(all);
+
+      // Sync status to backend
+      try {
+        http.patch(
+          Uri.parse('${ApiConfig.baseUrl}/api/v1/appointments/$appointmentId/status?new_status=$newStatus'),
+        ).timeout(const Duration(seconds: 3));
+      } catch (_) {}
     }
   }
 
@@ -635,6 +689,18 @@ class DoctorAppointment {
         bookedAt: old.bookedAt,
       );
       saveAllAppointments(all);
+
+      // Sync caregiver feedback to backend
+      try {
+        http.patch(
+          Uri.parse('${ApiConfig.baseUrl}/api/v1/appointments/$appointmentId/feedback'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'doctor_feedback_for_caregiver': feedbackNote,
+            'status': old.status,
+          }),
+        ).timeout(const Duration(seconds: 3));
+      } catch (_) {}
     }
   }
 

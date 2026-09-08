@@ -111,6 +111,15 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
       PatientProfile.saveAllToHive(_allPatients);
     }
 
+    // Sync to backend notes store
+    try {
+      http.put(
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/patient/$_activePatientId/notes'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'medical_notes': _activeProfile!.medicalNotes ?? ''}),
+      );
+    } catch (_) {}
+
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
         setState(() => _isSavingMedicalNotes = false);
