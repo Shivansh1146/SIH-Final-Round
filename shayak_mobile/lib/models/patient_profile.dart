@@ -207,9 +207,43 @@ class PatientProfile {
       final box = Hive.box('user_preferences');
       final savedList = box.get('saved_profiles');
       if (savedList != null && savedList is List && savedList.isNotEmpty) {
-        return savedList
+        final loaded = savedList
             .map((e) => PatientProfile.fromMap(Map<dynamic, dynamic>.from(e)))
             .toList();
+        
+        // Auto-migrate missing medicalNotes or caregiver data from default demo profiles
+        bool updated = false;
+        for (final def in defaultDemoProfiles) {
+          final idx = loaded.indexWhere((p) => p.id == def.id);
+          if (idx != -1) {
+            final p = loaded[idx];
+            bool changed = false;
+            if ((p.medicalNotes == null || p.medicalNotes!.isEmpty) && def.medicalNotes != null) {
+              p.medicalNotes = def.medicalNotes;
+              changed = true;
+            }
+            if ((p.caregiverName == null || p.caregiverName!.isEmpty) && def.caregiverName != null) {
+              p.caregiverName = def.caregiverName;
+              changed = true;
+            }
+            if ((p.caregiverPhone == null || p.caregiverPhone!.isEmpty) && def.caregiverPhone != null) {
+              p.caregiverPhone = def.caregiverPhone;
+              changed = true;
+            }
+            if ((p.caregiverRelation == null || p.caregiverRelation!.isEmpty) && def.caregiverRelation != null) {
+              p.caregiverRelation = def.caregiverRelation;
+              changed = true;
+            }
+            if (changed) {
+              loaded[idx] = p;
+              updated = true;
+            }
+          }
+        }
+        if (updated) {
+          saveAllToHive(loaded);
+        }
+        return loaded;
       }
     } catch (_) {}
 
