@@ -154,6 +154,48 @@ class LocalizationService {
     }
   }
 
+  static String trFilter(String filter, [AppLanguage? lang]) {
+    final l = lang ?? instance.currentLanguage;
+    switch (filter) {
+      case 'Pending':
+        return tr('pending', l);
+      case 'Completed':
+        switch (l) {
+          case AppLanguage.hindi: return 'पूर्ण';
+          case AppLanguage.assamese: return 'সম্পূৰ্ণ';
+          case AppLanguage.bengali: return 'সম্পন্ন';
+          case AppLanguage.manipuri: return 'লোইশিনবা';
+          case AppLanguage.bodo: return 'फुंखांनाय';
+          case AppLanguage.nepali: return 'पूरा';
+          case AppLanguage.mizo: return 'Zawh tawh';
+          case AppLanguage.english: default: return 'Completed';
+        }
+      case 'Medicines':
+        switch (l) {
+          case AppLanguage.hindi: return 'दवाइयाँ';
+          case AppLanguage.assamese: return 'ঔষধ';
+          case AppLanguage.bengali: return 'ওষুধ';
+          case AppLanguage.manipuri: return 'হিদাক';
+          case AppLanguage.bodo: return 'मुलि';
+          case AppLanguage.nepali: return 'औषधि';
+          case AppLanguage.mizo: return 'Damdawi';
+          case AppLanguage.english: default: return 'Medicines';
+        }
+      case 'All':
+      default:
+        switch (l) {
+          case AppLanguage.hindi: return 'सभी';
+          case AppLanguage.assamese: return 'সকলো';
+          case AppLanguage.bengali: return 'সমস্ত';
+          case AppLanguage.manipuri: return 'পুম্নমক';
+          case AppLanguage.bodo: return 'गासैबो';
+          case AppLanguage.nepali: return 'सबै';
+          case AppLanguage.mizo: return 'Zawng zawng';
+          case AppLanguage.english: default: return 'All';
+        }
+    }
+  }
+
   static String getCaregiverVoiceGreeting(AppLanguage lang, [String patientName = 'Ramesh']) {
     switch (lang) {
       case AppLanguage.hindi:

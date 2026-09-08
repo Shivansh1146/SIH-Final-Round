@@ -790,7 +790,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                           ),
                         ),
                         child: Text(
-                          filter,
+                          LocalizationService.trFilter(filter, currentLang),
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12.0,
                             fontWeight: FontWeight.w700,
