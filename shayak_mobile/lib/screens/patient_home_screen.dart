@@ -13,6 +13,7 @@ import 'memory_match_screen.dart';
 import 'clock_canvas_screen.dart';
 import 'category_sort_screen.dart';
 import 'pattern_sequence_screen.dart';
+import 'routine_sequencer_screen.dart';
 
 class PatientHomeScreen extends StatefulWidget {
   final ValueChanged<AppViewMode> onNavigate;
@@ -182,6 +183,20 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       context,
       MaterialPageRoute(
         builder: (ctx) => PatternSequenceScreen(
+          onFinish: () {
+            Navigator.pop(ctx);
+            _fetchBackendPatientData();
+          },
+        ),
+      ),
+    );
+  }
+
+  void _startRoutineSequencer() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => RoutineSequencerScreen(
           onFinish: () {
             Navigator.pop(ctx);
             _fetchBackendPatientData();
@@ -1145,6 +1160,21 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         ),
 
         const SizedBox(height: 24),
+
+        // Premier Dementia Activity: Daily Routine & ADL Sequencer
+        _buildActivityItemCard(
+          emoji: '☕',
+          tag: 'CLINICAL ADL PROCEDURAL REHABILITATION',
+          title: 'Daily Routine & Life Sequencer',
+          description: 'Rebuild step-by-step memory for familiar everyday activities (Making Morning Chai, Watering Plants, Getting Ready).',
+          duration: '3–5 minutes',
+          difficulty: 'AI-Adaptive (3–5 Steps)',
+          buttonColor: const Color(0xFFE65100),
+          buttonText: 'Play Routine Sequencer',
+          onPlay: _startRoutineSequencer,
+        ),
+
+        const SizedBox(height: 18),
 
         // Activity Card 1: Memory Match Activity
         _buildActivityItemCard(
