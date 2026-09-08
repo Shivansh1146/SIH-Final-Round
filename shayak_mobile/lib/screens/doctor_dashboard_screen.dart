@@ -1934,11 +1934,142 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                'Clinical Reason: ${apt.reasonForVisit}',
+                'Caregiver Note: ${apt.reasonForVisit}',
                 style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF334155)),
               ),
             ),
           ],
+          if (apt.doctorFeedbackForCaregiver != null && apt.doctorFeedbackForCaregiver!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFBFDBFE)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.reply_rounded, size: 16, color: Color(0xFF1D4ED8)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Your Feedback to Caregiver (${apt.caregiverName}):',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF1E40AF),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          apt.doctorFeedbackForCaregiver!,
+                          style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF1E293B)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton.icon(
+                onPressed: () => _showAppointmentFeedbackDialog(apt),
+                icon: const Icon(Icons.comment_rounded, size: 14, color: Color(0xFF1D4ED8)),
+                label: Text(
+                  apt.doctorFeedbackForCaregiver != null ? 'Edit Caregiver Feedback' : 'Send Feedback to Caregiver',
+                  style: GoogleFonts.plusJakartaSans(fontSize: 11.5, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
+                ),
+                style: TextButton.styleFrom(
+                  backgroundColor: const Color(0xFFEFF6FF),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAppointmentFeedbackDialog(DoctorAppointment apt) {
+    final feedbackCtrl = TextEditingController(text: apt.doctorFeedbackForCaregiver ?? '');
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.feedback_rounded, color: Color(0xFF1D4ED8)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Feedback to Caregiver (${apt.caregiverName})',
+                style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Appointment: ${apt.appointmentType} on ${apt.scheduledDate.day}/${apt.scheduledDate.month}/${apt.scheduledDate.year} (${apt.timeSlot}) for ${apt.patientName}',
+              style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: feedbackCtrl,
+              maxLines: 4,
+              decoration: InputDecoration(
+                hintText: 'Enter clinical instructions, prescription advice, test orders, or visit confirmation details for ${apt.caregiverName}...',
+                hintStyle: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF94A3B8)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                contentPadding: const EdgeInsets.all(12),
+              ),
+              style: GoogleFonts.inter(fontSize: 13),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              final text = feedbackCtrl.text.trim();
+              if (text.isNotEmpty) {
+                DoctorAppointment.updateFeedback(apt.id, text);
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Feedback sent to ${apt.caregiverName} on their Caregiver Portal!', style: GoogleFonts.inter()),
+                    backgroundColor: const Color(0xFF059669),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.send_rounded, size: 14),
+            label: Text('Send to Caregiver', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1D4ED8),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
         ],
       ),
     );

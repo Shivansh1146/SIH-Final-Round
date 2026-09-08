@@ -2945,6 +2945,50 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                                 style: GoogleFonts.inter(fontSize: 12, fontStyle: FontStyle.italic, color: AppTheme.textSecondary),
                               ),
                             ],
+                            if (apt.doctorFeedbackForCaregiver != null && apt.doctorFeedbackForCaregiver!.isNotEmpty) ...[
+                              const SizedBox(height: 10),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEFF6FF),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: const Color(0xFFBFDBFE)),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(Icons.medical_services_rounded, size: 16, color: Color(0xFF1D4ED8)),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Doctor's Feedback & Directives for this Visit:",
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: const Color(0xFF1E40AF),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            apt.doctorFeedbackForCaregiver!,
+                                            style: GoogleFonts.inter(
+                                              fontSize: 12,
+                                              height: 1.4,
+                                              color: const Color(0xFF1E293B),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       );

@@ -494,6 +494,7 @@ class DoctorAppointment {
   final String caregiverPhone;
   final String reasonForVisit;
   final String status; // 'Confirmed', 'Pending Review', 'Completed', 'Rescheduled'
+  final String? doctorFeedbackForCaregiver; // Feedback left by doctor specifically for caregiver on this appointment
   final DateTime bookedAt;
 
   DoctorAppointment({
@@ -509,6 +510,7 @@ class DoctorAppointment {
     required this.caregiverPhone,
     required this.reasonForVisit,
     this.status = 'Confirmed',
+    this.doctorFeedbackForCaregiver,
     required this.bookedAt,
   });
 
@@ -525,6 +527,7 @@ class DoctorAppointment {
         'caregiverPhone': caregiverPhone,
         'reasonForVisit': reasonForVisit,
         'status': status,
+        'doctorFeedbackForCaregiver': doctorFeedbackForCaregiver,
         'bookedAt': bookedAt.toIso8601String(),
       };
 
@@ -542,6 +545,7 @@ class DoctorAppointment {
       caregiverPhone: map['caregiverPhone'] ?? '+91 98450 12345',
       reasonForVisit: map['reasonForVisit'] ?? 'Routine Neuro-Geriatric Progress Evaluation',
       status: map['status'] ?? 'Confirmed',
+      doctorFeedbackForCaregiver: map['doctorFeedbackForCaregiver'],
       bookedAt: DateTime.tryParse(map['bookedAt'] ?? '') ?? DateTime.now(),
     );
   }
@@ -602,6 +606,32 @@ class DoctorAppointment {
         caregiverPhone: old.caregiverPhone,
         reasonForVisit: old.reasonForVisit,
         status: newStatus,
+        doctorFeedbackForCaregiver: old.doctorFeedbackForCaregiver,
+        bookedAt: old.bookedAt,
+      );
+      saveAllAppointments(all);
+    }
+  }
+
+  static void updateFeedback(String appointmentId, String feedbackNote) {
+    final all = loadAllAppointments();
+    final idx = all.indexWhere((a) => a.id == appointmentId);
+    if (idx != -1) {
+      final old = all[idx];
+      all[idx] = DoctorAppointment(
+        id: old.id,
+        patientId: old.patientId,
+        patientName: old.patientName,
+        doctorName: old.doctorName,
+        clinicOrHospital: old.clinicOrHospital,
+        appointmentType: old.appointmentType,
+        scheduledDate: old.scheduledDate,
+        timeSlot: old.timeSlot,
+        caregiverName: old.caregiverName,
+        caregiverPhone: old.caregiverPhone,
+        reasonForVisit: old.reasonForVisit,
+        status: old.status,
+        doctorFeedbackForCaregiver: feedbackNote,
         bookedAt: old.bookedAt,
       );
       saveAllAppointments(all);
@@ -622,6 +652,7 @@ class DoctorAppointment {
           caregiverPhone: '+91 98450 12345',
           reasonForVisit: 'Bi-monthly cognitive progression review and ESP32 kinematic utensil stability check.',
           status: 'Confirmed',
+          doctorFeedbackForCaregiver: 'Confirmed for 11:00 AM. Please bring the ESP32 utensil usage logs and ensure Ramesh had a light breakfast.',
           bookedAt: DateTime.now().subtract(const Duration(days: 1)),
         ),
         DoctorAppointment(
