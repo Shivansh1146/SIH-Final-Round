@@ -66,6 +66,16 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
   String _caregiverDifficulty = 'Level 2 (Moderate)';
   bool _caregiverAdaptiveMode = true;
 
+  // Appointment Booking Form State
+  final TextEditingController _aptDoctorNameController = TextEditingController(text: 'Dr. Debabrata Goswami, DM');
+  final TextEditingController _aptHospitalController = TextEditingController(text: 'Assam Medical College & Hospital');
+  final TextEditingController _aptReasonController = TextEditingController();
+  final TextEditingController _aptCaregiverPhoneController = TextEditingController();
+  String _aptSelectedType = 'In-Person Neuro Consultation';
+  DateTime _aptSelectedDate = DateTime.now().add(const Duration(days: 2));
+  String _aptSelectedTimeSlot = '10:30 AM';
+  bool _isBookingAppointment = false;
+
   @override
   void initState() {
     super.initState();
@@ -374,7 +384,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                     ),
                   ),
                   child: NavigationBar(
-                    selectedIndex: _sidebarIndex.clamp(0, 1),
+                    selectedIndex: _sidebarIndex.clamp(0, 2),
                     onDestinationSelected: (idx) {
                       setState(() => _sidebarIndex = idx);
                     },
@@ -393,6 +403,11 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                         icon: const Icon(Icons.calendar_today_outlined),
                         selectedIcon: const Icon(Icons.calendar_today_rounded, color: AppTheme.forestGreen),
                         label: LocalizationService.tr('care_plan', lang),
+                      ),
+                      const NavigationDestination(
+                        icon: Icon(Icons.event_available_outlined),
+                        selectedIcon: Icon(Icons.event_available_rounded, color: AppTheme.forestGreen),
+                        label: 'Book Doctor',
                       ),
                     ],
                   ),
@@ -449,6 +464,8 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
 
   Widget _buildSelectedCaregiverView(BuildContext context, AppLanguage lang) {
     switch (_sidebarIndex) {
+      case 2:
+        return _buildBookAppointmentView(context, lang);
       case 1:
         return _buildCarePlanView(context, lang);
       case 0:
@@ -2479,6 +2496,529 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
         ],
       ),
     );
+  }
+
+  // ── Book Doctor Appointment View ──────────────────────────────────────────
+  Widget _buildBookAppointmentView(BuildContext context, AppLanguage lang) {
+    final isMobile = MediaQuery.of(context).size.width < 700;
+    final activePatient = PatientProfile.loadFromHive();
+    final patientId = activePatient?.id ?? 'patient-ramesh';
+    final patientName = activePatient?.fullName ?? 'Ramesh Kumar';
+
+    final appointmentTypes = [
+      'In-Person Neuro Consultation',
+      'Telehealth Video Review',
+      'Cognitive & Memory Assessment',
+      'Kinematic Tremor Check-up'
+    ];
+
+    final timeSlots = [
+      '09:30 AM', '10:30 AM', '11:45 AM',
+      '02:00 PM', '03:30 PM', '04:45 PM'
+    ];
+
+    if (_aptCaregiverPhoneController.text.isEmpty && activePatient?.caregiverPhone != null) {
+      _aptCaregiverPhoneController.text = activePatient!.caregiverPhone!;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // View Header
+        Container(
+          padding: EdgeInsets.all(isMobile ? 18.0 : 24.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: AppTheme.surfaceBorder),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.sageLight,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppTheme.sageBorder),
+                    ),
+                    child: const Icon(Icons.event_available_rounded, size: 26, color: AppTheme.forestGreen),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppTheme.sageLight,
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: Text(
+                            'CLINICAL SCHEDULING PORTAL',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.forestGreen,
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Book Doctor Appointment',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: isMobile ? 22 : 26,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          'Directly schedule in-person or video consultations for $patientName.',
+                          style: GoogleFonts.inter(fontSize: 13.0, color: AppTheme.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        // Booking Form Card
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(isMobile ? 18.0 : 26.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: AppTheme.surfaceBorder),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Consultation Details',
+                style: GoogleFonts.plusJakartaSans(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
+              ),
+              const SizedBox(height: 16),
+
+              // Doctor Name & Clinic
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _aptDoctorNameController,
+                      decoration: InputDecoration(
+                        labelText: 'Physician / Specialist',
+                        labelStyle: GoogleFonts.inter(fontSize: 13),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      ),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _aptHospitalController,
+                      decoration: InputDecoration(
+                        labelText: 'Hospital / Clinic',
+                        labelStyle: GoogleFonts.inter(fontSize: 13),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      ),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Consultation Type Chips
+              Text(
+                'Appointment Format:',
+                style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: appointmentTypes.map((type) {
+                  final isSel = _aptSelectedType == type;
+                  return ChoiceChip(
+                    label: Text(type),
+                    selected: isSel,
+                    onSelected: (_) => setState(() => _aptSelectedType = type),
+                    selectedColor: AppTheme.sageLight,
+                    labelStyle: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: isSel ? FontWeight.w800 : FontWeight.w500,
+                      color: isSel ? AppTheme.forestGreen : AppTheme.textSecondary,
+                    ),
+                    backgroundColor: const Color(0xFFF1F5F9),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+
+              // Date Picker & Time Slots
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Scheduled Date:',
+                          style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                        ),
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: _aptSelectedDate,
+                              firstDate: DateTime.now(),
+                              lastDate: DateTime.now().add(const Duration(days: 90)),
+                            );
+                            if (picked != null) {
+                              setState(() => _aptSelectedDate = picked);
+                            }
+                          },
+                          icon: const Icon(Icons.calendar_month_rounded, size: 18, color: AppTheme.forestGreen),
+                          label: Text(
+                            '${_aptSelectedDate.day}/${_aptSelectedDate.month}/${_aptSelectedDate.year}',
+                            style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppTheme.surfaceBorder),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Caregiver Contact:',
+                          style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _aptCaregiverPhoneController,
+                          decoration: InputDecoration(
+                            hintText: '+91 98450 12345',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          ),
+                          style: GoogleFonts.jetBrainsMono(fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Time Slot selection
+              Text(
+                'Available Time Slots:',
+                style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: timeSlots.map((slot) {
+                  final isSel = _aptSelectedTimeSlot == slot;
+                  return ChoiceChip(
+                    label: Text(slot),
+                    selected: isSel,
+                    onSelected: (_) => setState(() => _aptSelectedTimeSlot = slot),
+                    selectedColor: AppTheme.pastelBlue,
+                    labelStyle: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: isSel ? FontWeight.w800 : FontWeight.w500,
+                      color: isSel ? const Color(0xFF1D4ED8) : AppTheme.textSecondary,
+                    ),
+                    backgroundColor: const Color(0xFFF1F5F9),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+
+              // Reason for visit
+              Text(
+                'Reason for Consultation / Observed Symptoms:',
+                style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _aptReasonController,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  hintText: 'e.g., Routine cognitive evaluation; observed slight morning confusion; review tremor metrics...',
+                  hintStyle: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF94A3B8)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                  contentPadding: const EdgeInsets.all(12),
+                ),
+                style: GoogleFonts.inter(fontSize: 13),
+              ),
+              const SizedBox(height: 20),
+
+              // Book Button
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: _isBookingAppointment ? null : () => _handleBookAppointment(patientId, patientName),
+                  icon: _isBookingAppointment
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.check_circle_rounded, size: 18),
+                  label: Text(
+                    _isBookingAppointment ? 'Scheduling with Physician...' : 'Confirm & Book Appointment',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 14.5, fontWeight: FontWeight.w700),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.forestGreen,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        // Existing Booked Appointments for this Patient
+        ValueListenableBuilder<int>(
+          valueListenable: DoctorAppointment.appointmentNotifier,
+          builder: (context, _, __) {
+            final appointments = DoctorAppointment.getAppointmentsForPatient(patientId);
+
+            return Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(isMobile ? 18.0 : 24.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppTheme.surfaceBorder),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Scheduled Appointments (${appointments.length})',
+                        style: GoogleFonts.plusJakartaSans(fontSize: 16.5, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppTheme.sageLight,
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: Text(
+                          'SYNCED WITH DOCTOR',
+                          style: GoogleFonts.plusJakartaSans(fontSize: 10.5, fontWeight: FontWeight.w800, color: AppTheme.forestGreen),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  if (appointments.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20.0),
+                      child: Center(
+                        child: Text(
+                          'No appointments scheduled yet. Use the form above to book.',
+                          style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary),
+                        ),
+                      ),
+                    )
+                  else
+                    ...appointments.map((apt) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.sageLight,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.event_note_rounded, size: 18, color: AppTheme.forestGreen),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${apt.doctorName} · ${apt.clinicOrHospital}',
+                                        style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                                      ),
+                                      Text(
+                                        apt.appointmentType,
+                                        style: GoogleFonts.inter(fontSize: 11.5, color: AppTheme.textSecondary),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: apt.status == 'Confirmed' ? const Color(0xFFECFDF5) : const Color(0xFFEFF6FF),
+                                    borderRadius: BorderRadius.circular(100),
+                                    border: Border.all(color: apt.status == 'Confirmed' ? const Color(0xFFA7F3D0) : const Color(0xFFBFDBFE)),
+                                  ),
+                                  child: Text(
+                                    apt.status,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: apt.status == 'Confirmed' ? const Color(0xFF059669) : const Color(0xFF1D4ED8),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                const Icon(Icons.access_time_rounded, size: 14, color: AppTheme.textSecondary),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '${apt.scheduledDate.day}/${apt.scheduledDate.month}/${apt.scheduledDate.year} at ${apt.timeSlot}',
+                                  style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                                ),
+                                const SizedBox(width: 14),
+                                const Icon(Icons.phone_rounded, size: 14, color: AppTheme.textSecondary),
+                                const SizedBox(width: 6),
+                                Text(
+                                  apt.caregiverPhone,
+                                  style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
+                                ),
+                              ],
+                            ),
+                            if (apt.reasonForVisit.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Note: ${apt.reasonForVisit}',
+                                style: GoogleFonts.inter(fontSize: 12, fontStyle: FontStyle.italic, color: AppTheme.textSecondary),
+                              ),
+                            ],
+                          ],
+                        ),
+                      );
+                    }),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  void _handleBookAppointment(String patientId, String patientName) {
+    if (_aptDoctorNameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter doctor name.', style: GoogleFonts.inter()), backgroundColor: AppTheme.warmTerracotta),
+      );
+      return;
+    }
+
+    setState(() => _isBookingAppointment = true);
+
+    final activePatient = PatientProfile.loadFromHive();
+    final newApt = DoctorAppointment(
+      id: 'apt-${DateTime.now().millisecondsSinceEpoch}',
+      patientId: patientId,
+      patientName: patientName,
+      doctorName: _aptDoctorNameController.text.trim(),
+      clinicOrHospital: _aptHospitalController.text.trim(),
+      appointmentType: _aptSelectedType,
+      scheduledDate: _aptSelectedDate,
+      timeSlot: _aptSelectedTimeSlot,
+      caregiverName: activePatient?.caregiverName ?? 'Anita Kumar',
+      caregiverPhone: _aptCaregiverPhoneController.text.trim().isNotEmpty
+          ? _aptCaregiverPhoneController.text.trim()
+          : (activePatient?.caregiverPhone ?? '+91 98450 12345'),
+      reasonForVisit: _aptReasonController.text.trim().isNotEmpty
+          ? _aptReasonController.text.trim()
+          : 'Routine Neuro-Geriatric Progress Evaluation',
+      status: 'Confirmed',
+      bookedAt: DateTime.now(),
+    );
+
+    DoctorAppointment.bookAppointment(newApt);
+
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) {
+        setState(() {
+          _isBookingAppointment = false;
+          _aptReasonController.clear();
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Appointment booked with ${newApt.doctorName} for ${newApt.patientName}! Synced to Doctor Portal.',
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppTheme.forestGreen,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    });
   }
 }
 

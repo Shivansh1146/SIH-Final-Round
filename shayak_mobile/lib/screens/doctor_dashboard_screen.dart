@@ -274,7 +274,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
           : null,
       bottomNavigationBar: isMobile
           ? NavigationBar(
-              selectedIndex: _sidebarIndex.clamp(0, 2),
+              selectedIndex: _sidebarIndex.clamp(0, 3),
               onDestinationSelected: (idx) {
                 setState(() => _sidebarIndex = idx);
               },
@@ -296,6 +296,11 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                   icon: Icon(Icons.analytics_outlined),
                   selectedIcon: Icon(Icons.analytics_rounded, color: Color(0xFF1D4ED8)),
                   label: 'Biomarkers',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.event_available_outlined),
+                  selectedIcon: Icon(Icons.event_available_rounded, color: Color(0xFF1D4ED8)),
+                  label: 'Appointments',
                 ),
               ],
             )
@@ -341,8 +346,10 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                 _buildReportsTab(isMobile)
                               else if (_sidebarIndex == 1)
                                 _buildFeedbackTab(isMobile)
+                              else if (_sidebarIndex == 2)
+                                _buildBiomarkersTab(isMobile)
                               else
-                                _buildBiomarkersTab(isMobile),
+                                _buildAppointmentsTab(isMobile),
                             ],
                           ),
                         ),
@@ -938,6 +945,114 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
         ),
 
         const SizedBox(height: 24),
+
+        // Scheduled Appointments Preview Card for this Patient
+        ValueListenableBuilder<int>(
+          valueListenable: DoctorAppointment.appointmentNotifier,
+          builder: (context, _, __) {
+            final apts = DoctorAppointment.getAppointmentsForPatient(_activePatientId);
+            if (apts.isEmpty) return const SizedBox.shrink();
+
+            return Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 24),
+              padding: EdgeInsets.all(isMobile ? 18.0 : 22.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: const Color(0xFFA7F3D0), width: 1.2),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF059669).withOpacity(0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFECFDF5),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.event_available_rounded, size: 20, color: Color(0xFF059669)),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Caregiver Booked Appointments (${apts.length})',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF065F46),
+                            ),
+                          ),
+                        ],
+                      ),
+                      TextButton.icon(
+                        onPressed: () => setState(() => _sidebarIndex = 3),
+                        icon: const Icon(Icons.calendar_today_rounded, size: 14, color: Color(0xFF059669)),
+                        label: Text(
+                          'View All',
+                          style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF059669)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ...apts.map((apt) => Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFD1FAE5)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check_circle_rounded, size: 16, color: Color(0xFF059669)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${apt.appointmentType} · ${apt.scheduledDate.day}/${apt.scheduledDate.month}/${apt.scheduledDate.year} at ${apt.timeSlot}',
+                                    style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                                  ),
+                                  Text(
+                                    'Booked by ${apt.caregiverName} (${apt.caregiverPhone}) · ${apt.reasonForVisit}',
+                                    style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF64748B)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDCFCE7),
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: Text(
+                                apt.status,
+                                style: GoogleFonts.plusJakartaSans(fontSize: 10.5, fontWeight: FontWeight.w800, color: const Color(0xFF166534)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )),
+                ],
+              ),
+            );
+          },
+        ),
 
         // Historical Doctor Feedback Cards for this Patient
         Container(
@@ -1569,4 +1684,264 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
       ],
     );
   }
+
+  // ── Tab 3: Appointments & Consultation Schedule ───────────────────────────
+  Widget _buildAppointmentsTab(bool isMobile) {
+    return ValueListenableBuilder<int>(
+      valueListenable: DoctorAppointment.appointmentNotifier,
+      builder: (context, _, __) {
+        final allAppointments = DoctorAppointment.loadAllAppointments();
+        final patientAppointments = allAppointments.where((a) => a.patientId == _activePatientId).toList();
+
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(isMobile ? 18.0 : 26.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFEFF6FF),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.event_available_rounded, size: 22, color: Color(0xFF1D4ED8)),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Clinical Consultation Appointments',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: isMobile ? 18 : 20,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF0F172A),
+                          ),
+                        ),
+                        Text(
+                          'Appointments booked by caregivers across registered patients',
+                          style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF64748B)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(color: const Color(0xFFBFDBFE)),
+                    ),
+                    child: Text(
+                      '${allAppointments.length} Total Booked',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1D4ED8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Active Patient Upcoming Appointments
+              Text(
+                'Appointments for ${_activeProfile?.fullName ?? "Active Patient"} (${patientAppointments.length}):',
+                style: GoogleFonts.plusJakartaSans(fontSize: 14.5, fontWeight: FontWeight.w700, color: const Color(0xFF334155)),
+              ),
+              const SizedBox(height: 10),
+
+              if (patientAppointments.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'No appointments scheduled yet for this patient.',
+                      style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B)),
+                    ),
+                  ),
+                )
+              else
+                ...patientAppointments.map((apt) => _buildAppointmentCard(apt, isCurrentPatient: true)),
+
+              const SizedBox(height: 20),
+              const Divider(color: Color(0xFFF1F5F9), height: 1),
+              const SizedBox(height: 18),
+
+              // All Other Scheduled Patient Appointments
+              Text(
+                'All Other Patient Appointments:',
+                style: GoogleFonts.plusJakartaSans(fontSize: 14.5, fontWeight: FontWeight.w700, color: const Color(0xFF334155)),
+              ),
+              const SizedBox(height: 10),
+
+              ...allAppointments.where((a) => a.patientId != _activePatientId).map((apt) => _buildAppointmentCard(apt, isCurrentPatient: false)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAppointmentCard(DoctorAppointment apt, {required bool isCurrentPatient}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isCurrentPatient ? const Color(0xFFF8FAFC) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: isCurrentPatient ? const Color(0xFFBFDBFE) : const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isCurrentPatient ? const Color(0xFFEFF6FF) : const Color(0xFFF1F5F9),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.person_rounded, size: 18, color: isCurrentPatient ? const Color(0xFF1D4ED8) : const Color(0xFF64748B)),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          apt.patientName,
+                          style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A)),
+                        ),
+                        if (!isCurrentPatient) ...[
+                          const SizedBox(width: 6),
+                          InkWell(
+                            onTap: () => _onSelectPatient(apt.patientId),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEFF6FF),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                'Switch Patient',
+                                style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    Text(
+                      '${apt.appointmentType} · ${apt.doctorName}',
+                      style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Status Dropdown / Action
+              PopupMenuButton<String>(
+                onSelected: (newStatus) {
+                  DoctorAppointment.updateStatus(apt.id, newStatus);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Appointment status updated to $newStatus', style: GoogleFonts.inter()),
+                      backgroundColor: const Color(0xFF1D4ED8),
+                      behavior: SnackBarBehavior.floating,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(value: 'Confirmed', child: Text('Mark Confirmed')),
+                  const PopupMenuItem(value: 'Completed', child: Text('Mark Completed')),
+                  const PopupMenuItem(value: 'Rescheduled', child: Text('Mark Rescheduled')),
+                ],
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: apt.status == 'Confirmed' ? const Color(0xFFECFDF5) : (apt.status == 'Completed' ? const Color(0xFFF1F5F9) : const Color(0xFFFFFBEB)),
+                    borderRadius: BorderRadius.circular(100),
+                    border: Border.all(
+                      color: apt.status == 'Confirmed' ? const Color(0xFFA7F3D0) : (apt.status == 'Completed' ? const Color(0xFFCBD5E1) : const Color(0xFFFDE68A)),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        apt.status,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: apt.status == 'Confirmed' ? const Color(0xFF059669) : const Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: Color(0xFF64748B)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const Icon(Icons.access_time_rounded, size: 14, color: Color(0xFF64748B)),
+              const SizedBox(width: 6),
+              Text(
+                '${apt.scheduledDate.day}/${apt.scheduledDate.month}/${apt.scheduledDate.year} at ${apt.timeSlot}',
+                style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+              ),
+              const SizedBox(width: 14),
+              const Icon(Icons.phone_rounded, size: 14, color: Color(0xFF059669)),
+              const SizedBox(width: 6),
+              Text(
+                '${apt.caregiverName} (${apt.caregiverPhone})',
+                style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF334155)),
+              ),
+            ],
+          ),
+          if (apt.reasonForVisit.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                'Clinical Reason: ${apt.reasonForVisit}',
+                style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF334155)),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
+

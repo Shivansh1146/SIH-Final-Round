@@ -442,3 +442,170 @@ class DoctorFeedback {
       ];
 }
 
+/// ============================================================================
+/// DOCTOR APPOINTMENT BOOKING MODEL
+/// Caregivers can book clinical appointments directly, syncing immediately
+/// to the Doctor Dashboard and Caregiver Calendar with real-time status.
+/// ============================================================================
+class DoctorAppointment {
+  final String id;
+  final String patientId;
+  final String patientName;
+  final String doctorName;
+  final String clinicOrHospital;
+  final String appointmentType; // 'In-Person Consultation', 'Telehealth Video Review', 'Cognitive Assessment'
+  final DateTime scheduledDate;
+  final String timeSlot; // e.g. '10:30 AM', '02:00 PM'
+  final String caregiverName;
+  final String caregiverPhone;
+  final String reasonForVisit;
+  final String status; // 'Confirmed', 'Pending Review', 'Completed', 'Rescheduled'
+  final DateTime bookedAt;
+
+  DoctorAppointment({
+    required this.id,
+    required this.patientId,
+    required this.patientName,
+    required this.doctorName,
+    required this.clinicOrHospital,
+    required this.appointmentType,
+    required this.scheduledDate,
+    required this.timeSlot,
+    required this.caregiverName,
+    required this.caregiverPhone,
+    required this.reasonForVisit,
+    this.status = 'Confirmed',
+    required this.bookedAt,
+  });
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'patientId': patientId,
+        'patientName': patientName,
+        'doctorName': doctorName,
+        'clinicOrHospital': clinicOrHospital,
+        'appointmentType': appointmentType,
+        'scheduledDate': scheduledDate.toIso8601String(),
+        'timeSlot': timeSlot,
+        'caregiverName': caregiverName,
+        'caregiverPhone': caregiverPhone,
+        'reasonForVisit': reasonForVisit,
+        'status': status,
+        'bookedAt': bookedAt.toIso8601String(),
+      };
+
+  factory DoctorAppointment.fromMap(Map<dynamic, dynamic> map) {
+    return DoctorAppointment(
+      id: map['id'] ?? '',
+      patientId: map['patientId'] ?? '',
+      patientName: map['patientName'] ?? 'Patient',
+      doctorName: map['doctorName'] ?? 'Dr. Debabrata Goswami, DM',
+      clinicOrHospital: map['clinicOrHospital'] ?? 'Assam Medical College & Hospital',
+      appointmentType: map['appointmentType'] ?? 'In-Person Consultation',
+      scheduledDate: DateTime.tryParse(map['scheduledDate'] ?? '') ?? DateTime.now().add(const Duration(days: 2)),
+      timeSlot: map['timeSlot'] ?? '10:30 AM',
+      caregiverName: map['caregiverName'] ?? 'Caregiver',
+      caregiverPhone: map['caregiverPhone'] ?? '+91 98450 12345',
+      reasonForVisit: map['reasonForVisit'] ?? 'Routine Neuro-Geriatric Progress Evaluation',
+      status: map['status'] ?? 'Confirmed',
+      bookedAt: DateTime.tryParse(map['bookedAt'] ?? '') ?? DateTime.now(),
+    );
+  }
+
+  // ── Hive Persistence for Appointments ──
+  static final ValueNotifier<int> appointmentNotifier = ValueNotifier<int>(0);
+
+  static List<DoctorAppointment> loadAllAppointments() {
+    try {
+      final box = Hive.box('user_preferences');
+      final saved = box.get('doctor_appointments_list');
+      if (saved != null && saved is List && saved.isNotEmpty) {
+        return saved.map((e) => DoctorAppointment.fromMap(Map<dynamic, dynamic>.from(e))).toList();
+      }
+    } catch (_) {}
+
+    final seeded = defaultSeedAppointments;
+    saveAllAppointments(seeded);
+    return seeded;
+  }
+
+  static List<DoctorAppointment> getAppointmentsForPatient(String patientId) {
+    final all = loadAllAppointments();
+    return all.where((a) => a.patientId == patientId).toList()
+      ..sort((a, b) => a.scheduledDate.compareTo(b.scheduledDate));
+  }
+
+  static void saveAllAppointments(List<DoctorAppointment> list) {
+    try {
+      final box = Hive.box('user_preferences');
+      final maps = list.map((e) => e.toMap()).toList();
+      box.put('doctor_appointments_list', maps);
+      appointmentNotifier.value++;
+    } catch (_) {}
+  }
+
+  static void bookAppointment(DoctorAppointment appointment) {
+    final all = loadAllAppointments();
+    all.insert(0, appointment);
+    saveAllAppointments(all);
+  }
+
+  static void updateStatus(String appointmentId, String newStatus) {
+    final all = loadAllAppointments();
+    final idx = all.indexWhere((a) => a.id == appointmentId);
+    if (idx != -1) {
+      final old = all[idx];
+      all[idx] = DoctorAppointment(
+        id: old.id,
+        patientId: old.patientId,
+        patientName: old.patientName,
+        doctorName: old.doctorName,
+        clinicOrHospital: old.clinicOrHospital,
+        appointmentType: old.appointmentType,
+        scheduledDate: old.scheduledDate,
+        timeSlot: old.timeSlot,
+        caregiverName: old.caregiverName,
+        caregiverPhone: old.caregiverPhone,
+        reasonForVisit: old.reasonForVisit,
+        status: newStatus,
+        bookedAt: old.bookedAt,
+      );
+      saveAllAppointments(all);
+    }
+  }
+
+  static List<DoctorAppointment> get defaultSeedAppointments => [
+        DoctorAppointment(
+          id: 'apt-1',
+          patientId: 'patient-ramesh',
+          patientName: 'Ramesh Kumar',
+          doctorName: 'Dr. Debabrata Goswami, DM',
+          clinicOrHospital: 'Assam Medical College & Hospital',
+          appointmentType: 'In-Person Neuro Consultation',
+          scheduledDate: DateTime.now().add(const Duration(days: 3)),
+          timeSlot: '11:00 AM',
+          caregiverName: 'Anita Kumar',
+          caregiverPhone: '+91 98450 12345',
+          reasonForVisit: 'Bi-monthly cognitive progression review and ESP32 kinematic utensil stability check.',
+          status: 'Confirmed',
+          bookedAt: DateTime.now().subtract(const Duration(days: 1)),
+        ),
+        DoctorAppointment(
+          id: 'apt-2',
+          patientId: 'patient-monalisa',
+          patientName: 'Monalisa Barua',
+          doctorName: 'Dr. Priya Sengupta, MD',
+          clinicOrHospital: 'Guwahati Neurological Institute',
+          appointmentType: 'Telehealth Video Review',
+          scheduledDate: DateTime.now().add(const Duration(days: 5)),
+          timeSlot: '02:30 PM',
+          caregiverName: 'Pranab Barua',
+          caregiverPhone: '+91 94350 12345',
+          reasonForVisit: 'Follow-up on morning routine orientation and Memory Lane recall progress.',
+          status: 'Confirmed',
+          bookedAt: DateTime.now().subtract(const Duration(days: 2)),
+        ),
+      ];
+}
+
+
