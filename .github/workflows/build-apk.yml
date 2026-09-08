@@ -43,9 +43,21 @@ jobs:
         working-directory: ./shayak_mobile
         run: flutter build apk --release --no-tree-shake-icons --verbose
 
+      - name: Build Flutter Web Bundle
+        working-directory: ./shayak_mobile
+        run: flutter build web --release
+
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: shayak-release-apk
           path: shayak_mobile/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
+
+      - name: Upload Web Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: shayak-web-bundle
+          path: shayak_mobile/build/web
+          if-no-files-found: error
+
