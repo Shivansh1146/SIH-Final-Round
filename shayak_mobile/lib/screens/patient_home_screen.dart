@@ -1,8 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import '../theme/app_theme.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/app_sidebar.dart';
+import '../models/patient_profile.dart';
+import '../services/audio_narration_service.dart';
 import 'memory_match_screen.dart';
 import 'clock_canvas_screen.dart';
 
@@ -19,6 +23,18 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   int _sidebarIndex = 0;
   bool _isPlayingAudio = false;
 
+  // Live Backend Patient State
+  String _patientId = 'PT-9042';
+  String _patientDisplayName = 'Ramesh';
+  String _patientFullName = 'Ramesh Kumar';
+  String _currentDifficultyLevel = 'Level 2 (Moderate)';
+  bool _isAdaptiveMode = true;
+  int _totalSessions = 13;
+  double _avgAccuracy = 76.0;
+  double _stabilityScore = 84.0;
+  List<dynamic> _recentSessions = [];
+  bool _isLoadingBackend = false;
+
   // Reminders interactive check list
   final List<Map<String, dynamic>> _reminders = [
     {'title': 'Morning blood pressure tablet', 'time': '08:00 AM', 'done': true, 'emoji': '💊'},
@@ -28,55 +44,80 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     {'title': 'Night multivitamin & water', 'time': '08:30 PM', 'done': false, 'emoji': '💧'},
   ];
 
-  void _playListenAudio() {
+  @override
+  void initState() {
+    super.initState();
+    _initActiveProfile();
+    PatientProfile.activeProfileNotifier.addListener(_onProfileChanged);
+  }
+
+  @override
+  void dispose() {
+    PatientProfile.activeProfileNotifier.removeListener(_onProfileChanged);
+    super.dispose();
+  }
+
+  void _onProfileChanged() {
+    _initActiveProfile();
+  }
+
+  Future<void> _initActiveProfile() async {
+    final active = PatientProfile.loadFromHive();
+    if (active != null) {
+      setState(() {
+        _patientFullName = active.fullName;
+        _patientDisplayName = active.fullName.split(' ').first;
+        _patientId = active.id.isNotEmpty ? active.id : 'PT-9042';
+      });
+    }
+    await _fetchBackendPatientData();
+  }
+
+  Future<void> _fetchBackendPatientData() async {
+    if (!mounted) return;
+    setState(() => _isLoadingBackend = true);
+
+    try {
+      final backendId = _patientId.startsWith('patient-') ? 'PT-9042' : _patientId;
+      final res = await http.get(Uri.parse('http://127.0.0.1:8000/api/v1/patient/$backendId/history'));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (mounted) {
+          setState(() {
+            _currentDifficultyLevel = data['current_difficulty_level'] ?? 'Level 2 (Moderate)';
+            _isAdaptiveMode = data['is_adaptive_mode'] ?? true;
+            _totalSessions = data['total_sessions_completed'] ?? 13;
+            _avgAccuracy = (data['average_accuracy'] as num?)?.toDouble() ?? 76.0;
+            if (data['latest_evaluation'] != null) {
+              _stabilityScore = (data['latest_evaluation']['postural_stability_score'] as num?)?.toDouble() ?? 84.0;
+            }
+            _recentSessions = data['recent_sessions'] ?? [];
+            _isLoadingBackend = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoadingBackend = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingBackend = false);
+    }
+  }
+
+  Future<void> _playListenAudio() async {
+    final text = 'Good morning, $_patientDisplayName. Today\'s gentle activities include Memory Match and the Clock Contour drawing. Find matching pairs and draw at your own calm pace. Current level is $_currentDifficultyLevel. Anita is available anytime you need assistance.';
+
     setState(() => _isPlayingAudio = true);
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: const BoxDecoration(
-                color: AppTheme.sageLight,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.volume_up_rounded, color: AppTheme.forestGreen, size: 28),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Audio Narration Active',
-              style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.forestGreen),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              '"Good morning, Ramesh. Today’s gentle activities include Memory Match and the Clock Contour drawing. Find matching pairs and draw at your own calm pace. Anita is available anytime you need assistance."',
-              style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textSecondary, height: 1.5),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                setState(() => _isPlayingAudio = false);
-                Navigator.pop(ctx);
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.forestGreen),
-              child: const Text('Close Audio'),
-            ),
-          ],
-        ),
-      ),
-    );
+    await AudioNarrationService.instance.speak(text, language: AppLanguage.english);
+    if (mounted) {
+      setState(() => _isPlayingAudio = false);
+    }
   }
 
   void _resetData() {
+    _fetchBackendPatientData();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Demo activity data refreshed.', style: GoogleFonts.inter()),
+        content: Text('Demo activity & backend data refreshed.', style: GoogleFonts.inter()),
         backgroundColor: AppTheme.forestGreen,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -88,7 +129,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (ctx) => const ClockCanvasScreen()),
-    );
+    ).then((_) => _fetchBackendPatientData());
   }
 
   void _startMemoryMatch() {
@@ -96,7 +137,10 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       context,
       MaterialPageRoute(
         builder: (ctx) => MemoryMatchScreen(
-          onFinish: () => Navigator.pop(ctx),
+          onFinish: () {
+            Navigator.pop(ctx);
+            _fetchBackendPatientData();
+          },
         ),
       ),
     );
@@ -188,7 +232,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   Row(
                     children: [
                       Text(
-                        'Ramesh',
+                        _patientDisplayName,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 34.0,
                           fontWeight: FontWeight.w800,
@@ -399,8 +443,8 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                         const Text('·', style: TextStyle(color: Colors.white70)),
                         const SizedBox(width: 10),
                         Text(
-                          'Level 3',
-                          style: GoogleFonts.inter(fontSize: 12.5, color: Colors.white70, fontWeight: FontWeight.w500),
+                          '$_currentDifficultyLevel${_isAdaptiveMode ? " (AI-Adaptive)" : ""}',
+                          style: GoogleFonts.inter(fontSize: 12.5, color: Colors.white70, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -1045,11 +1089,11 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             ),
             const SizedBox(width: 14),
             Expanded(
-              child: _buildProgressStatCard('13 SESSIONS', 'Activities Completed', '🧠 Memory & Drawing', AppTheme.sageLight),
+              child: _buildProgressStatCard('$_totalSessions SESSIONS', 'Activities Completed', '${_avgAccuracy.toStringAsFixed(0)}% Avg Score', AppTheme.sageLight),
             ),
             const SizedBox(width: 14),
             Expanded(
-              child: _buildProgressStatCard('84/100', 'Kinematic Stability', '⚖️ Motor balance score', AppTheme.pastelBlue),
+              child: _buildProgressStatCard('${_stabilityScore.toStringAsFixed(0)}/100', 'Kinematic Stability', '⚖️ Motor balance score', AppTheme.pastelBlue),
             ),
           ],
         ),
@@ -1068,16 +1112,44 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Recent Gentle Milestones',
-                style: GoogleFonts.plusJakartaSans(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Recent Clinical Milestones',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.sageLight,
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Text(
+                      'AI Engine Live',
+                      style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.forestGreen),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
-              _buildMilestoneRow('Clock Contour Drawing Completed', 'Score 8.5/10 · Today, 09:15 AM', Icons.draw_rounded),
-              const SizedBox(height: 12),
-              _buildMilestoneRow('Memory Match Pairs Solved', 'Turn accuracy 82% · Yesterday, 08:45 AM', Icons.psychology_rounded),
-              const SizedBox(height: 12),
-              _buildMilestoneRow('ESP32 Tremor Compensation Active', '4-12 Hz jitter stabilized · 6 Sep, 02:30 PM', Icons.sensors_rounded),
+              if (_recentSessions.isNotEmpty) ...[
+                for (final s in _recentSessions.take(4))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: _buildMilestoneRow(
+                      '${s['session_type'] ?? "Activity"} (${s['difficulty_level'] ?? "Standard"})',
+                      'Score ${s['score']?.toStringAsFixed(1) ?? "80.0"}% · ${s['timestamp'] != null ? s['timestamp'].toString().substring(0, 10) : "Today"}',
+                      (s['session_type'] == 'Clock Contour Drawing') ? Icons.draw_rounded : Icons.psychology_rounded,
+                    ),
+                  ),
+              ] else ...[
+                _buildMilestoneRow('Clock Contour Drawing Completed', 'Score 8.5/10 · Today, 09:15 AM', Icons.draw_rounded),
+                const SizedBox(height: 12),
+                _buildMilestoneRow('Memory Match Pairs Solved', 'Turn accuracy 82% · Yesterday, 08:45 AM', Icons.psychology_rounded),
+                const SizedBox(height: 12),
+                _buildMilestoneRow('ESP32 Tremor Compensation Active', '4-12 Hz jitter stabilized · 6 Sep, 02:30 PM', Icons.sensors_rounded),
+              ],
             ],
           ),
         ),

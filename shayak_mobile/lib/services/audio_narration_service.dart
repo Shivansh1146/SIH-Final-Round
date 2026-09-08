@@ -98,6 +98,8 @@ class AudioNarrationService extends ChangeNotifier {
     }
   }
 
+  Future<void> narrate(String text, {AppLanguage? language}) => speak(text, language: language);
+
   Future<void> stop() async {
     try {
       await _flutterTts.stop();
