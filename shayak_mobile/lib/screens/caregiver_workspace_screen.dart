@@ -402,22 +402,25 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
   }
 
   String _getLastActivityTime(List<GameSession> sessions) {
+    final now = DateTime.now();
     if (sessions.isEmpty) {
-      final now = DateTime.now();
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       final hour12 = now.hour % 12 == 0 ? 12 : now.hour % 12;
       final ampm = now.hour >= 12 ? 'pm' : 'am';
       final minStr = now.minute.toString().padLeft(2, '0');
       return 'Today, $hour12:$minStr $ampm';
     }
     final latest = sessions.first.playedAt;
-    final now = DateTime.now();
-    final isToday = latest.year == now.year && latest.month == now.month && latest.day == now.day;
     final hour12 = latest.hour % 12 == 0 ? 12 : latest.hour % 12;
     final ampm = latest.hour >= 12 ? 'pm' : 'am';
     final minStr = latest.minute.toString().padLeft(2, '0');
+
+    final isToday = latest.year == now.year && latest.month == now.month && latest.day == now.day;
     if (isToday) {
       return 'Today, $hour12:$minStr $ampm';
+    }
+    final diffDays = now.difference(latest).inDays;
+    if (diffDays == 1 || (now.day - latest.day == 1 && now.month == latest.month)) {
+      return 'Yesterday, $hour12:$minStr $ampm';
     }
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return '${latest.day} ${months[latest.month - 1]}, $hour12:$minStr $ampm';

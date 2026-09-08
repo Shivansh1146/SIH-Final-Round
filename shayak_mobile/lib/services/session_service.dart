@@ -169,7 +169,7 @@ class SessionService extends ChangeNotifier {
 
   /// Seeds initial demonstration sessions ONLY for 'patient-ramesh' (the demo profile)
   /// so fresh installs show realistic data for Ramesh, while any new patient starts at 0.
-  void ensureDemoDataSeeded() {
+  void ensureDemoDataSeeded({bool forceRefresh = false}) {
     try {
       final box = Hive.box(_boxKey);
       final raw = box.get(_hiveKey);
@@ -178,17 +178,33 @@ class SessionService extends ChangeNotifier {
         all.addAll(raw.cast<Map<dynamic, dynamic>>());
       }
       final rameshSessions =
-          all.where((m) => m['patientId'] == 'patient-ramesh');
-      if (rameshSessions.isEmpty) {
-        final now = DateTime.now();
+          all.where((m) => m['patientId'] == 'patient-ramesh').toList();
+
+      final now = DateTime.now();
+      bool needsReseed = rameshSessions.isEmpty || forceRefresh;
+      if (!needsReseed) {
+        final latestPlayed = DateTime.tryParse(rameshSessions.last['playedAt'] ?? '');
+        if (latestPlayed != null &&
+            (latestPlayed.day != now.day ||
+                latestPlayed.month != now.month ||
+                latestPlayed.year != now.year)) {
+          needsReseed = true;
+        }
+      }
+
+      if (needsReseed) {
+        all.removeWhere((m) => m['patientId'] == 'patient-ramesh');
         final demoAccuracies = [0.65, 0.70, 0.68, 0.74, 0.72, 0.78, 0.81];
         final demoResponses = [2.8, 2.5, 2.6, 2.3, 2.4, 2.1, 1.9];
         for (int i = 0; i < demoAccuracies.length; i++) {
+          final sessionTime = (i == demoAccuracies.length - 1)
+              ? now.subtract(const Duration(minutes: 32))
+              : now.subtract(Duration(days: demoAccuracies.length - 1 - i, hours: 2));
           final s = GameSession(
             sessionId: 'demo-ramesh-$i',
             patientId: 'patient-ramesh',
             gameType: i.isEven ? 'memory_match' : 'clock_drawing',
-            playedAt: now.subtract(Duration(days: 7 - i, hours: 2)),
+            playedAt: sessionTime,
             accuracyRatio: demoAccuracies[i],
             responseTimeSec: demoResponses[i],
             totalMoves: 12 + i,
