@@ -1,5 +1,5 @@
-name: sahayak_ai
-description: "SAHAYAK-AI: Accessible Cognitive Health & Kinematic Stabilization Platform"
+name: shayak_mobile
+description: "SHAYAK-AI: Accessible Cognitive Health & Kinematic Stabilization Platform"
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.6
-  google_fonts: ^6.1.0
+  google_fonts: ^6.3.3
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   intl: ^0.19.0

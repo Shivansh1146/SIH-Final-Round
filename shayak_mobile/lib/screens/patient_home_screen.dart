@@ -1,16 +1,14 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import '../models/patient_profile.dart';
-import '../models/reminder_item.dart';
+import 'package:http/http.dart' as http;
 import '../theme/app_theme.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/app_sidebar.dart';
-import 'memory_match_screen.dart';
-import 'reminders_screen.dart';
-import 'clock_canvas_screen.dart';
-import '../services/reminder_service.dart';
+import '../models/patient_profile.dart';
 import '../services/audio_narration_service.dart';
+import 'memory_match_screen.dart';
+import 'clock_canvas_screen.dart';
 
 class PatientHomeScreen extends StatefulWidget {
   final ValueChanged<AppViewMode> onNavigate;
@@ -22,127 +20,104 @@ class PatientHomeScreen extends StatefulWidget {
 }
 
 class _PatientHomeScreenState extends State<PatientHomeScreen> {
-  int _selectedIndex = 0;
+  int _sidebarIndex = 0;
   bool _isPlayingAudio = false;
-  late List<ReminderItem> _reminders;
-  PatientProfile? _profile;
 
-  // Convenience getters that fall back gracefully
-  String get _patientFirstName =>
-      _profile?.fullName.split(' ').first ?? 'Ramesh';
-  String get _patientFullName => _profile?.fullName ?? 'Ramesh Kumar';
+  // Live Backend Patient State
+  String _patientId = 'PT-9042';
+  String _patientDisplayName = 'Ramesh';
+  String _patientFullName = 'Ramesh Kumar';
+  String _currentDifficultyLevel = 'Level 2 (Moderate)';
+  bool _isAdaptiveMode = true;
+  int _totalSessions = 13;
+  double _avgAccuracy = 76.0;
+  double _stabilityScore = 84.0;
+  List<dynamic> _recentSessions = [];
+  bool _isLoadingBackend = false;
+
+  // Reminders interactive check list
+  final List<Map<String, dynamic>> _reminders = [
+    {'title': 'Morning blood pressure tablet', 'time': '08:00 AM', 'done': true, 'emoji': '💊'},
+    {'title': 'Gentle 15-minute garden walk', 'time': '09:30 AM', 'done': true, 'emoji': '🌿'},
+    {'title': 'Afternoon hydration & warm tea', 'time': '02:00 PM', 'done': false, 'emoji': '☕'},
+    {'title': 'Evening memory exercise', 'time': '05:30 PM', 'done': false, 'emoji': '🧠'},
+    {'title': 'Night multivitamin & water', 'time': '08:30 PM', 'done': false, 'emoji': '💧'},
+  ];
 
   @override
   void initState() {
     super.initState();
-    _profile = PatientProfile.loadFromHive();
-    _loadReminders();
-    ReminderService.instance.addListener(_onReminderServiceChanged);
-    PatientProfile.activeProfileNotifier.addListener(_onActiveProfileChanged);
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        ReminderService.instance.initialize(context);
-      }
-    });
+    _initActiveProfile();
+    PatientProfile.activeProfileNotifier.addListener(_onProfileChanged);
   }
 
   @override
   void dispose() {
-    ReminderService.instance.removeListener(_onReminderServiceChanged);
-    PatientProfile.activeProfileNotifier.removeListener(_onActiveProfileChanged);
+    PatientProfile.activeProfileNotifier.removeListener(_onProfileChanged);
     super.dispose();
   }
 
-  void _onActiveProfileChanged() {
-    if (mounted) {
-      setState(() {
-        _profile = PatientProfile.loadFromHive();
-      });
-    }
+  void _onProfileChanged() {
+    _initActiveProfile();
   }
 
-  void _onReminderServiceChanged() {
-    if (mounted) {
+  Future<void> _initActiveProfile() async {
+    final active = PatientProfile.loadFromHive();
+    if (active != null) {
       setState(() {
-        _loadReminders();
+        _patientFullName = active.fullName;
+        _patientDisplayName = active.fullName.split(' ').first;
+        _patientId = active.id.isNotEmpty ? active.id : 'PT-9042';
       });
     }
+    await _fetchBackendPatientData();
   }
 
-  void _loadReminders() {
+  Future<void> _fetchBackendPatientData() async {
+    if (!mounted) return;
+    setState(() => _isLoadingBackend = true);
+
     try {
-      final box = Hive.box('user_preferences');
-      final saved = box.get('saved_reminders');
-      if (saved != null && saved is List) {
-        _reminders = saved.map((e) => ReminderItem.fromMap(Map<dynamic, dynamic>.from(e))).toList();
-        return;
+      final backendId = _patientId.startsWith('patient-') ? 'PT-9042' : _patientId;
+      final res = await http.get(Uri.parse('http://127.0.0.1:8000/api/v1/patient/$backendId/history'));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (mounted) {
+          setState(() {
+            _currentDifficultyLevel = data['current_difficulty_level'] ?? 'Level 2 (Moderate)';
+            _isAdaptiveMode = data['is_adaptive_mode'] ?? true;
+            _totalSessions = data['total_sessions_completed'] ?? 13;
+            _avgAccuracy = (data['average_accuracy'] as num?)?.toDouble() ?? 76.0;
+            if (data['latest_evaluation'] != null) {
+              _stabilityScore = (data['latest_evaluation']['postural_stability_score'] as num?)?.toDouble() ?? 84.0;
+            }
+            _recentSessions = data['recent_sessions'] ?? [];
+            _isLoadingBackend = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoadingBackend = false);
       }
-    } catch (_) {}
-    _reminders = ReminderItem.defaultReminders;
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingBackend = false);
+    }
   }
 
-  void _playListenAudio() {
-    setState(() => _isPlayingAudio = true);
-    final narrationText = "Good morning, $_patientFirstName. Today's gentle activity is Memory Match. Find matching pairs at your own pace. There is no rush.";
-    AudioNarrationService.instance.speak(narrationText);
+  Future<void> _playListenAudio() async {
+    final text = 'Good morning, $_patientDisplayName. Today\'s gentle activities include Memory Match and the Clock Contour drawing. Find matching pairs and draw at your own calm pace. Current level is $_currentDifficultyLevel. Anita is available anytime you need assistance.';
 
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: const BoxDecoration(
-                color: AppTheme.sageLight,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.volume_up_rounded, color: AppTheme.forestGreen, size: 28),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Audio Narration Active',
-              style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.forestGreen),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              '"$narrationText"',
-              style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textSecondary, height: 1.5),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                AudioNarrationService.instance.stop();
-                setState(() => _isPlayingAudio = false);
-                Navigator.pop(ctx);
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.forestGreen),
-              child: const Text('Stop Audio'),
-            ),
-          ],
-        ),
-      ),
-    );
+    setState(() => _isPlayingAudio = true);
+    await AudioNarrationService.instance.speak(text, language: AppLanguage.english);
+    if (mounted) {
+      setState(() => _isPlayingAudio = false);
+    }
   }
 
   void _resetData() {
-    setState(() {
-      _reminders = ReminderItem.defaultReminders;
-    });
-    try {
-      final box = Hive.box('user_preferences');
-      box.delete('saved_reminders');
-    } catch (_) {}
-
+    _fetchBackendPatientData();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Demo activity data & reminders refreshed.', style: GoogleFonts.inter()),
+        content: Text('Demo activity & backend data refreshed.', style: GoogleFonts.inter()),
         backgroundColor: AppTheme.forestGreen,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -150,15 +125,29 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     );
   }
 
-  void _onTabSelected(int idx) {
-    setState(() => _selectedIndex = idx);
+  void _startClockDrawing() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (ctx) => const ClockCanvasScreen()),
+    ).then((_) => _fetchBackendPatientData());
+  }
+
+  void _startMemoryMatch() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => MemoryMatchScreen(
+          onFinish: () {
+            Navigator.pop(ctx);
+            _fetchBackendPatientData();
+          },
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 768;
-
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
@@ -170,106 +159,56 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               onModeChanged: widget.onNavigate,
             ),
 
-            // Content Area (Responsive)
+            // Sidebar + Content Row
             Expanded(
-              child: isMobile
-                  ? SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-                      child: _buildActiveView(context, isMobile: true),
-                    )
-                  : Row(
-                      children: [
-                        // Left Desktop/Tablet Navigation Sidebar
-                        AppSidebar(
-                          isCaregiver: false,
-                          selectedIndex: _selectedIndex,
-                          onSelectIndex: _onTabSelected,
-                          onResetData: _resetData,
-                        ),
+              child: Row(
+                children: [
+                  // Left Navigation Sidebar
+                  AppSidebar(
+                    isCaregiver: false,
+                    selectedIndex: _sidebarIndex,
+                    onSelectIndex: (idx) {
+                      setState(() => _sidebarIndex = idx);
+                    },
+                    onResetData: _resetData,
+                  ),
 
-                        // Main Content Area
-                        Expanded(
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(horizontal: 36.0, vertical: 24.0),
-                            child: Center(
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(maxWidth: 960),
-                                child: _buildActiveView(context, isMobile: false),
-                              ),
-                            ),
-                          ),
+                  // Main Content Area
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 36.0, vertical: 24.0),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 960),
+                          child: _buildSelectedView(context),
                         ),
-                      ],
+                      ),
                     ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: isMobile
-          ? Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(top: BorderSide(color: AppTheme.surfaceBorder, width: 1.0)),
-              ),
-              child: BottomNavigationBar(
-                currentIndex: _selectedIndex,
-                onTap: _onTabSelected,
-                backgroundColor: Colors.white,
-                elevation: 0,
-                selectedItemColor: AppTheme.forestGreen,
-                unselectedItemColor: AppTheme.textSecondary,
-                selectedLabelStyle: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700),
-                unselectedLabelStyle: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500),
-                type: BottomNavigationBarType.fixed,
-                items: const [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home_outlined),
-                    activeIcon: Icon(Icons.home_rounded),
-                    label: 'Home',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.psychology_outlined),
-                    activeIcon: Icon(Icons.psychology_rounded),
-                    label: 'Games',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.auto_awesome_outlined),
-                    activeIcon: Icon(Icons.auto_awesome_rounded),
-                    label: 'Reminders',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.grid_view_outlined),
-                    activeIcon: Icon(Icons.grid_view_rounded),
-                    label: 'Progress',
-                  ),
-                ],
-              ),
-            )
-          : null,
     );
   }
 
-  Widget _buildActiveView(BuildContext context, {required bool isMobile}) {
-    switch (_selectedIndex) {
-      case 0:
-        return _buildPatientHomeContent(context, isMobile: isMobile);
+  Widget _buildSelectedView(BuildContext context) {
+    switch (_sidebarIndex) {
       case 1:
-        return _buildGamesMenuContent(context, isMobile: isMobile);
+        return _buildGamesHubView(context);
       case 2:
-        return RemindersScreen(
-          reminders: _reminders,
-          onRemindersUpdated: (updated) {
-            setState(() => _reminders = updated);
-          },
-        );
+        return _buildRemindersView(context);
       case 3:
-        return _buildProgressSummaryContent(context, isMobile: isMobile);
+        return _buildProgressView(context);
+      case 0:
       default:
-        return _buildPatientHomeContent(context, isMobile: isMobile);
+        return _buildPatientHomeContent(context);
     }
   }
 
-  Widget _buildPatientHomeContent(BuildContext context, {required bool isMobile}) {
+  Widget _buildPatientHomeContent(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -284,7 +223,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   Text(
                     'Good morning,',
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: isMobile ? 14.0 : 16.0,
+                      fontSize: 16.0,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textSecondary,
                     ),
@@ -293,23 +232,23 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   Row(
                     children: [
                       Text(
-                        _patientFirstName,
+                        _patientDisplayName,
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: isMobile ? 26.0 : 34.0,
+                          fontSize: 34.0,
                           fontWeight: FontWeight.w800,
                           color: AppTheme.forestGreen,
                           letterSpacing: -0.5,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text('🌿', style: TextStyle(fontSize: isMobile ? 22 : 28)),
+                      const Text('🌿', style: TextStyle(fontSize: 28)),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'A calm start makes room for a good memory.',
                     style: GoogleFonts.inter(
-                      fontSize: isMobile ? 13.0 : 14.5,
+                      fontSize: 14.5,
                       fontWeight: FontWeight.w400,
                       color: AppTheme.textSecondary,
                     ),
@@ -325,13 +264,13 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   onPressed: _playListenAudio,
                   icon: Icon(
                     _isPlayingAudio ? Icons.volume_up_rounded : Icons.volume_down_rounded,
-                    size: 15,
+                    size: 16,
                     color: AppTheme.forestGreen,
                   ),
                   label: Text(
                     'Listen',
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: isMobile ? 12.0 : 13.5,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.forestGreen,
                     ),
@@ -339,14 +278,14 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   style: OutlinedButton.styleFrom(
                     backgroundColor: Colors.white,
                     side: const BorderSide(color: AppTheme.surfaceBorder),
-                    padding: EdgeInsets.symmetric(horizontal: isMobile ? 10 : 16, vertical: isMobile ? 6 : 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 Container(
-                  width: isMobile ? 32 : 38,
-                  height: isMobile ? 32 : 38,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
@@ -354,7 +293,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   ),
                   child: IconButton(
                     padding: EdgeInsets.zero,
-                    icon: Icon(Icons.tune_rounded, size: isMobile ? 15 : 17, color: AppTheme.textSecondary),
+                    icon: const Icon(Icons.tune_rounded, size: 17, color: AppTheme.textSecondary),
                     onPressed: () {},
                   ),
                 ),
@@ -363,42 +302,51 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           ],
         ),
 
-        SizedBox(height: isMobile ? 16 : 24),
+        const SizedBox(height: 24),
 
         // Hero Today's Activity Banner
-        _buildHeroActivityBanner(context, isMobile: isMobile),
+        _buildHeroActivityBanner(context),
 
-        SizedBox(height: isMobile ? 16 : 24),
+        const SizedBox(height: 24),
 
         // Bottom Grid: Reminders & Need Help
-        if (isMobile) ...[
-          _buildRemindersSummaryCard(context),
-          const SizedBox(height: 14),
-          _buildNeedHelpCard(context),
-        ] else ...[
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: _buildRemindersSummaryCard(context)),
-              const SizedBox(width: 20),
-              Expanded(child: _buildNeedHelpCard(context)),
-            ],
-          ),
-        ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth > 640;
+            if (isWide) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _buildRemindersCard(context)),
+                  const SizedBox(width: 20),
+                  Expanded(child: _buildNeedHelpCard(context)),
+                ],
+              );
+            } else {
+              return Column(
+                children: [
+                  _buildRemindersCard(context),
+                  const SizedBox(height: 18),
+                  _buildNeedHelpCard(context),
+                ],
+              );
+            }
+          },
+        ),
       ],
     );
   }
 
-  Widget _buildHeroActivityBanner(BuildContext context, {required bool isMobile}) {
+  Widget _buildHeroActivityBanner(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(isMobile ? 20.0 : 28.0),
+      padding: const EdgeInsets.all(28.0),
       decoration: BoxDecoration(
         color: AppTheme.forestTealCard,
         borderRadius: BorderRadius.circular(24.0),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.forestGreen.withValues(alpha: 0.15),
+            color: AppTheme.forestGreen.withOpacity(0.15),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -406,18 +354,18 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       ),
       child: Stack(
         children: [
-          // Background decorative rings
+          // Background concentric decorative rings
           Positioned(
             right: -20,
             top: -30,
             child: Opacity(
               opacity: 0.15,
               child: Container(
-                width: 220,
-                height: 220,
+                width: 260,
+                height: 260,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 24),
+                  border: Border.all(color: Colors.white, width: 28),
                 ),
               ),
             ),
@@ -434,20 +382,20 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   children: [
                     // Tag Pill
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
+                        color: Colors.white.withOpacity(0.18),
                         borderRadius: BorderRadius.circular(100),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.auto_awesome_rounded, size: 11, color: Colors.white),
-                          const SizedBox(width: 5),
+                          const Icon(Icons.auto_awesome_rounded, size: 12, color: Colors.white),
+                          const SizedBox(width: 6),
                           Text(
                             "TODAY'S ACTIVITY",
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 9.5,
+                              fontSize: 10.5,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
                               letterSpacing: 0.8,
@@ -457,51 +405,51 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
 
                     Text(
                       'Memory Match',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: isMobile ? 24.0 : 30.0,
+                        fontSize: 30.0,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                         letterSpacing: -0.4,
                       ),
                     ),
 
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
 
                     Text(
                       'Find the matching pairs. Take your time — one card at a time.',
                       style: GoogleFonts.inter(
-                        fontSize: isMobile ? 13.0 : 14.5,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w400,
-                        color: Colors.white.withValues(alpha: 0.9),
-                        height: 1.35,
+                        color: Colors.white.withOpacity(0.9),
+                        height: 1.4,
                       ),
                     ),
 
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 16),
 
                     Row(
                       children: [
-                        const Icon(Icons.access_time_rounded, size: 13, color: Colors.white70),
-                        const SizedBox(width: 5),
+                        const Icon(Icons.access_time_rounded, size: 14, color: Colors.white70),
+                        const SizedBox(width: 6),
                         Text(
-                          'About 5 mins',
-                          style: GoogleFonts.inter(fontSize: 11.5, color: Colors.white70, fontWeight: FontWeight.w500),
+                          'About 5 minutes',
+                          style: GoogleFonts.inter(fontSize: 12.5, color: Colors.white70, fontWeight: FontWeight.w500),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
                         const Text('·', style: TextStyle(color: Colors.white70)),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
                         Text(
-                          'Level 3',
-                          style: GoogleFonts.inter(fontSize: 11.5, color: Colors.white70, fontWeight: FontWeight.w500),
+                          '$_currentDifficultyLevel${_isAdaptiveMode ? " (AI-Adaptive)" : ""}',
+                          style: GoogleFonts.inter(fontSize: 12.5, color: Colors.white70, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
 
-                    SizedBox(height: isMobile ? 16 : 22),
+                    const SizedBox(height: 22),
 
                     // Start Activity Button
                     ElevatedButton(
@@ -509,7 +457,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.warmPeach,
                         foregroundColor: AppTheme.textPrimary,
-                        padding: EdgeInsets.symmetric(horizontal: isMobile ? 18 : 24, vertical: isMobile ? 10 : 14),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
                         elevation: 0,
                       ),
@@ -519,13 +467,13 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                           Text(
                             'Start activity',
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: isMobile ? 13.5 : 15.0,
+                              fontSize: 15.0,
                               fontWeight: FontWeight.w800,
                               color: AppTheme.textPrimary,
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          const Icon(Icons.arrow_forward_rounded, size: 15, color: AppTheme.textPrimary),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward_rounded, size: 16, color: AppTheme.textPrimary),
                         ],
                       ),
                     ),
@@ -533,37 +481,37 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                 ),
               ),
 
-              const SizedBox(width: 12),
+              const SizedBox(width: 20),
 
               // Right 3D Brain Visual
               Container(
-                width: isMobile ? 80 : 120,
-                height: isMobile ? 80 : 120,
+                width: 120,
+                height: 120,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
+                  color: Colors.white.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(24),
                 ),
                 child: Center(
                   child: Container(
-                    width: isMobile ? 54 : 76,
-                    height: isMobile ? 54 : 76,
+                    width: 76,
+                    height: 76,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFFFF94B8), Color(0xFFFF4081)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFF4081).withValues(alpha: 0.4),
-                          blurRadius: 14,
-                          offset: const Offset(0, 4),
+                          color: const Color(0xFFFF4081).withOpacity(0.4),
+                          blurRadius: 18,
+                          offset: const Offset(0, 6),
                         ),
                       ],
                     ),
-                    child: Center(
-                      child: Text('🧠', style: TextStyle(fontSize: isMobile ? 28 : 38)),
+                    child: const Center(
+                      child: Text('🧠', style: TextStyle(fontSize: 38)),
                     ),
                   ),
                 ),
@@ -575,12 +523,9 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     );
   }
 
-  Widget _buildRemindersSummaryCard(BuildContext context) {
-    final pending = _reminders.where((e) => !e.isCompleted).toList();
-    final firstItem = pending.isNotEmpty ? pending.first : (_reminders.isNotEmpty ? _reminders.first : null);
-
+  Widget _buildRemindersCard(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18.0),
+      padding: const EdgeInsets.all(22.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20.0),
@@ -598,7 +543,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   Text(
                     'TODAY',
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 10.0,
+                      fontSize: 10.5,
                       fontWeight: FontWeight.w800,
                       color: AppTheme.textSecondary,
                       letterSpacing: 0.8,
@@ -608,7 +553,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   Text(
                     'Reminders',
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 17.0,
+                      fontSize: 18.0,
                       fontWeight: FontWeight.w800,
                       color: AppTheme.textPrimary,
                     ),
@@ -616,13 +561,11 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                 ],
               ),
               TextButton(
-                onPressed: () {
-                  setState(() => _selectedIndex = 2);
-                },
+                onPressed: () {},
                 child: Text(
                   'View all',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12.5,
+                    fontSize: 13.0,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.forestGreen,
                   ),
@@ -631,71 +574,55 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             ],
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
-          if (firstItem != null)
-            InkWell(
-              onTap: () {
-                setState(() => _selectedIndex = 2);
-              },
+          // Reminder List Item
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppTheme.background,
               borderRadius: BorderRadius.circular(14),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppTheme.background,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Text(firstItem.emoji, style: const TextStyle(fontSize: 16)),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            firstItem.title,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary,
-                              decoration: firstItem.isCompleted ? TextDecoration.lineThrough : null,
-                            ),
-                          ),
-                          Text(
-                            firstItem.formattedTime,
-                            style: GoogleFonts.inter(
-                              fontSize: 11.5,
-                              color: AppTheme.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      firstItem.isCompleted ? Icons.check_circle_rounded : Icons.notifications_none_rounded,
-                      size: 17,
-                      color: firstItem.isCompleted ? AppTheme.statusGreen : AppTheme.textSecondary,
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
-            Text(
-              'No reminders set for today.',
-              style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
             ),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Center(
+                    child: Text('💊', style: TextStyle(fontSize: 18)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Morning medicine',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        '08:00',
+                        style: GoogleFonts.inter(
+                          fontSize: 12.0,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.notifications_none_rounded, size: 18, color: AppTheme.textSecondary),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -703,7 +630,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
   Widget _buildNeedHelpCard(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18.0),
+      padding: const EdgeInsets.all(22.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20.0),
@@ -713,52 +640,57 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 28,
-            height: 28,
+            width: 32,
+            height: 32,
             decoration: const BoxDecoration(
               color: AppTheme.pastelYellow,
               shape: BoxShape.circle,
             ),
             child: const Center(
-              child: Text('?', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.warmTerracotta)),
+              child: Text('?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.warmTerracotta)),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
             'Need a little help?',
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 17.0,
+              fontSize: 18.0,
               fontWeight: FontWeight.w800,
               color: AppTheme.textPrimary,
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 6),
           Text(
             'You can listen to instructions, take a pause, or ask a caregiver for assistance anytime.',
             style: GoogleFonts.inter(
-              fontSize: 12.5,
+              fontSize: 13.0,
               fontWeight: FontWeight.w400,
               color: AppTheme.textSecondary,
-              height: 1.35,
+              height: 1.4,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           OutlinedButton.icon(
-            onPressed: () => _showConnectCaregiverModal(context),
-            icon: const Icon(Icons.favorite_rounded, size: 14, color: AppTheme.warmTerracotta),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Connected to Caregiver Anita.', style: GoogleFonts.inter()),
+                  backgroundColor: AppTheme.forestGreen,
+                ),
+              );
+            },
+            icon: const Icon(Icons.phone_in_talk_rounded, size: 15, color: AppTheme.forestGreen),
             label: Text(
-              'Connect to Caregiver',
+              'Call Caregiver Anita',
               style: GoogleFonts.plusJakartaSans(
-                fontSize: 12.5,
+                fontSize: 13.0,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.warmTerracotta,
+                color: AppTheme.forestGreen,
               ),
             ),
             style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppTheme.warmPeachDark),
-              backgroundColor: AppTheme.warmPeach,
+              side: const BorderSide(color: AppTheme.surfaceBorder),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             ),
           ),
         ],
@@ -766,332 +698,101 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     );
   }
 
-  void _showConnectCaregiverModal(BuildContext context) {
-    bool _isCalling = false;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (modalCtx, setModalState) => Container(
-          padding: EdgeInsets.only(
-            left: 24, right: 24, top: 8,
-            bottom: MediaQuery.of(modalCtx).viewInsets.bottom + 32,
-          ),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle bar
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 20),
-                  width: 44, height: 5,
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceBorder,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-
-              // Title
-              Row(
-                children: [
-                  Container(
-                    width: 36, height: 36,
-                    decoration: const BoxDecoration(
-                      color: AppTheme.warmPeach,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.favorite_rounded, color: AppTheme.warmTerracotta, size: 18),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Connect to Caregiver',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 20, fontWeight: FontWeight.w800,
-                            color: AppTheme.forestGreen,
-                          ),
-                        ),
-                        Text(
-                          'Reach your caregiver instantly',
-                          style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // Caregiver Profile Card
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.background,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppTheme.sageBorder),
-                ),
-                child: Row(
-                  children: [
-                    // Avatar
-                    Container(
-                      width: 56, height: 56,
-                      decoration: BoxDecoration(
-                        color: AppTheme.forestTealCard,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: const Center(
-                        child: Text('👩‍⚕️', style: TextStyle(fontSize: 28)),
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Anita Sharma',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 16, fontWeight: FontWeight.w800,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Primary Caregiver · Family',
-                            style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Container(
-                                width: 8, height: 8,
-                                decoration: const BoxDecoration(
-                                  color: AppTheme.statusGreen,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                'Available now',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11.5, fontWeight: FontWeight.w600,
-                                  color: AppTheme.statusGreen,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Action Buttons
-              Row(
-                children: [
-                  // Call Button
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        setModalState(() => _isCalling = true);
-                        Future.delayed(const Duration(seconds: 2), () {
-                          if (Navigator.canPop(ctx)) Navigator.pop(ctx);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Row(
-                                children: [
-                                  const Icon(Icons.phone_in_talk_rounded, color: Colors.white, size: 18),
-                                  const SizedBox(width: 10),
-                                  Text('Calling Anita Sharma…', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-                                ],
-                              ),
-                              backgroundColor: AppTheme.forestGreen,
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              duration: const Duration(seconds: 3),
-                            ),
-                          );
-                        });
-                      },
-                      icon: _isCalling
-                          ? const SizedBox(
-                              width: 16, height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Icon(Icons.phone_rounded, size: 18),
-                      label: Text(
-                        _isCalling ? 'Calling…' : 'Call Now',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.forestGreen,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                        elevation: 0,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Message Button
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Message sent to Anita Sharma ✓', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-                            backgroundColor: AppTheme.forestGreen,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.chat_bubble_outline_rounded, size: 17),
-                      label: Text(
-                        'Send Message',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.forestGreen,
-                        side: const BorderSide(color: AppTheme.sageBorder, width: 1.5),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Link Code Section
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: AppTheme.sageLight,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppTheme.sageBorder),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.link_rounded, color: AppTheme.forestGreen, size: 20),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Your Link Code',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 11, fontWeight: FontWeight.w700,
-                              color: AppTheme.textSecondary, letterSpacing: 0.5,
-                            ),
-                          ),
-                          Text(
-                            'SAH-4829-RXMT',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 16, fontWeight: FontWeight.w800,
-                              color: AppTheme.forestGreen, letterSpacing: 1.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Link code copied!', style: GoogleFonts.inter()),
-                            backgroundColor: AppTheme.forestGreen,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            duration: const Duration(seconds: 1),
-                          ),
-                        );
-                      },
-                      style: TextButton.styleFrom(foregroundColor: AppTheme.forestGreen),
-                      child: Text(
-                        'Copy',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              Text(
-                'Share this code with a new caregiver to link accounts.',
-                style: GoogleFonts.inter(fontSize: 11.5, color: AppTheme.textSecondary),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGamesMenuContent(BuildContext context, {required bool isMobile}) {
+  Widget _buildGamesHubView(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Cognitive Activities & Games',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: isMobile ? 22 : 28,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.forestGreen,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'GENTLE ACTIVITIES',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11.0,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.forestGreen,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Games & Exercises',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 32.0,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.forestGreen,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Enjoyable cognitive exercises designed to strengthen memory and motor calm.',
+                  style: GoogleFonts.inter(
+                    fontSize: 14.5,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            IconButton(
+              icon: const Icon(Icons.volume_up_rounded, color: AppTheme.forestGreen),
+              onPressed: _playListenAudio,
+              tooltip: 'Listen to instructions',
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          'Gentle brain exercises designed for daily wellness without frustration.',
-          style: GoogleFonts.inter(fontSize: 13.5, color: AppTheme.textSecondary),
-        ),
-        const SizedBox(height: 20),
 
-        _buildGameCard(
-          title: 'Memory Match',
-          subtitle: 'Match pairs of familiar objects at your own pace.',
-          duration: '5 mins',
-          level: 'Level 3',
+        const SizedBox(height: 24),
+
+        // Activity Card 1: Memory Match
+        _buildActivityItemCard(
           emoji: '🧠',
-          color: AppTheme.forestTealCard,
-          onTap: _startMemoryMatch,
+          tag: 'WORKING MEMORY',
+          title: 'Memory Match Activity',
+          description: 'Turn over gentle pairs of everyday items at your own comfortable pace.',
+          duration: '5 minutes',
+          difficulty: 'Adaptive (Level 2)',
+          buttonColor: AppTheme.forestGreen,
+          buttonText: 'Play Memory Match',
+          onPlay: _startMemoryMatch,
         ),
-        const SizedBox(height: 14),
-        _buildGameCard(
-          title: 'Clock Drawing Assessment',
-          subtitle: 'Draw a clock face to assess planning and motor stability.',
-          duration: '3 mins',
-          level: 'Module 2',
-          emoji: '🕒',
-          color: AppTheme.warmTerracotta,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (ctx) => const ClockCanvasScreen()),
+
+        const SizedBox(height: 18),
+
+        // Activity Card 2: Clock Drawing Assessment
+        _buildActivityItemCard(
+          emoji: '⏰',
+          tag: 'KINEMATIC & EXECUTIVE PLANNING',
+          title: 'Clock Contour Assessment',
+          description: 'Draw a clock circle, write numbers 1 to 12, and set the hands to 10 past 11 with stylus / touch.',
+          duration: '3-5 minutes',
+          difficulty: 'Diagnostic Contour',
+          buttonColor: AppTheme.warmTerracotta,
+          buttonText: 'Start Clock Drawing',
+          onPlay: _startClockDrawing,
+        ),
+
+        const SizedBox(height: 18),
+
+        // Activity Card 3: Cultural Pattern Sequence
+        _buildActivityItemCard(
+          emoji: '🌸',
+          tag: 'VISUAL-SPATIAL RHYTHM',
+          title: 'Cultural Pattern Sequence',
+          description: 'Recall rhythmic patterns of rangoli shapes and traditional Indian motifs.',
+          duration: '4 minutes',
+          difficulty: 'Gentle Flow',
+          buttonColor: AppTheme.forestGreen,
+          buttonText: 'Explore Patterns',
+          onPlay: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Starting Cultural Pattern Sequence session.', style: GoogleFonts.inter()),
+                backgroundColor: AppTheme.forestGreen,
+              ),
             );
           },
         ),
@@ -1099,110 +800,314 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     );
   }
 
-  Widget _buildGameCard({
-    required String title,
-    required String subtitle,
-    required String duration,
-    required String level,
+  Widget _buildActivityItemCard({
     required String emoji,
-    required Color color,
-    required VoidCallback onTap,
+    required String tag,
+    required String title,
+    required String description,
+    required String duration,
+    required String difficulty,
+    required Color buttonColor,
+    required String buttonText,
+    required VoidCallback onPlay,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22.0),
+        border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: AppTheme.sageLight,
+              borderRadius: BorderRadius.circular(18),
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Center(
-                child: Text(emoji, style: const TextStyle(fontSize: 26)),
-              ),
+            child: Center(
+              child: Text(emoji, style: const TextStyle(fontSize: 32)),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppTheme.background,
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Text(
+                    tag,
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 17,
+                      fontSize: 9.5,
                       fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary,
+                      color: AppTheme.forestGreen,
+                      letterSpacing: 0.6,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.inter(fontSize: 12.5, color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  title,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.textPrimary,
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.access_time_rounded, size: 12, color: AppTheme.textLight),
-                      const SizedBox(width: 4),
-                      Text(duration, style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textLight)),
-                      const SizedBox(width: 8),
-                      Text('·', style: TextStyle(color: AppTheme.textLight)),
-                      const SizedBox(width: 8),
-                      Text(level, style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textLight)),
-                    ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: GoogleFonts.inter(
+                    fontSize: 13.5,
+                    color: AppTheme.textSecondary,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    const Icon(Icons.access_time_rounded, size: 14, color: AppTheme.textSecondary),
+                    const SizedBox(width: 4),
+                    Text(duration, style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary)),
+                    const SizedBox(width: 12),
+                    const Icon(Icons.tune_rounded, size: 14, color: AppTheme.textSecondary),
+                    const SizedBox(width: 4),
+                    Text(difficulty, style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary)),
+                  ],
+                ),
+              ],
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppTheme.forestGreen),
-          ],
-        ),
+          ),
+          const SizedBox(width: 16),
+          ElevatedButton(
+            onPressed: onPlay,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: buttonColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(buttonText, style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w700)),
+                const SizedBox(width: 6),
+                const Icon(Icons.arrow_forward_rounded, size: 15),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildProgressSummaryContent(BuildContext context, {required bool isMobile}) {
+  Widget _buildRemindersView(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'DAILY SCHEDULE',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11.0,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.forestGreen,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Reminders & Care Plan',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 32.0,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.forestGreen,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Today, ${DateTime.now().day} September · Steady daily rhythm supported by Anita.',
+                  style: GoogleFonts.inter(fontSize: 14.5, color: AppTheme.textSecondary),
+                ),
+              ],
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                _playListenAudio();
+              },
+              icon: const Icon(Icons.volume_up_rounded, size: 16),
+              label: const Text('Read Schedule Aloud'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.sageLight,
+                foregroundColor: AppTheme.forestGreen,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 24),
+
+        // Reminders List
+        Container(
+          padding: const EdgeInsets.all(20.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22.0),
+            border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
+          ),
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _reminders.length,
+            separatorBuilder: (_, __) => const Divider(height: 20, color: AppTheme.background),
+            itemBuilder: (context, index) {
+              final item = _reminders[index];
+              final isDone = item['done'] as bool;
+
+              return InkWell(
+                onTap: () {
+                  setState(() {
+                    item['done'] = !isDone;
+                  });
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: isDone ? AppTheme.sageLight : AppTheme.background,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Text(item['emoji'] as String, style: const TextStyle(fontSize: 20)),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item['title'] as String,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.w700,
+                                color: isDone ? AppTheme.textSecondary : AppTheme.textPrimary,
+                                decoration: isDone ? TextDecoration.lineThrough : null,
+                              ),
+                            ),
+                            Text(
+                              item['time'] as String,
+                              style: GoogleFonts.inter(fontSize: 12.5, color: AppTheme.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Checkbox(
+                        value: isDone,
+                        activeColor: AppTheme.forestGreen,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                        onChanged: (val) {
+                          setState(() {
+                            item['done'] = val ?? false;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProgressView(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Your Activity Journey',
+          'YOUR JOURNEY',
           style: GoogleFonts.plusJakartaSans(
-            fontSize: isMobile ? 22 : 28,
+            fontSize: 11.0,
             fontWeight: FontWeight.w800,
             color: AppTheme.forestGreen,
+            letterSpacing: 0.8,
           ),
         ),
         const SizedBox(height: 4),
         Text(
-          'Every small step strengthens calm focus and joyful memory.',
-          style: GoogleFonts.inter(fontSize: 13.5, color: AppTheme.textSecondary),
+          'Progress & Wellness',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 32.0,
+            fontWeight: FontWeight.w800,
+            color: AppTheme.forestGreen,
+            letterSpacing: -0.5,
+          ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 4),
+        Text(
+          'Consistent gentle practice nurtures brain reserve and physical confidence.',
+          style: GoogleFonts.inter(fontSize: 14.5, color: AppTheme.textSecondary),
+        ),
 
+        const SizedBox(height: 24),
+
+        // 3 Highlight Stats Cards
+        Row(
+          children: [
+            Expanded(
+              child: _buildProgressStatCard('7 DAYS', 'Current Streak', '🔥 Daily consistency', AppTheme.warmPeach),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: _buildProgressStatCard('$_totalSessions SESSIONS', 'Activities Completed', '${_avgAccuracy.toStringAsFixed(0)}% Avg Score', AppTheme.sageLight),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: _buildProgressStatCard('${_stabilityScore.toStringAsFixed(0)}/100', 'Kinematic Stability', '⚖️ Motor balance score', AppTheme.pastelBlue),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 22),
+
+        // Recent Milestones Card
         Container(
-          padding: const EdgeInsets.all(20),
+          width: double.infinity,
+          padding: const EdgeInsets.all(22.0),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppTheme.surfaceBorder),
+            borderRadius: BorderRadius.circular(22.0),
+            border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1210,38 +1115,41 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('This Week\'s Consistency', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 16)),
-                  Text('6 of 7 Days 🌟', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: AppTheme.forestGreen)),
+                  Text(
+                    'Recent Clinical Milestones',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.sageLight,
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Text(
+                      'AI Engine Live',
+                      style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.forestGreen),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) {
-                  final isDone = day != 'Sun';
-                  return Column(
-                    children: [
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: isDone ? AppTheme.forestGreen : AppTheme.sageLight,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Icon(
-                            isDone ? Icons.check_rounded : Icons.circle_outlined,
-                            size: 16,
-                            color: isDone ? Colors.white : AppTheme.textSecondary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(day, style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textSecondary)),
-                    ],
-                  );
-                }).toList(),
-              ),
+              if (_recentSessions.isNotEmpty) ...[
+                for (final s in _recentSessions.take(4))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: _buildMilestoneRow(
+                      '${s['session_type'] ?? "Activity"} (${s['difficulty_level'] ?? "Standard"})',
+                      'Score ${s['score']?.toStringAsFixed(1) ?? "80.0"}% · ${s['timestamp'] != null ? s['timestamp'].toString().substring(0, 10) : "Today"}',
+                      (s['session_type'] == 'Clock Contour Drawing') ? Icons.draw_rounded : Icons.psychology_rounded,
+                    ),
+                  ),
+              ] else ...[
+                _buildMilestoneRow('Clock Contour Drawing Completed', 'Score 8.5/10 · Today, 09:15 AM', Icons.draw_rounded),
+                const SizedBox(height: 12),
+                _buildMilestoneRow('Memory Match Pairs Solved', 'Turn accuracy 82% · Yesterday, 08:45 AM', Icons.psychology_rounded),
+                const SizedBox(height: 12),
+                _buildMilestoneRow('ESP32 Tremor Compensation Active', '4-12 Hz jitter stabilized · 6 Sep, 02:30 PM', Icons.sensors_rounded),
+              ],
             ],
           ),
         ),
@@ -1249,14 +1157,73 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     );
   }
 
-  void _startMemoryMatch() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (ctx) => MemoryMatchScreen(
-          onFinish: () => Navigator.pop(ctx),
-        ),
+  Widget _buildProgressStatCard(String val, String title, String subtitle, Color bgColor) {
+    return Container(
+      padding: const EdgeInsets.all(20.0),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20.0),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            val,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 22.0,
+              fontWeight: FontWeight.w800,
+              color: AppTheme.forestGreen,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 14.0,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: GoogleFonts.inter(fontSize: 12.0, color: AppTheme.textSecondary),
+          ),
+        ],
       ),
     );
   }
+
+  Widget _buildMilestoneRow(String title, String subtitle, IconData icon) {
+    return Row(
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: const BoxDecoration(
+            color: AppTheme.sageLight,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: AppTheme.forestGreen, size: 18),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.plusJakartaSans(fontSize: 14.0, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+              ),
+              Text(
+                subtitle,
+                style: GoogleFonts.inter(fontSize: 12.0, color: AppTheme.textSecondary),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
+

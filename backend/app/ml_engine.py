@@ -181,11 +181,48 @@ class ClinicalMLEngine:
         # Initialize SHAP TreeExplainer on the core tree ensemble
         self.explainer = shap.TreeExplainer(self.model)
 
-        # Calculate base expected value for the impairment risk class (MCI + Dementia or Class 1/2)
+        # Calculate base expected value for the cognitive impairment risk (MCI + Dementia)
         if isinstance(self.explainer.expected_value, (list, np.ndarray)):
-            self.base_expected_value = float(self.explainer.expected_value[1])
+            # Impairment baseline = 1.0 - expected_value[0] = expected_value[1] + expected_value[2]
+            self.base_expected_value = float(1.0 - float(self.explainer.expected_value[0]))
         else:
             self.base_expected_value = float(self.explainer.expected_value)
+
+        # In-memory session store initialized with representative baseline records for Ramesh Kumar
+        self.patient_sessions: dict[str, list[dict]] = {
+            "PT-9042": [
+                {
+                    "session_id": "SES-801",
+                    "patient_id": "PT-9042",
+                    "activity_type": "memory_match",
+                    "score": 82.0,
+                    "duration_seconds": 190,
+                    "metrics": {"pairs_matched": 6.0, "total_turns": 9.0, "accuracy_ratio": 0.82},
+                    "notes": "Fast recall and smooth touch gestures.",
+                    "timestamp": "2026-09-08T08:30:00Z"
+                },
+                {
+                    "session_id": "SES-802",
+                    "patient_id": "PT-9042",
+                    "activity_type": "clock_drawing",
+                    "score": 85.0,
+                    "duration_seconds": 125,
+                    "metrics": {"circularity": 0.89, "hesitation_count": 3.0, "mean_velocity": 0.24, "tremor_jitter": 9.2},
+                    "notes": "Clock contour well-closed, minor tremor.",
+                    "timestamp": "2026-09-07T09:15:00Z"
+                },
+                {
+                    "session_id": "SES-803",
+                    "patient_id": "PT-9042",
+                    "activity_type": "pattern_sequence",
+                    "score": 75.0,
+                    "duration_seconds": 210,
+                    "metrics": {"correct_patterns": 5.0, "latency_ms": 1150.0},
+                    "notes": "Steady progress across level 2 difficulty.",
+                    "timestamp": "2026-09-06T10:00:00Z"
+                }
+            ]
+        }
 
     def evaluate_patient(self, req: ClinicalEvaluationRequest) -> ClinicalEvaluationResponse:
         """
@@ -223,20 +260,28 @@ class ClinicalMLEngine:
         # Aggregate impairment risk (MCI probability + Probable Dementia probability)
         primary_risk = float(probabilities[1] + probabilities[2])
 
-        # 2. Local SHAP Attribution Calculation
+        # 2. Local SHAP Attribution Calculation for Cognitive Impairment Risk
         shap_values = self.explainer.shap_values(feature_vector)
 
-        # Extract SHAP attribution vector for the clinically critical risk class (Class 1: MCI or highest impairment tier)
+        # In multi-class (0: Normal, 1: MCI, 2: Dementia):
+        # Target SHAP for Impairment Risk = -shap_values[0] = shap_values[1] + shap_values[2]
         if isinstance(shap_values, list):
-            # Binary or Multi-class output: select class 1 or 2
-            target_class_shap = shap_values[1][0] if len(shap_values) > 1 else shap_values[0][0]
-        elif len(shap_values.shape) == 3:
+            if len(shap_values) >= 3:
+                target_class_shap = shap_values[1][0] + shap_values[2][0]
+            elif len(shap_values) == 2:
+                target_class_shap = shap_values[1][0]
+            else:
+                target_class_shap = shap_values[0][0]
+        elif isinstance(shap_values, np.ndarray) and len(shap_values.shape) == 3:
             # (n_samples, n_features, n_classes)
-            target_class_shap = shap_values[0, :, 1]
+            if shap_values.shape[2] >= 3:
+                target_class_shap = shap_values[0, :, 1] + shap_values[0, :, 2]
+            else:
+                target_class_shap = shap_values[0, :, 1]
         else:
             target_class_shap = shap_values[0]
 
-        # 3. Format Structured Payload for React 19 + Recharts Waterfall Chart
+        # 3. Format Structured Payload for React 19 + Recharts / Flutter Waterfall Chart
         attributions: list[FeatureSHAPAttribution] = []
         for i, meta in enumerate(FEATURE_METADATA):
             key = meta["key"]

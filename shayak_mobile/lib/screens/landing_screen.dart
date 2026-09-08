@@ -337,7 +337,7 @@ class _LandingScreenState extends State<LandingScreen> {
             height: 320,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppTheme.sageLight.withValues(alpha: 0.6),
+              color: AppTheme.sageLight.withOpacity(0.6),
             ),
           ),
         ),
@@ -352,7 +352,7 @@ class _LandingScreenState extends State<LandingScreen> {
             border: Border.all(color: AppTheme.surfaceBorder, width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: Colors.black.withOpacity(0.04),
                 blurRadius: 28,
                 offset: const Offset(0, 12),
               ),
@@ -408,9 +408,9 @@ class _LandingScreenState extends State<LandingScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(18.0),
                   decoration: BoxDecoration(
-                    color: AppTheme.sageLight.withValues(alpha: 0.5),
+                    color: AppTheme.sageLight.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(20.0),
-                    border: Border.all(color: AppTheme.sageBorder.withValues(alpha: 0.7)),
+                    border: Border.all(color: AppTheme.sageBorder.withOpacity(0.7)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -542,7 +542,7 @@ class _LandingScreenState extends State<LandingScreen> {
               border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: Colors.black.withOpacity(0.05),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),

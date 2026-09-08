@@ -112,3 +112,63 @@ class ClinicalEvaluationResponse(BaseModel):
         ..., description="Contextual recommendations for caregivers and clinicians"
     )
     evaluated_at: str
+
+
+class KinematicTelemetryPayload(BaseModel):
+    """
+    ESP32 Real-Time Kinematic & Tremor IMU Telemetry Packet.
+    """
+    device_id: str = Field(default="ESP32-STABILIZER-01", description="Hardware identifier")
+    patient_id: str = Field(default="PT-9042", description="Patient identifier")
+    roll_deg: float = Field(..., description="Roll angle in degrees (-180 to +180)")
+    pitch_deg: float = Field(..., description="Pitch angle in degrees (-90 to +90)")
+    yaw_deg: float = Field(..., description="Yaw angle in degrees (0 to 360)")
+    vertical_accel_ms2: float = Field(..., description="Inertial earth-frame vertical acceleration (m/s^2)")
+    net_force_error_n: float = Field(..., description="Net force error F_net along vertical axis (N)")
+    tremor_variance: float = Field(..., description="Sliding window micro-jitter variance in 4-12 Hz band")
+    thrust_pwm_z: int = Field(..., ge=0, le=1023, description="Active PWM duty cycle on counter-thrust")
+    stabilization_active: bool = Field(default=True, description="Active PID stabilization status")
+    timestamp_ms: int = Field(..., description="ESP32 monotonic timestamp")
+
+
+class PatientSessionRecord(BaseModel):
+    """
+    Completed cognitive assessment session record (Clock Drawing, Memory Match, or Multi-modal).
+    """
+    session_id: str = Field(..., description="Unique session identifier")
+    patient_id: str = Field(..., description="Patient identifier")
+    activity_type: Literal["clock_drawing", "memory_match", "pattern_sequence", "multimodal_full"]
+    score: float = Field(..., ge=0.0, le=100.0, description="Normalized score 0-100")
+    duration_seconds: int = Field(..., ge=0, description="Duration of session in seconds")
+    difficulty_level: str = Field(default="Level 2 (Moderate)", description="Difficulty level during session")
+    is_adaptive: bool = Field(default=True, description="Whether adaptive difficulty was enabled")
+    metrics: Dict[str, float] = Field(default_factory=dict, description="Detailed biomarker metric dictionary")
+    notes: str = Field(default="", description="Optional caregiver or system notes")
+    timestamp: str = Field(..., description="ISO 8601 timestamp")
+
+
+class PatientDifficultyUpdateRequest(BaseModel):
+    """
+    Manual or algorithmic difficulty configuration request.
+    """
+    difficulty_level: Literal["Level 1 (Gentle)", "Level 2 (Moderate)", "Level 3 (Challenging)", "Level 4 (Master)"]
+    is_adaptive: bool = True
+    caregiver_override: bool = False
+
+
+class LongitudinalPatientHistory(BaseModel):
+    """
+    Longitudinal summary of patient assessment sessions and risk progression over time.
+    """
+    patient_id: str
+    patient_name: str
+    age: int
+    caregiver_name: str
+    total_sessions_completed: int
+    average_accuracy: float
+    current_difficulty_level: str
+    is_adaptive_mode: bool = True
+    recent_sessions: List[PatientSessionRecord]
+    latest_evaluation: ClinicalEvaluationResponse | None = None
+
+

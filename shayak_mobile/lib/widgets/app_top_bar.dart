@@ -61,11 +61,11 @@ class AppTopBar extends StatelessWidget {
                               margin: const EdgeInsets.only(bottom: 8),
                               decoration: BoxDecoration(
                                 color: isActive
-                                    ? AppTheme.sageLight.withValues(alpha: 0.5)
+                                    ? AppTheme.sageLight.withOpacity(0.5)
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: isActive ? AppTheme.sageBorder : AppTheme.surfaceBorder.withValues(alpha: 0.5),
+                                  color: isActive ? AppTheme.sageBorder : AppTheme.surfaceBorder.withOpacity(0.5),
                                 ),
                               ),
                               child: ListTile(
@@ -222,7 +222,7 @@ class AppTopBar extends StatelessWidget {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.forestGreen.withValues(alpha: 0.25),
+                              color: AppTheme.forestGreen.withOpacity(0.25),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),

@@ -149,6 +149,13 @@ class PatientProfile {
     );
   }
 
+  AppLanguage get language => preferredLanguage;
+  set language(AppLanguage val) => preferredLanguage = val;
+
+  // Compatibility aliases
+  static PatientProfile? load() => loadFromHive();
+  void save() => saveToHive();
+
   // ── Hive helpers ────────────────────────────────────────────────────────────
 
   static final ValueNotifier<String?> activeProfileNotifier = ValueNotifier<String?>(null);
