@@ -406,11 +406,11 @@ class AppTopBar extends StatelessWidget {
                       color: AppTheme.forestGreen,
                     ),
                     tooltip: currentMode == AppViewMode.patient ? 'Switch to Caregiver' : 'Switch to Patient',
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.white,
                       side: const BorderSide(color: AppTheme.surfaceBorder),
                       padding: const EdgeInsets.all(6),
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                     ),
                   )
                 else if (currentMode == AppViewMode.patient)
