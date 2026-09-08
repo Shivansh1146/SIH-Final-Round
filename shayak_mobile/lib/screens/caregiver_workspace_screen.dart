@@ -1019,89 +1019,89 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
 
         // 4 Stat Metric Cards Grid
         LayoutBuilder(
-        builder: (context, constraints) {
-          final isWide = constraints.maxWidth > 700;
-          return GridView.count(
-            crossAxisCount: isWide ? 4 : 2,
-            crossAxisSpacing: 14,
-            mainAxisSpacing: 14,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: isWide ? 1.35 : 1.25,
-            children: [
-              _buildStatCard(
-                title: LocalizationService.tr('games_completed', lang),
-                value: '$totalSessionsCount',
-                subtitle: LocalizationService.tr('across_recent_sessions', lang),
-                badgeIcon: Icons.check_circle_outline_rounded,
-                badgeColor: AppTheme.statusGreen,
-                badgeBg: AppTheme.sageLight,
-              ),
-              _buildStatCard(
-                title: LocalizationService.tr('avg_accuracy', lang),
-                value: avgAccStr,
-                subtitle: LocalizationService.tr('gameplay_performance', lang),
-                badgeIcon: Icons.north_east_rounded,
-                badgeColor: AppTheme.warmTerracotta,
-                badgeBg: AppTheme.warmPeach,
-              ),
-              _buildStatCard(
-                title: LocalizationService.tr('avg_response', lang),
-                value: avgRespStr,
-                subtitle: LocalizationService.tr('per_interaction', lang),
-                badgeIcon: Icons.access_time_rounded,
-                badgeColor: AppTheme.warmOchre,
-                badgeBg: AppTheme.pastelYellow,
-              ),
-              _buildStatCard(
-                title: LocalizationService.tr('current_difficulty', lang),
-                value: _caregiverDifficulty.split(' ').take(2).join(' '),
-                subtitle: _caregiverAdaptiveMode
-                    ? LocalizationService.tr('ai_adaptive_auto', lang)
-                    : LocalizationService.tr('fixed_manual_mode', lang),
-                badgeIcon: Icons.psychology_outlined,
-                badgeColor: AppTheme.forestGreen,
-                badgeBg: AppTheme.pastelBlue,
-              ),
-            ],
-          );
-        },
-      ),
-
-      const SizedBox(height: 20),
-
-      // Cognitive Difficulty & AI Pacing Controller Card
-      _buildDifficultyControllerCard(context, lang),
-
-      const SizedBox(height: 20),
-
-      // Lower Dashboard: 7-Session Performance & Support Notes
-      LayoutBuilder(
-        builder: (context, constraints) {
-          final isWide = constraints.maxWidth > 640;
-          if (isWide) {
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth > 700;
+            return GridView.count(
+              crossAxisCount: isWide ? 4 : 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              childAspectRatio: isWide ? 1.35 : 1.05,
               children: [
-                Expanded(flex: 6, child: _buildCognitivePerformanceCard(lang)),
-                const SizedBox(width: 18),
-                Expanded(flex: 4, child: _buildSupportNotesCard(totalSessionsCount, patientName, latestScore, lang)),
+                _buildStatCard(
+                  title: LocalizationService.tr('games_completed', lang),
+                  value: '$totalSessionsCount',
+                  subtitle: LocalizationService.tr('across_recent_sessions', lang),
+                  badgeIcon: Icons.check_circle_outline_rounded,
+                  badgeColor: AppTheme.statusGreen,
+                  badgeBg: AppTheme.sageLight,
+                ),
+                _buildStatCard(
+                  title: LocalizationService.tr('avg_accuracy', lang),
+                  value: avgAccStr,
+                  subtitle: LocalizationService.tr('gameplay_performance', lang),
+                  badgeIcon: Icons.north_east_rounded,
+                  badgeColor: AppTheme.warmTerracotta,
+                  badgeBg: AppTheme.warmPeach,
+                ),
+                _buildStatCard(
+                  title: LocalizationService.tr('avg_response', lang),
+                  value: avgRespStr,
+                  subtitle: LocalizationService.tr('per_interaction', lang),
+                  badgeIcon: Icons.access_time_rounded,
+                  badgeColor: AppTheme.warmOchre,
+                  badgeBg: AppTheme.pastelYellow,
+                ),
+                _buildStatCard(
+                  title: LocalizationService.tr('current_difficulty', lang),
+                  value: _caregiverDifficulty.split(' ').take(2).join(' '),
+                  subtitle: _caregiverAdaptiveMode
+                      ? LocalizationService.tr('ai_adaptive_auto', lang)
+                      : LocalizationService.tr('fixed_manual_mode', lang),
+                  badgeIcon: Icons.psychology_outlined,
+                  badgeColor: AppTheme.forestGreen,
+                  badgeBg: AppTheme.pastelBlue,
+                ),
               ],
             );
-          } else {
-            return Column(
-              children: [
-                _buildCognitivePerformanceCard(lang),
-                const SizedBox(height: 18),
-                _buildSupportNotesCard(totalSessionsCount, patientName, latestScore, lang),
-              ],
-            );
-          }
-        },
-      ),
-    ],
-  );
-}
+          },
+        ),
+
+        const SizedBox(height: 20),
+
+        // Cognitive Difficulty & AI Pacing Controller Card
+        _buildDifficultyControllerCard(context, lang),
+
+        const SizedBox(height: 20),
+
+        // Lower Dashboard: 7-Session Performance & Support Notes
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth > 640;
+            if (isWide) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 6, child: _buildCognitivePerformanceCard(lang)),
+                  const SizedBox(width: 18),
+                  Expanded(flex: 4, child: _buildSupportNotesCard(totalSessionsCount, patientName, latestScore, lang)),
+                ],
+              );
+            } else {
+              return Column(
+                children: [
+                  _buildCognitivePerformanceCard(lang),
+                  const SizedBox(height: 18),
+                  _buildSupportNotesCard(totalSessionsCount, patientName, latestScore, lang),
+                ],
+              );
+            }
+          },
+        ),
+      ],
+    );
+  }
 
   Widget _buildDifficultyControllerCard(BuildContext context, AppLanguage lang) {
     const tiers = [
@@ -1112,7 +1112,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     ];
 
     return Container(
-      padding: const EdgeInsets.all(22.0),
+      padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22.0),
@@ -1128,10 +1128,10 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 460;
+              final headerInfo = Row(
                 children: [
                   Container(
                     width: 38,
@@ -1145,30 +1145,34 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        LocalizationService.tr('diff_controller_title', lang),
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.textPrimary,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          LocalizationService.tr('diff_controller_title', lang),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      Text(
-                        LocalizationService.tr('diff_controller_sub', lang),
-                        style: GoogleFonts.inter(
-                          fontSize: 12.5,
-                          color: AppTheme.textSecondary,
+                        Text(
+                          LocalizationService.tr('diff_controller_sub', lang),
+                          style: GoogleFonts.inter(
+                            fontSize: 12.0,
+                            color: AppTheme.textSecondary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
-              ),
-              // Mode Toggle
-              Container(
+              );
+
+              final toggleWidget = Container(
                 decoration: BoxDecoration(
                   color: AppTheme.background,
                   borderRadius: BorderRadius.circular(100),
@@ -1181,7 +1185,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                       onTap: () => _updatePatientDifficulty(_caregiverDifficulty, true),
                       borderRadius: BorderRadius.circular(100),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: _caregiverAdaptiveMode ? AppTheme.forestGreen : Colors.transparent,
                           borderRadius: BorderRadius.circular(100),
@@ -1189,7 +1193,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                         child: Text(
                           '🤖 ${LocalizationService.tr('ai_adaptive', lang)}',
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12.5,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w700,
                             color: _caregiverAdaptiveMode ? Colors.white : AppTheme.textSecondary,
                           ),
@@ -1200,7 +1204,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                       onTap: () => _updatePatientDifficulty(_caregiverDifficulty, false),
                       borderRadius: BorderRadius.circular(100),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: !_caregiverAdaptiveMode ? AppTheme.warmTerracotta : Colors.transparent,
                           borderRadius: BorderRadius.circular(100),
@@ -1208,7 +1212,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                         child: Text(
                           '⚙️ ${LocalizationService.tr('manual_lock', lang)}',
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12.5,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w700,
                             color: !_caregiverAdaptiveMode ? Colors.white : AppTheme.textSecondary,
                           ),
@@ -1217,8 +1221,28 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                     ),
                   ],
                 ),
-              ),
-            ],
+              );
+
+              if (isNarrow) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    headerInfo,
+                    const SizedBox(height: 12),
+                    toggleWidget,
+                  ],
+                );
+              }
+
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(child: headerInfo),
+                  const SizedBox(width: 8),
+                  toggleWidget,
+                ],
+              );
+            },
           ),
 
           const SizedBox(height: 18),
@@ -1229,13 +1253,13 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
               final isCurrent = _caregiverDifficulty == tier;
               return Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 3.0),
                   child: InkWell(
                     onTap: () => _updatePatientDifficulty(tier, _caregiverAdaptiveMode),
                     borderRadius: BorderRadius.circular(14),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
                       decoration: BoxDecoration(
                         color: isCurrent
                             ? AppTheme.forestGreen
@@ -1254,10 +1278,11 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                                 ? LocalizationService.trTier(tier, lang).split('(').first.trim()
                                 : LocalizationService.trTier(tier, lang),
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12.5,
+                              fontSize: 11.5,
                               fontWeight: isCurrent ? FontWeight.w800 : FontWeight.w700,
                               color: isCurrent ? Colors.white : AppTheme.textPrimary,
                             ),
+                            textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 2),
                           Text(
@@ -1265,9 +1290,11 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                                 ? LocalizationService.trTier(tier, lang).split('(').last.replaceAll(')', '').trim()
                                 : '',
                             style: GoogleFonts.inter(
-                              fontSize: 11.0,
+                              fontSize: 10.0,
                               color: isCurrent ? Colors.white.withOpacity(0.9) : AppTheme.textSecondary,
                             ),
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
@@ -1291,7 +1318,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     required Color badgeBg,
   }) {
     return Container(
-      padding: const EdgeInsets.all(18.0),
+      padding: const EdgeInsets.all(14.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18.0),
@@ -1304,24 +1331,27 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 10.0,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.textSecondary,
-                  letterSpacing: 0.5,
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.textSecondary,
+                    letterSpacing: 0.4,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               Container(
-                width: 26,
-                height: 26,
+                width: 24,
+                height: 24,
                 decoration: BoxDecoration(
                   color: badgeBg,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
-                  child: Icon(badgeIcon, size: 14, color: badgeColor),
+                  child: Icon(badgeIcon, size: 12, color: badgeColor),
                 ),
               ),
             ],
@@ -1329,18 +1359,20 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
           Text(
             value,
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 26.0,
+              fontSize: 22.0,
               fontWeight: FontWeight.w800,
               color: AppTheme.textPrimary,
               letterSpacing: -0.5,
             ),
+            overflow: TextOverflow.ellipsis,
           ),
           Text(
             subtitle,
             style: GoogleFonts.inter(
-              fontSize: 11.5,
+              fontSize: 10.5,
               color: AppTheme.textSecondary,
             ),
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -1350,7 +1382,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
   Widget _buildCognitivePerformanceCard([AppLanguage? lang]) {
     final language = lang ?? LocalizationService.instance.currentLanguage;
     return Container(
-      padding: const EdgeInsets.all(22.0),
+      padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20.0),
@@ -1362,31 +1394,36 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    LocalizationService.tr('the_last_7_sessions', language),
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.textSecondary,
-                      letterSpacing: 0.6,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      LocalizationService.tr('the_last_7_sessions', language),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10.0,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textSecondary,
+                        letterSpacing: 0.6,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    LocalizationService.tr('cognitive_activity_performance', language),
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary,
+                    const SizedBox(height: 2),
+                    Text(
+                      LocalizationService.tr('cognitive_activity_performance', language),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15.0,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: AppTheme.sageLight,
                   borderRadius: BorderRadius.circular(100),
@@ -1394,7 +1431,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 child: Text(
                   LocalizationService.tr('non_medical_view', language),
                   style: GoogleFonts.inter(
-                    fontSize: 11.0,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.forestGreen,
                   ),
@@ -1840,69 +1877,133 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
   }
 
   Widget _buildCarePlanView(BuildContext context, AppLanguage lang) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  LocalizationService.tr('care_team', lang),
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11.0,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.forestGreen,
-                    letterSpacing: 0.8,
+        if (isMobile) ...[
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                LocalizationService.tr('care_team', lang),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11.0,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.forestGreen,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                LocalizationService.tr('care_plan', lang),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 28.0,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.forestGreen,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                LocalizationService.tr('patient_care_team_sub', lang),
+                style: GoogleFonts.inter(fontSize: 13.5, color: AppTheme.textSecondary),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _showAddCarePlanItemDialog,
+                      icon: const Icon(Icons.add_rounded, size: 16),
+                      label: Text(LocalizationService.tr('add_activity', lang)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppTheme.surfaceBorder),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  LocalizationService.tr('care_plan', lang),
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 32.0,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.forestGreen,
-                    letterSpacing: -0.5,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _saveCarePlan,
+                      icon: const Icon(Icons.check_rounded, size: 16),
+                      label: Text(LocalizationService.tr('save_plan', lang)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.forestGreen,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  LocalizationService.tr('patient_care_team_sub', lang),
-                  style: GoogleFonts.inter(fontSize: 14.5, color: AppTheme.textSecondary),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                OutlinedButton.icon(
-                  onPressed: _showAddCarePlanItemDialog,
-                  icon: const Icon(Icons.add_rounded, size: 16),
-                  label: Text(LocalizationService.tr('add_activity', lang)),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppTheme.surfaceBorder),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                ],
+              ),
+            ],
+          ),
+        ] else ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    LocalizationService.tr('care_team', lang),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11.0,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.forestGreen,
+                      letterSpacing: 0.8,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton.icon(
-                  onPressed: _saveCarePlan,
-                  icon: const Icon(Icons.check_rounded, size: 16),
-                  label: Text(LocalizationService.tr('save_plan', lang)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.forestGreen,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  const SizedBox(height: 4),
+                  Text(
+                    LocalizationService.tr('care_plan', lang),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 32.0,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.forestGreen,
+                      letterSpacing: -0.5,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
+                  const SizedBox(height: 4),
+                  Text(
+                    LocalizationService.tr('patient_care_team_sub', lang),
+                    style: GoogleFonts.inter(fontSize: 14.5, color: AppTheme.textSecondary),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _showAddCarePlanItemDialog,
+                    icon: const Icon(Icons.add_rounded, size: 16),
+                    label: Text(LocalizationService.tr('add_activity', lang)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppTheme.surfaceBorder),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: _saveCarePlan,
+                    icon: const Icon(Icons.check_rounded, size: 16),
+                    label: Text(LocalizationService.tr('save_plan', lang)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.forestGreen,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
 
         const SizedBox(height: 24),
 
