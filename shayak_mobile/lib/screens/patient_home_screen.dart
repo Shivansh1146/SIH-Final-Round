@@ -1130,16 +1130,6 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     }
   }
 
-  Future<void> _makeWhatsAppCall(String rawPhoneNumber) async {
-    final digits = rawPhoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
-    final uri = Uri.parse('https://wa.me/$digits?text=Hello%20Anita,%20I%20am%20calling%20for%20assistance.');
-    try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (e) {
-      debugPrint('Error launching WhatsApp: $e');
-    }
-  }
-
   void _showCaregiverCallDialog(BuildContext context, AppLanguage lang) {
     const caregiverPhone = '+91 98450 12345';
     const caregiverName = 'Anita Kumar';
@@ -1273,7 +1263,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                           ],
                         ),
                         child: const Center(
-                          child: Icon(Icons.person_rounded, size: 48, color: Colors.white),
+                          child: Icon(Icons.phone_in_talk_rounded, size: 44, color: Colors.white),
                         ),
                       ),
                     ],
@@ -1291,9 +1281,9 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Primary Caregiver · $caregiverPhone (Phone Link)',
+                    'Primary Caregiver · $caregiverPhone',
                     style: GoogleFonts.inter(
-                      fontSize: 13.5,
+                      fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: const Color(0xFF94A3B8),
                     ),
@@ -1331,46 +1321,29 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Telephony Direct Actions (Phone Link Normal Call & WhatsApp)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            _makePhoneLinkCall(caregiverPhone);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('📞 Initiating Phone Link call to $caregiverName ($caregiverPhone)...', style: GoogleFonts.inter()),
-                                backgroundColor: AppTheme.forestGreen,
-                                duration: const Duration(seconds: 3),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.phone_enabled_rounded, size: 16),
-                          label: const Text('Phone Link Call'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF10B981),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  // Telephony Direct Action (Pure Phone Call via Phone Link)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        _makePhoneLinkCall(caregiverPhone);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('📞 Dialing $caregiverName ($caregiverPhone) via Phone Link...', style: GoogleFonts.inter()),
+                            backgroundColor: AppTheme.forestGreen,
+                            duration: const Duration(seconds: 3),
                           ),
-                        ),
+                        );
+                      },
+                      icon: const Icon(Icons.phone_enabled_rounded, size: 18),
+                      label: const Text('Redial via Phone Link / Phone Call', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () => _makeWhatsAppCall(caregiverPhone),
-                          icon: const Icon(Icons.chat_bubble_rounded, size: 16),
-                          label: const Text('WhatsApp'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF25D366),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
 
                   const SizedBox(height: 14),
