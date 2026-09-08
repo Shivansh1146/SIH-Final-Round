@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/patient_profile.dart';
+import '../services/localization_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_top_bar.dart';
 
@@ -389,9 +390,38 @@ class _PatientRegistrationScreenState
 
   Widget _buildLanguageStep() {
     return _sectionCard(children: [
-      Text(
-        'Select preferred language for the patient\'s interface.',
-        style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary, height: 1.4),
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Select preferred language for the patient\'s interface.',
+              style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary, height: 1.4),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppTheme.pastelYellow,
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.volume_up_rounded, size: 12, color: AppTheme.warmTerracotta),
+                const SizedBox(width: 4),
+                Text(
+                  'VOICE PREVIEW',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.warmTerracotta,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
       const SizedBox(height: 16),
       ...AppLanguage.values.map((lang) {
@@ -399,9 +429,13 @@ class _PatientRegistrationScreenState
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: InkWell(
-            onTap: () => setState(() => _language = lang),
+            onTap: () {
+              setState(() => _language = lang);
+              LocalizationService.instance.setLanguage(lang, speakPreview: true);
+            },
             borderRadius: BorderRadius.circular(16),
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 color: sel ? AppTheme.sageLight : Colors.white,
@@ -410,23 +444,60 @@ class _PatientRegistrationScreenState
                   color: sel ? AppTheme.forestGreen : AppTheme.surfaceBorder,
                   width: sel ? 2 : 1,
                 ),
+                boxShadow: sel
+                    ? [
+                        BoxShadow(
+                          color: AppTheme.forestGreen.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
               ),
               child: Row(
                 children: [
                   Text(lang.flag, style: const TextStyle(fontSize: 22)),
                   const SizedBox(width: 14),
                   Expanded(
-                    child: Text(
-                      lang.displayName,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15, fontWeight: FontWeight.w700,
-                        color: sel ? AppTheme.forestGreen : AppTheme.textPrimary,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          lang.displayName,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: sel ? AppTheme.forestGreen : AppTheme.textPrimary,
+                          ),
+                        ),
+                        if (sel)
+                          Text(
+                            'Audio narration active · Tap to replay voice',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: AppTheme.forestGreen,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   if (sel)
-                    const Icon(Icons.check_circle_rounded,
-                        color: AppTheme.forestGreen, size: 22),
+                    IconButton(
+                      icon: const Icon(Icons.volume_up_rounded, color: AppTheme.forestGreen, size: 20),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        LocalizationService.instance.setLanguage(lang, speakPreview: true);
+                      },
+                      tooltip: 'Play voice sample',
+                    ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    sel ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                    color: sel ? AppTheme.forestGreen : AppTheme.surfaceBorder,
+                    size: 22,
+                  ),
                 ],
               ),
             ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/patient_profile.dart';
+import '../services/localization_service.dart';
+import '../services/audio_narration_service.dart';
 import '../theme/app_theme.dart';
 
 class AppSidebar extends StatelessWidget {
@@ -107,6 +109,18 @@ class AppSidebar extends StatelessWidget {
               const SizedBox(height: 14),
 
               // Bottom Action Links
+              ValueListenableBuilder<AppLanguage>(
+                valueListenable: LocalizationService.languageNotifier,
+                builder: (context, lang, _) {
+                  return _buildActionItem(
+                    context,
+                    Icons.translate_rounded,
+                    'Language: ${lang.flag} ${lang.displayName.split(' ').first}',
+                    onTap: () => _showLanguageModal(context),
+                  );
+                },
+              ),
+              const SizedBox(height: 6),
               _buildActionItem(
                 context,
                 Icons.help_outline_rounded,
@@ -311,6 +325,132 @@ class AppSidebar extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showLanguageModal(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogCtx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            final currentLang = LocalizationService.instance.currentLanguage;
+
+            return Dialog(
+              backgroundColor: Colors.white,
+              elevation: 12,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+              child: Container(
+                width: 400,
+                padding: const EdgeInsets.all(22),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'PREFERRED LANGUAGE',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.textSecondary,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Choose Interface Language',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.forestGreen,
+                              ),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
+                          onPressed: () => Navigator.pop(dialogCtx),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      'All reminders, instructions, audio speech, and games adapt to your selected language.',
+                      style: GoogleFonts.inter(fontSize: 12.5, color: AppTheme.textSecondary, height: 1.3),
+                    ),
+                    const SizedBox(height: 16),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 360),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: AppLanguage.values.map((lang) {
+                            final isSel = lang == currentLang;
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 6),
+                              decoration: BoxDecoration(
+                                color: isSel ? AppTheme.sageLight : Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: isSel ? AppTheme.forestGreen : AppTheme.surfaceBorder,
+                                  width: isSel ? 1.8 : 1,
+                                ),
+                              ),
+                              child: ListTile(
+                                dense: true,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                                leading: Text(lang.flag, style: const TextStyle(fontSize: 20)),
+                                title: Text(
+                                  lang.displayName,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 14,
+                                    fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
+                                    color: isSel ? AppTheme.forestGreen : AppTheme.textPrimary,
+                                  ),
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.volume_up_rounded, size: 18, color: AppTheme.forestGreen),
+                                      tooltip: 'Voice preview',
+                                      onPressed: () {
+                                        final greeting = LocalizationService.getLanguageWelcomeSpeech(lang);
+                                        AudioNarrationService.instance.speak(greeting, language: lang);
+                                      },
+                                    ),
+                                    if (isSel)
+                                      const Icon(Icons.check_circle_rounded, color: AppTheme.forestGreen, size: 20),
+                                  ],
+                                ),
+                                onTap: () {
+                                  LocalizationService.instance.setLanguage(lang, speakPreview: true);
+                                  setDialogState(() {});
+                                  Future.delayed(const Duration(milliseconds: 400), () {
+                                    if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+                                  });
+                                },
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

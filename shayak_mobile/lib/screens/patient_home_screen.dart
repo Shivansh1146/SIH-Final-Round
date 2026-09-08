@@ -8,6 +8,7 @@ import '../widgets/app_sidebar.dart';
 import '../models/patient_profile.dart';
 import '../services/audio_narration_service.dart';
 import '../services/reminder_service.dart';
+import '../services/localization_service.dart';
 import 'reminders_screen.dart';
 import 'memory_match_screen.dart';
 import 'clock_canvas_screen.dart';
@@ -40,9 +41,11 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   @override
   void initState() {
     super.initState();
+    LocalizationService.instance.init();
     _initActiveProfile();
     PatientProfile.activeProfileNotifier.addListener(_onProfileChanged);
     ReminderService.instance.addListener(_onRemindersUpdated);
+    LocalizationService.languageNotifier.addListener(_onLanguageChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ReminderService.instance.initialize(context);
@@ -54,7 +57,12 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   void dispose() {
     PatientProfile.activeProfileNotifier.removeListener(_onProfileChanged);
     ReminderService.instance.removeListener(_onRemindersUpdated);
+    LocalizationService.languageNotifier.removeListener(_onLanguageChanged);
     super.dispose();
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onRemindersUpdated() {
@@ -108,10 +116,55 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     }
 
     setState(() => _isPlayingAudio = true);
-    final textToRead = "Good morning $_patientDisplayName. Today's focus is the Memory Match Activity, "
-        "designed for gentle cognitive engagement at difficulty level $_currentDifficultyLevel. "
-        "You have completed $_totalSessions sessions with an average accuracy of ${_avgAccuracy.toStringAsFixed(0)} percent.";
-    await AudioNarrationService.instance.speak(textToRead);
+    final currentLang = LocalizationService.instance.currentLanguage;
+    String textToRead;
+
+    switch (currentLang) {
+      case AppLanguage.hindi:
+        textToRead = "शुभ प्रभात $_patientDisplayName। आज की मुख्य गतिविधि स्मृति मिलान (Memory Match) है। "
+            "आपने $_totalSessions अभ्यास सत्र पूरे किए हैं और आपकी औसत सटीकता ${_avgAccuracy.toStringAsFixed(0)} प्रतिशत है।";
+        break;
+      case AppLanguage.bengali:
+        textToRead = "সুপ্রভাত $_patientDisplayName। আজকের প্রধান কার্যকলাপ স্মৃতি মেলানো (Memory Match)। "
+            "আপনি $_totalSessions টি সেশন সম্পন্ন করেছেন এবং গড় নির্ভুলতা ${_avgAccuracy.toStringAsFixed(0)} শতাংশ।";
+        break;
+      case AppLanguage.tamil:
+        textToRead = "காலை வணக்கம் $_patientDisplayName. இன்றைய முக்கிய செயல்பாடு நினைவக பொருத்தம் (Memory Match). "
+            "நீங்கள் $_totalSessions அமர்வுகளை முடித்துள்ளீர்கள்.";
+        break;
+      case AppLanguage.telugu:
+        textToRead = "శుభోదయం $_patientDisplayName. నేటి ముఖ్య కార్యాచరణ జ్ఞాపకశక్తి సరిపోలిక (Memory Match). "
+            "మీరు $_totalSessions సెషన్లను పూర్తి చేశారు.";
+        break;
+      case AppLanguage.marathi:
+        textToRead = "शुभ प्रभात $_patientDisplayName. आजचा मुख्य खेळ स्मृती जुळवणी (Memory Match) आहे. "
+            "तुम्ही $_totalSessions सत्रे पूर्ण केली आहेत.";
+        break;
+      case AppLanguage.gujarati:
+        textToRead = "શુભ સવાર $_patientDisplayName. આજની મુખ્ય પ્રવૃત્તિ યાદશક્તિ મેચ (Memory Match) છે. "
+            "તમે $_totalSessions સત્રો પૂર્ણ કર્યા છે.";
+        break;
+      case AppLanguage.kannada:
+        textToRead = "ಶುಭೋದಯ $_patientDisplayName. ಇಂದಿನ ಮುಖ್ಯ ಆಟ ನೆನಪಿನ ಹೊಂದಾಣಿಕೆ (Memory Match). "
+            "ನೀವು $_totalSessions ಸೆಷನ್‌ಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಿದ್ದೀರಿ.";
+        break;
+      case AppLanguage.malayalam:
+        textToRead = "സുപ്രഭാതം $_patientDisplayName. ഇന്നത്തെ പ്രധാന പ്രവർത്തനം ഓർമ്മ പൊരുത്തം (Memory Match) ആണ്. "
+            "നിങ്ങൾ $_totalSessions സെഷനുകൾ പൂർത്തിയാക്കി.";
+        break;
+      case AppLanguage.punjabi:
+        textToRead = "ਸ਼ੁਭ ਸਵੇਰ $_patientDisplayName. ਅੱਜ ਦੀ ਮੁੱਖ ਗਤੀਵਿਧੀ ਯਾਦਦਾਸ਼ਤ ਮੇਲ (Memory Match) ਹੈ। "
+            "ਤੁਸੀਂ $_totalSessions ਸੈਸ਼ਨ ਪੂਰੇ ਕੀਤੇ ਹਨ।";
+        break;
+      case AppLanguage.english:
+      default:
+        textToRead = "Good morning $_patientDisplayName. Today's focus is the Memory Match Activity, "
+            "designed for gentle cognitive engagement at difficulty level $_currentDifficultyLevel. "
+            "You have completed $_totalSessions sessions with an average accuracy of ${_avgAccuracy.toStringAsFixed(0)} percent.";
+        break;
+    }
+
+    await AudioNarrationService.instance.speak(textToRead, language: currentLang);
     if (mounted) setState(() => _isPlayingAudio = false);
   }
 
@@ -379,7 +432,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Good morning,',
+                      LocalizationService.tr('good_morning'),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 16.0,
                         fontWeight: FontWeight.w600,
@@ -404,7 +457,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'A calm start makes room for a good memory.',
+                      LocalizationService.tr('calm_quote'),
                       style: GoogleFonts.inter(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w400,
@@ -426,7 +479,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                       color: AppTheme.forestGreen,
                     ),
                     label: Text(
-                      'Listen',
+                      LocalizationService.tr('listen'),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
@@ -551,7 +604,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                               const Icon(Icons.auto_awesome_rounded, size: 12, color: Colors.white),
                               const SizedBox(width: 6),
                               Text(
-                                "TODAY'S ACTIVITY",
+                                LocalizationService.tr('todays_activity'),
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.w800,
@@ -564,7 +617,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Memory Match',
+                          LocalizationService.tr('memory_match'),
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: isCompact ? 24.0 : 30.0,
                             fontWeight: FontWeight.w800,
@@ -574,7 +627,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Find the matching pairs. Take your time — one card at a time.',
+                          LocalizationService.tr('memory_match_sub'),
                           style: GoogleFonts.inter(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w400,
@@ -594,7 +647,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                                 const Icon(Icons.access_time_rounded, size: 14, color: Colors.white70),
                                 const SizedBox(width: 6),
                                 Text(
-                                  'About 5 minutes',
+                                  LocalizationService.tr('about_5_mins'),
                                   style: GoogleFonts.inter(fontSize: 12.0, color: Colors.white70, fontWeight: FontWeight.w500),
                                 ),
                               ],
@@ -619,7 +672,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'Start activity',
+                                LocalizationService.tr('start_activity'),
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 14.5,
                                   fontWeight: FontWeight.w800,
@@ -702,7 +755,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   Row(
                     children: [
                       Text(
-                        'TODAY',
+                        LocalizationService.tr('today'),
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w800,
@@ -719,7 +772,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                             borderRadius: BorderRadius.circular(100),
                           ),
                           child: Text(
-                            pending.isEmpty ? 'All Done 🎉' : '${pending.length} pending',
+                            pending.isEmpty ? LocalizationService.tr('all_done') : '${pending.length} ${LocalizationService.tr('pending')}',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
@@ -732,7 +785,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Reminders',
+                    LocalizationService.tr('reminders'),
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 18.0,
                       fontWeight: FontWeight.w800,
@@ -978,7 +1031,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Need a little help?',
+            LocalizationService.tr('need_help'),
             style: GoogleFonts.plusJakartaSans(
               fontSize: 18.0,
               fontWeight: FontWeight.w800,
@@ -987,7 +1040,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'You can listen to instructions, take a pause, or ask a caregiver for assistance anytime.',
+            LocalizationService.tr('need_help_sub'),
             style: GoogleFonts.inter(
               fontSize: 13.0,
               fontWeight: FontWeight.w400,
@@ -1000,7 +1053,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             onPressed: () => _showCaregiverCallDialog(context),
             icon: const Icon(Icons.phone_in_talk_rounded, size: 15, color: AppTheme.forestGreen),
             label: Text(
-              'Call Caregiver Anita',
+              '${LocalizationService.tr('call_caregiver')} Anita',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13.0,
                 fontWeight: FontWeight.w700,
@@ -1018,9 +1071,10 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   }
 
   void _showCaregiverCallDialog(BuildContext context) {
+    final currentLang = LocalizationService.instance.currentLanguage;
     AudioNarrationService.instance.speak(
       'Calling Caregiver Anita Kumar. Please hold on a moment.',
-      language: AppLanguage.english,
+      language: currentLang,
     );
 
     showDialog(
@@ -1172,7 +1226,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'GENTLE ACTIVITIES',
+                  LocalizationService.tr('gentle_activities'),
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 11.0,
                     fontWeight: FontWeight.w800,
@@ -1182,7 +1236,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Games & Exercises',
+                  LocalizationService.tr('games_exercises'),
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 32.0,
                     fontWeight: FontWeight.w800,
@@ -1192,7 +1246,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Enjoyable cognitive exercises designed to strengthen memory and motor calm.',
+                  LocalizationService.tr('games_sub'),
                   style: GoogleFonts.inter(
                     fontSize: 14.5,
                     color: AppTheme.textSecondary,
@@ -1214,12 +1268,12 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         _buildActivityItemCard(
           emoji: '☕',
           tag: 'CLINICAL ADL PROCEDURAL REHABILITATION',
-          title: 'Daily Routine & Life Sequencer',
-          description: 'Rebuild step-by-step memory for familiar everyday activities (Making Morning Chai, Watering Plants, Getting Ready).',
+          title: LocalizationService.tr('routine_sequencer'),
+          description: LocalizationService.tr('routine_sub'),
           duration: '3–5 minutes',
           difficulty: 'AI-Adaptive (3–5 Steps)',
           buttonColor: const Color(0xFFE65100),
-          buttonText: 'Play Routine Sequencer',
+          buttonText: LocalizationService.tr('play_routine'),
           onPlay: _startRoutineSequencer,
         ),
 
@@ -1229,12 +1283,12 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         _buildActivityItemCard(
           emoji: '🧠',
           tag: 'WORKING MEMORY',
-          title: 'Memory Match Activity',
-          description: 'Turn over gentle pairs of colorful items at your own comfortable pace.',
+          title: LocalizationService.tr('memory_match'),
+          description: LocalizationService.tr('memory_match_sub'),
           duration: '5 minutes',
           difficulty: '$_currentDifficultyLevel${_isAdaptiveMode ? " (AI Adaptive)" : ""}',
           buttonColor: AppTheme.forestGreen,
-          buttonText: 'Play Memory Match',
+          buttonText: LocalizationService.tr('play_memory_match'),
           onPlay: _startMemoryMatch,
         ),
       ],
