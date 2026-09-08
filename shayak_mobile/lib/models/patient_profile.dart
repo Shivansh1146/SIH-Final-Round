@@ -412,7 +412,18 @@ class DoctorFeedback {
       final box = Hive.box('user_preferences');
       final saved = box.get('doctor_feedback_list');
       if (saved != null && saved is List && saved.isNotEmpty) {
-        return saved.map((e) => DoctorFeedback.fromMap(Map<dynamic, dynamic>.from(e))).toList();
+        final list = saved.map((e) => DoctorFeedback.fromMap(Map<dynamic, dynamic>.from(e))).toList();
+        bool added = false;
+        for (final seed in defaultSeedFeedback) {
+          if (!list.any((f) => f.id == seed.id)) {
+            list.add(seed);
+            added = true;
+          }
+        }
+        if (added) {
+          saveAllFeedback(list);
+        }
+        return list;
       }
     } catch (_) {}
 
@@ -495,6 +506,23 @@ class DoctorFeedback {
           ],
           recommendedDifficulty: 'Level 1 (Gentle)',
           submittedAt: DateTime.now().subtract(const Duration(days: 4, hours: 2)),
+        ),
+        DoctorFeedback(
+          id: 'df-3',
+          patientId: 'patient-tenzin',
+          doctorName: 'Dr. Tashi Norbu, MD',
+          hospitalOrClinic: 'Arunachal Neuro-Geriatric Institute',
+          specialty: 'Movement Disorders & Neuro-Rehabilitation',
+          clinicalImpression: 'Postural Tremors Stabilized with Adaptive Utensil',
+          feedbackNotes: 'Kinematic telemetry demonstrates robust stabilization (84/100 motor tremor neutralization). Clock contour reproduction remains preserved with minimal drawing hesitations. Memory match adherence shows consistent 81% accuracy. Continue assistive eating utensils and motor dexterity exercises.',
+          prescribedDirectives: [
+            'Daily 15-minute kinematic utensil stabilization exercises.',
+            'Maintain visual search and clock drawing drills 3x weekly.',
+            'Encourage supervised morning outdoor walks for gait symmetry.',
+            'Follow-up evaluation scheduled in 6 weeks.'
+          ],
+          recommendedDifficulty: 'Level 2 (Moderate)',
+          submittedAt: DateTime.now().subtract(const Duration(days: 3, hours: 5)),
         ),
       ];
 }
@@ -581,7 +609,18 @@ class DoctorAppointment {
       final box = Hive.box('user_preferences');
       final saved = box.get('doctor_appointments_list');
       if (saved != null && saved is List && saved.isNotEmpty) {
-        return saved.map((e) => DoctorAppointment.fromMap(Map<dynamic, dynamic>.from(e))).toList();
+        final list = saved.map((e) => DoctorAppointment.fromMap(Map<dynamic, dynamic>.from(e))).toList();
+        bool added = false;
+        for (final seed in defaultSeedAppointments) {
+          if (!list.any((a) => a.id == seed.id)) {
+            list.add(seed);
+            added = true;
+          }
+        }
+        if (added) {
+          saveAllAppointments(list);
+        }
+        return list;
       }
     } catch (_) {}
 
@@ -735,6 +774,22 @@ class DoctorAppointment {
           reasonForVisit: 'Follow-up on morning routine orientation and Memory Lane recall progress.',
           status: 'Confirmed',
           bookedAt: DateTime.now().subtract(const Duration(days: 2)),
+        ),
+        DoctorAppointment(
+          id: 'apt-3',
+          patientId: 'patient-tenzin',
+          patientName: 'Tenzin Dorjee',
+          doctorName: 'Dr. Tashi Norbu, MD',
+          clinicOrHospital: 'Arunachal Neuro-Geriatric Institute',
+          appointmentType: 'Kinematic Tremor & Gait Review',
+          scheduledDate: DateTime.now().add(const Duration(days: 4)),
+          timeSlot: '10:00 AM',
+          caregiverName: 'Pema Dorjee',
+          caregiverPhone: '+919862012345',
+          reasonForVisit: 'Kinematic bio-feedback sensor calibration and postural stability follow-up.',
+          status: 'Confirmed',
+          doctorFeedbackForCaregiver: 'Confirmed for 10:00 AM. Please bring the smart utensil sensor log and recent gait notes.',
+          bookedAt: DateTime.now().subtract(const Duration(days: 1, hours: 3)),
         ),
       ];
 }

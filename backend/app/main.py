@@ -322,6 +322,22 @@ appointments_store: list[dict] = [
         "doctor_feedback_for_caregiver": None,
         "booked_at": datetime.now(timezone.utc).isoformat(),
     },
+    {
+        "id": "apt-3",
+        "patient_id": "patient-tenzin",
+        "patient_name": "Tenzin Dorjee",
+        "doctor_name": "Dr. Tashi Norbu, MD",
+        "clinic_or_hospital": "Arunachal Neuro-Geriatric Institute",
+        "appointment_type": "Kinematic Tremor & Gait Review",
+        "scheduled_date": "2026-09-13T10:00:00Z",
+        "time_slot": "10:00 AM",
+        "caregiver_name": "Pema Dorjee",
+        "caregiver_phone": "+91 98620 12345",
+        "reason_for_visit": "Kinematic bio-feedback sensor calibration and postural stability follow-up.",
+        "status": "Confirmed",
+        "doctor_feedback_for_caregiver": "Confirmed for 10:00 AM. Please bring the smart utensil sensor log and recent gait notes.",
+        "booked_at": datetime.now(timezone.utc).isoformat(),
+    },
 ]
 
 clinical_feedback_store: list[dict] = [
@@ -341,7 +357,40 @@ clinical_feedback_store: list[dict] = [
         ],
         "recommended_difficulty": "Level 2 (Moderate)",
         "submitted_at": datetime.now(timezone.utc).isoformat(),
-    }
+    },
+    {
+        "id": "df-2",
+        "patient_id": "patient-monalisa",
+        "doctor_name": "Dr. Priya Sengupta, MD",
+        "hospital_or_clinic": "Guwahati Neurological Institute",
+        "specialty": "Geriatric Psychiatry",
+        "clinical_impression": "Mild Attentional Fluctuations",
+        "feedback_notes": "Mild procedural sequence hesitations observed in morning routines. Reminiscence therapy (Memory Lane) shows strong emotional grounding and positive autobiographical speech recall.",
+        "prescribed_directives": [
+            "Prioritize Memory Lane and Local Language Naming games in the morning hours.",
+            "Ensure caregiver assistance during complex procedural sequences.",
+            "Hydration check: at least 1.8 liters daily.",
+        ],
+        "recommended_difficulty": "Level 1 (Gentle)",
+        "submitted_at": datetime.now(timezone.utc).isoformat(),
+    },
+    {
+        "id": "df-3",
+        "patient_id": "patient-tenzin",
+        "doctor_name": "Dr. Tashi Norbu, MD",
+        "hospital_or_clinic": "Arunachal Neuro-Geriatric Institute",
+        "specialty": "Movement Disorders & Neuro-Rehabilitation",
+        "clinical_impression": "Postural Tremors Stabilized with Adaptive Utensil",
+        "feedback_notes": "Kinematic telemetry demonstrates robust stabilization (84/100 motor tremor neutralization). Clock contour reproduction remains preserved with minimal drawing hesitations. Memory match adherence shows consistent 81% accuracy. Continue assistive eating utensils and motor dexterity exercises.",
+        "prescribed_directives": [
+            "Daily 15-minute kinematic utensil stabilization exercises.",
+            "Maintain visual search and clock drawing drills 3x weekly.",
+            "Encourage supervised morning outdoor walks for gait symmetry.",
+            "Follow-up evaluation scheduled in 6 weeks.",
+        ],
+        "recommended_difficulty": "Level 2 (Moderate)",
+        "submitted_at": datetime.now(timezone.utc).isoformat(),
+    },
 ]
 
 patient_medical_notes_store: dict[str, str] = {

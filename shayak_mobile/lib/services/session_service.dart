@@ -80,16 +80,15 @@ class SessionService extends ChangeNotifier {
   /// Returns all sessions for the active patient, most recent first.
   List<GameSession> getSessionsFor(String patientId) {
     try {
-      if (patientId == 'patient-ramesh' || patientId == 'PT-9042') {
-        ensureDemoDataSeeded(patientId: patientId);
-      }
+      ensureDemoDataSeeded(patientId: patientId);
       final box = Hive.box(_boxKey);
       final raw = box.get(_hiveKey);
       if (raw is! List) return [];
+      final target = (patientId == 'PT-9042') ? 'patient-ramesh' : patientId;
       return raw
           .cast<Map<dynamic, dynamic>>()
           .map(GameSession.fromMap)
-          .where((s) => s.patientId == patientId || (patientId == 'PT-9042' && s.patientId == 'patient-ramesh'))
+          .where((s) => s.patientId == target || (target == 'patient-ramesh' && s.patientId == 'PT-9042'))
           .toList()
         ..sort((a, b) => b.playedAt.compareTo(a.playedAt));
     } catch (e) {
@@ -167,8 +166,8 @@ class SessionService extends ChangeNotifier {
     }
   }
 
-  /// Seeds initial demonstration sessions for 'patient-ramesh' / 'PT-9042'
-  /// so fresh installs show realistic data for Ramesh, while any new patient starts at 0.
+  /// Seeds initial demonstration sessions for all demo patient profiles
+  /// so doctors and caregivers immediately see rich longitudinal performance data.
   void ensureDemoDataSeeded({String patientId = 'patient-ramesh', bool forceRefresh = false}) {
     try {
       final box = Hive.box(_boxKey);
@@ -177,43 +176,51 @@ class SessionService extends ChangeNotifier {
       if (raw is List) {
         all.addAll(raw.cast<Map<dynamic, dynamic>>());
       }
-      final targetId = patientId == 'PT-9042' ? 'patient-ramesh' : patientId;
-      final rameshSessions =
-          all.where((m) => m['patientId'] == targetId).toList();
-
+      
+      final demoProfiles = ['patient-ramesh', 'patient-monalisa', 'patient-tenzin'];
       final now = DateTime.now();
-      bool needsReseed = rameshSessions.isEmpty || forceRefresh;
-      if (!needsReseed) {
-        final latestPlayed = DateTime.tryParse(rameshSessions.last['playedAt'] ?? '');
-        if (latestPlayed != null &&
-            (latestPlayed.day != now.day ||
-                latestPlayed.month != now.month ||
-                latestPlayed.year != now.year)) {
-          needsReseed = true;
-        }
-      }
 
-      if (needsReseed) {
-        all.removeWhere((m) => m['patientId'] == targetId);
-        final demoAccuracies = [0.65, 0.70, 0.68, 0.74, 0.72, 0.78, 0.81];
-        final demoResponses = [2.8, 2.5, 2.6, 2.3, 2.4, 2.1, 1.9];
-        for (int i = 0; i < demoAccuracies.length; i++) {
-          final sessionTime = (i == demoAccuracies.length - 1)
-              ? now.subtract(const Duration(minutes: 32))
-              : now.subtract(Duration(days: demoAccuracies.length - 1 - i, hours: 2));
-          final s = GameSession(
-            sessionId: 'demo-ramesh-$i',
-            patientId: targetId,
-            gameType: i.isEven ? 'memory_match' : 'clock_drawing',
-            playedAt: sessionTime,
-            accuracyRatio: demoAccuracies[i],
-            responseTimeSec: demoResponses[i],
-            totalMoves: 12 + i,
-          );
-          all.add(s.toMap());
+      for (final pid in demoProfiles) {
+        final existing = all.where((m) => m['patientId'] == pid).toList();
+        if (existing.isEmpty || forceRefresh) {
+          all.removeWhere((m) => m['patientId'] == pid);
+
+          final List<double> accuracies;
+          final List<double> responses;
+          final List<String> gameTypes;
+
+          if (pid == 'patient-tenzin') {
+            accuracies = [0.76, 0.82, 0.80, 0.85, 0.79, 0.84, 0.81];
+            responses = [2.4, 2.1, 2.5, 1.8, 2.3, 1.9, 2.0];
+            gameTypes = ['memory_match', 'clock_drawing', 'spot_the_difference', 'clock_drawing', 'memory_match', 'spot_the_difference', 'clock_drawing'];
+          } else if (pid == 'patient-monalisa') {
+            accuracies = [0.72, 0.78, 0.75, 0.82, 0.80, 0.85, 0.83];
+            responses = [3.1, 2.8, 2.9, 2.4, 2.6, 2.2, 2.3];
+            gameTypes = ['memory_story', 'local_language_naming', 'memory_match', 'memory_story', 'local_language_naming', 'memory_match', 'memory_story'];
+          } else {
+            accuracies = [0.65, 0.70, 0.68, 0.74, 0.72, 0.78, 0.81];
+            responses = [2.8, 2.5, 2.6, 2.3, 2.4, 2.1, 1.9];
+            gameTypes = ['memory_match', 'clock_drawing', 'memory_match', 'clock_drawing', 'memory_match', 'clock_drawing', 'memory_match'];
+          }
+
+          for (int i = 0; i < accuracies.length; i++) {
+            final sessionTime = (i == accuracies.length - 1)
+                ? now.subtract(const Duration(minutes: 32))
+                : now.subtract(Duration(days: accuracies.length - 1 - i, hours: 2));
+            final s = GameSession(
+              sessionId: 'demo-$pid-$i',
+              patientId: pid,
+              gameType: gameTypes[i % gameTypes.length],
+              playedAt: sessionTime,
+              accuracyRatio: accuracies[i],
+              responseTimeSec: responses[i],
+              totalMoves: 12 + i,
+            );
+            all.add(s.toMap());
+          }
         }
-        box.put(_hiveKey, all);
       }
+      box.put(_hiveKey, all);
     } catch (e) {
       debugPrint('[SessionService] seed error: $e');
     }
