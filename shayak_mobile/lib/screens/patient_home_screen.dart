@@ -373,48 +373,27 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                       color: AppTheme.textSecondary,
                     ),
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed: _playListenAudio,
-                        icon: Icon(
-                          _isPlayingAudio ? Icons.volume_up_rounded : Icons.volume_down_rounded,
-                          size: 15,
-                          color: AppTheme.forestGreen,
-                        ),
-                        label: Text(
-                          LocalizationService.tr('listen', lang),
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.forestGreen,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          side: const BorderSide(color: AppTheme.surfaceBorder),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                        ),
+                  OutlinedButton.icon(
+                    onPressed: _playListenAudio,
+                    icon: Icon(
+                      _isPlayingAudio ? Icons.volume_up_rounded : Icons.volume_down_rounded,
+                      size: 15,
+                      color: AppTheme.forestGreen,
+                    ),
+                    label: Text(
+                      LocalizationService.tr('listen', lang),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.forestGreen,
                       ),
-                      const SizedBox(width: 6),
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppTheme.surfaceBorder),
-                        ),
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          tooltip: 'Language & Voice Settings',
-                          icon: const Icon(Icons.tune_rounded, size: 16, color: AppTheme.textSecondary),
-                          onPressed: () => LocalizationService.showLanguageDialog(context),
-                        ),
-                      ),
-                    ],
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: AppTheme.surfaceBorder),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                    ),
                   ),
                 ],
               ),
@@ -490,48 +469,28 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                 ),
               ),
 
-              // Right Actions: Listen & Adjust
-              Row(
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: _playListenAudio,
-                    icon: Icon(
-                      _isPlayingAudio ? Icons.volume_up_rounded : Icons.volume_down_rounded,
-                      size: 16,
-                      color: AppTheme.forestGreen,
-                    ),
-                    label: Text(
-                      LocalizationService.tr('listen', lang),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.forestGreen,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: const BorderSide(color: AppTheme.surfaceBorder),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                    ),
+              // Right Action: Listen
+              OutlinedButton.icon(
+                onPressed: _playListenAudio,
+                icon: Icon(
+                  _isPlayingAudio ? Icons.volume_up_rounded : Icons.volume_down_rounded,
+                  size: 16,
+                  color: AppTheme.forestGreen,
+                ),
+                label: Text(
+                  LocalizationService.tr('listen', lang),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.forestGreen,
                   ),
-                  const SizedBox(width: 8),
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppTheme.surfaceBorder),
-                    ),
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      tooltip: 'Language & Voice Settings',
-                      icon: const Icon(Icons.tune_rounded, size: 17, color: AppTheme.textSecondary),
-                      onPressed: () => LocalizationService.showLanguageDialog(context),
-                    ),
-                  ),
-                ],
+                ),
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  side: const BorderSide(color: AppTheme.surfaceBorder),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                ),
               ),
             ],
           ),
