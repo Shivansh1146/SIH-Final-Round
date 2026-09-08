@@ -7,7 +7,7 @@ class AppSidebar extends StatelessWidget {
   final bool isCaregiver;
   final int selectedIndex;
   final ValueChanged<int> onSelectIndex;
-  final VoidCallback onResetData;
+  final VoidCallback? onResetData;
   final VoidCallback? onHelp;
   final VoidCallback? onAccessibility;
 
@@ -16,7 +16,7 @@ class AppSidebar extends StatelessWidget {
     required this.isCaregiver,
     required this.selectedIndex,
     required this.onSelectIndex,
-    required this.onResetData,
+    this.onResetData,
     this.onHelp,
     this.onAccessibility,
   });
@@ -122,37 +122,6 @@ class AppSidebar extends StatelessWidget {
                   onTap: onAccessibility ?? () => _showAccessibilityDialog(context),
                 ),
               ],
-              const SizedBox(height: 10),
-              InkWell(
-                onTap: () {
-                  if (Scaffold.maybeOf(context)?.isDrawerOpen ?? false) {
-                    Navigator.of(context).pop();
-                  }
-                  onResetData();
-                },
-                borderRadius: BorderRadius.circular(10),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.auto_fix_high_rounded,
-                        size: 16,
-                        color: AppTheme.warmTerracotta,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Reset demo data',
-                        style: GoogleFonts.inter(
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.warmTerracotta,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ],
           ),
         ),
