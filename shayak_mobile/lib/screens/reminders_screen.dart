@@ -1,7 +1,5 @@
-// reminders_screen.dart — self-contained Hive-backed version
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import '../models/reminder_item.dart';
 import '../models/patient_profile.dart';
 import '../services/reminder_service.dart';
@@ -33,7 +31,8 @@ class _RemindersScreenState extends State<RemindersScreen> {
   @override
   void initState() {
     super.initState();
-    _loadFromStorage();
+    _syncFromService();
+    ReminderService.instance.addListener(_syncFromService);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ReminderService.instance.initialize(context);
@@ -41,43 +40,28 @@ class _RemindersScreenState extends State<RemindersScreen> {
     });
   }
 
-  void _loadFromStorage() {
-    try {
-      final box = Hive.box('user_preferences');
-      final saved = box.get('saved_reminders');
-      if (saved != null && saved is List && saved.isNotEmpty) {
-        setState(() {
-          _items = saved
-              .map((e) => ReminderItem.fromMap(Map<dynamic, dynamic>.from(e)))
-              .toList();
-        });
-        return;
-      }
-    } catch (_) {}
-    // First launch — seed defaults
-    setState(() {
-      _items = ReminderItem.defaultReminders;
-    });
-    _saveToStorage();
+  @override
+  void dispose() {
+    ReminderService.instance.removeListener(_syncFromService);
+    super.dispose();
   }
 
-  void _saveToStorage() {
-    try {
-      final box = Hive.box('user_preferences');
-      final listMap = _items.map((e) => e.toMap()).toList();
-      box.put('saved_reminders', listMap);
-    } catch (_) {}
-    // Notify parent (optional)
-    widget.onRemindersUpdated?.call(List.from(_items));
+  void _syncFromService() {
+    if (mounted) {
+      setState(() {
+        _items = List.from(ReminderService.instance.reminders);
+      });
+      widget.onRemindersUpdated?.call(List.from(_items));
+    }
   }
 
   void _toggleComplete(int index) {
-    setState(() {
-      _items[index].isCompleted = !_items[index].isCompleted;
-    });
-    _saveToStorage();
+    if (index < 0 || index >= _items.length) return;
+    final item = _items[index];
+    final willBeCompleted = !item.isCompleted;
+    ReminderService.instance.toggleComplete(item.id);
 
-    if (_items[index].isCompleted) {
+    if (willBeCompleted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -85,7 +69,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
               const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
               const SizedBox(width: 10),
               Text(
-                'Completed: "${_items[index].title}"',
+                'Completed: "${item.title}"',
                 style: GoogleFonts.inter(fontWeight: FontWeight.w600),
               ),
             ],
@@ -100,11 +84,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
   }
 
   void _deleteReminder(int index) {
+    if (index < 0 || index >= _items.length) return;
     final deleted = _items[index];
-    setState(() {
-      _items.removeAt(index);
-    });
-    _saveToStorage();
+    ReminderService.instance.deleteReminder(deleted.id);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -113,10 +95,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
           label: 'Undo',
           textColor: AppTheme.warmPeach,
           onPressed: () {
-            setState(() {
-              _items.insert(index, deleted);
-            });
-            _saveToStorage();
+            ReminderService.instance.addReminder(deleted);
           },
         ),
         backgroundColor: AppTheme.forestGreen,
@@ -474,22 +453,11 @@ class _RemindersScreenState extends State<RemindersScreen> {
                           isCompleted: existingItem?.isCompleted ?? false,
                         );
 
-                        setState(() {
-                          if (existingItem != null) {
-                            final idx = _items.indexWhere((r) => r.id == existingItem.id);
-                            if (idx != -1) _items[idx] = newItem;
-                          } else {
-                            _items.add(newItem);
-                          }
-                          // Sort by time
-                          _items.sort((a, b) {
-                            final aMin = a.time.hour * 60 + a.time.minute;
-                            final bMin = b.time.hour * 60 + b.time.minute;
-                            return aMin.compareTo(bMin);
-                          });
-                        });
-                        _saveToStorage();
-                        ReminderService.instance.loadReminders();
+                        if (existingItem != null) {
+                          ReminderService.instance.updateReminder(newItem);
+                        } else {
+                          ReminderService.instance.addReminder(newItem);
+                        }
 
                         Navigator.pop(ctx);
                         ScaffoldMessenger.of(context).showSnackBar(

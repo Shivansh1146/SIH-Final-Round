@@ -7,6 +7,8 @@ import '../widgets/app_top_bar.dart';
 import '../widgets/app_sidebar.dart';
 import '../models/patient_profile.dart';
 import '../services/audio_narration_service.dart';
+import '../services/reminder_service.dart';
+import 'reminders_screen.dart';
 import 'memory_match_screen.dart';
 import 'clock_canvas_screen.dart';
 
@@ -35,26 +37,28 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   List<dynamic> _recentSessions = [];
   bool _isLoadingBackend = false;
 
-  // Reminders interactive check list
-  final List<Map<String, dynamic>> _reminders = [
-    {'title': 'Morning blood pressure tablet', 'time': '08:00 AM', 'done': true, 'emoji': '💊'},
-    {'title': 'Gentle 15-minute garden walk', 'time': '09:30 AM', 'done': true, 'emoji': '🌿'},
-    {'title': 'Afternoon hydration & warm tea', 'time': '02:00 PM', 'done': false, 'emoji': '☕'},
-    {'title': 'Evening memory exercise', 'time': '05:30 PM', 'done': false, 'emoji': '🧠'},
-    {'title': 'Night multivitamin & water', 'time': '08:30 PM', 'done': false, 'emoji': '💧'},
-  ];
-
   @override
   void initState() {
     super.initState();
     _initActiveProfile();
     PatientProfile.activeProfileNotifier.addListener(_onProfileChanged);
+    ReminderService.instance.addListener(_onRemindersUpdated);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ReminderService.instance.initialize(context);
+      }
+    });
   }
 
   @override
   void dispose() {
     PatientProfile.activeProfileNotifier.removeListener(_onProfileChanged);
+    ReminderService.instance.removeListener(_onRemindersUpdated);
     super.dispose();
+  }
+
+  void _onRemindersUpdated() {
+    if (mounted) setState(() {});
   }
 
   void _onProfileChanged() {
@@ -524,6 +528,10 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   }
 
   Widget _buildRemindersCard(BuildContext context) {
+    final allReminders = ReminderService.instance.reminders;
+    final pending = allReminders.where((r) => !r.isCompleted).toList();
+    final totalCount = allReminders.length;
+
     return Container(
       padding: const EdgeInsets.all(22.0),
       decoration: BoxDecoration(
@@ -540,14 +548,36 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'TODAY',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.textSecondary,
-                      letterSpacing: 0.8,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        'TODAY',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.textSecondary,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      if (totalCount > 0) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: pending.isEmpty ? AppTheme.sageLight : AppTheme.pastelYellow,
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: Text(
+                            pending.isEmpty ? 'All Done 🎉' : '${pending.length} pending',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: pending.isEmpty ? AppTheme.forestGreen : AppTheme.warmTerracotta,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -560,69 +590,128 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   ),
                 ],
               ),
-              TextButton(
-                onPressed: () {},
-                child: Text(
-                  'View all',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13.0,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.forestGreen,
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () => setState(() => _sidebarIndex = 2),
+                    child: Text(
+                      'View all ($totalCount)',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13.0,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.forestGreen,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
 
           const SizedBox(height: 14),
 
-          // Reminder List Item
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppTheme.background,
+          if (allReminders.isEmpty)
+            InkWell(
+              onTap: () => setState(() => _sidebarIndex = 2),
               borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Center(
-                    child: Text('💊', style: TextStyle(fontSize: 18)),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: AppTheme.background,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    const Text('🌿', style: TextStyle(fontSize: 20)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'No reminders set. Tap to add your daily routine.',
+                        style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary),
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_rounded, size: 16, color: AppTheme.forestGreen),
+                  ],
+                ),
+              ),
+            )
+          else ...[
+            ...allReminders.take(3).map((rem) {
+              final isDone = rem.isCompleted;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: InkWell(
+                  onTap: () {
+                    ReminderService.instance.toggleComplete(rem.id);
+                  },
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isDone ? AppTheme.background.withOpacity(0.6) : AppTheme.background,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isDone ? AppTheme.surfaceBorder : AppTheme.sageBorder.withOpacity(0.5),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: isDone ? Colors.white : AppTheme.sageLight,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Center(
+                            child: Text(rem.emoji, style: const TextStyle(fontSize: 17)),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                rem.title,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDone ? AppTheme.textSecondary : AppTheme.textPrimary,
+                                  decoration: isDone ? TextDecoration.lineThrough : null,
+                                ),
+                              ),
+                              Text(
+                                rem.formattedTime,
+                                style: GoogleFonts.inter(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDone ? AppTheme.textLight : AppTheme.warmTerracotta,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: Icon(
+                            isDone ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                            color: isDone ? AppTheme.forestGreen : AppTheme.textSecondary,
+                            size: 22,
+                          ),
+                          onPressed: () {
+                            ReminderService.instance.toggleComplete(rem.id);
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Morning medicine',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        '08:00',
-                        style: GoogleFonts.inter(
-                          fontSize: 12.0,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.notifications_none_rounded, size: 18, color: AppTheme.textSecondary),
-              ],
-            ),
-          ),
+              );
+            }),
+          ],
         ],
       ),
     );
@@ -1054,137 +1143,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   }
 
   Widget _buildRemindersView(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'DAILY SCHEDULE',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11.0,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.forestGreen,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Reminders & Care Plan',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 32.0,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.forestGreen,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Today, ${DateTime.now().day} September · Steady daily rhythm supported by Anita.',
-                  style: GoogleFonts.inter(fontSize: 14.5, color: AppTheme.textSecondary),
-                ),
-              ],
-            ),
-            ElevatedButton.icon(
-              onPressed: () {
-                _playListenAudio();
-              },
-              icon: const Icon(Icons.volume_up_rounded, size: 16),
-              label: const Text('Read Schedule Aloud'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.sageLight,
-                foregroundColor: AppTheme.forestGreen,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 24),
-
-        // Reminders List
-        Container(
-          padding: const EdgeInsets.all(20.0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(22.0),
-            border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
-          ),
-          child: ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _reminders.length,
-            separatorBuilder: (_, __) => const Divider(height: 20, color: AppTheme.background),
-            itemBuilder: (context, index) {
-              final item = _reminders[index];
-              final isDone = item['done'] as bool;
-
-              return InkWell(
-                onTap: () {
-                  setState(() {
-                    item['done'] = !isDone;
-                  });
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          color: isDone ? AppTheme.sageLight : AppTheme.background,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Center(
-                          child: Text(item['emoji'] as String, style: const TextStyle(fontSize: 20)),
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item['title'] as String,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 15.0,
-                                fontWeight: FontWeight.w700,
-                                color: isDone ? AppTheme.textSecondary : AppTheme.textPrimary,
-                                decoration: isDone ? TextDecoration.lineThrough : null,
-                              ),
-                            ),
-                            Text(
-                              item['time'] as String,
-                              style: GoogleFonts.inter(fontSize: 12.5, color: AppTheme.textSecondary),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Checkbox(
-                        value: isDone,
-                        activeColor: AppTheme.forestGreen,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                        onChanged: (val) {
-                          setState(() {
-                            item['done'] = val ?? false;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
+    return const RemindersScreen(isEmbedded: true);
   }
 
   Widget _buildProgressView(BuildContext context) {
