@@ -12,6 +12,95 @@ enum GameDifficultyTier {
   master,
 }
 
+class _CardThemeInfo {
+  final String emoji;
+  final String title;
+  final List<Color> gradient;
+  final Color badgeColor;
+  final Color shadowColor;
+
+  const _CardThemeInfo({
+    required this.emoji,
+    required this.title,
+    required this.gradient,
+    required this.badgeColor,
+    required this.shadowColor,
+  });
+}
+
+final Map<String, _CardThemeInfo> _kCardThemes = {
+  '🍎': const _CardThemeInfo(
+    emoji: '🍎',
+    title: 'Apple',
+    gradient: [Color(0xFFFF416C), Color(0xFFFF4B2B)],
+    badgeColor: Color(0xFFFFEBEE),
+    shadowColor: Color(0x66FF416C),
+  ),
+  '🌺': const _CardThemeInfo(
+    emoji: '🌺',
+    title: 'Flower',
+    gradient: [Color(0xFFDA22FF), Color(0xFF9733EE)],
+    badgeColor: Color(0xFFF3E5F5),
+    shadowColor: Color(0x66DA22FF),
+  ),
+  '☕': const _CardThemeInfo(
+    emoji: '☕',
+    title: 'Coffee',
+    gradient: [Color(0xFFF7971E), Color(0xFFFFD200)],
+    badgeColor: Color(0xFFFFF8E1),
+    shadowColor: Color(0x66F7971E),
+  ),
+  '📖': const _CardThemeInfo(
+    emoji: '📖',
+    title: 'Story',
+    gradient: [Color(0xFF00C6FF), Color(0xFF0072FF)],
+    badgeColor: Color(0xFFE1F5FE),
+    shadowColor: Color(0x6600C6FF),
+  ),
+  '🦚': const _CardThemeInfo(
+    emoji: '🦚',
+    title: 'Peacock',
+    gradient: [Color(0xFF11998E), Color(0xFF38EF7D)],
+    badgeColor: Color(0xFFE8F8F5),
+    shadowColor: Color(0x6611998E),
+  ),
+  '🔔': const _CardThemeInfo(
+    emoji: '🔔',
+    title: 'Bell',
+    gradient: [Color(0xFFFF8008), Color(0xFFFFC837)],
+    badgeColor: Color(0xFFFFF3E0),
+    shadowColor: Color(0x66FF8008),
+  ),
+  '🎨': const _CardThemeInfo(
+    emoji: '🎨',
+    title: 'Art',
+    gradient: [Color(0xFF8A2387), Color(0xFFE94057)],
+    badgeColor: Color(0xFFFCE4EC),
+    shadowColor: Color(0x66E94057),
+  ),
+  '🌟': const _CardThemeInfo(
+    emoji: '🌟',
+    title: 'Star',
+    gradient: [Color(0xFFFFB75E), Color(0xFFED8F03)],
+    badgeColor: Color(0xFFFFFDE7),
+    shadowColor: Color(0x66FFB75E),
+  ),
+  '🕊️': const _CardThemeInfo(
+    emoji: '🕊️',
+    title: 'Dove',
+    gradient: [Color(0xFF4CA1AF), Color(0xFFC4E0E5)],
+    badgeColor: Color(0xFFE0F7FA),
+    shadowColor: Color(0x664CA1AF),
+  ),
+  '🍋': const _CardThemeInfo(
+    emoji: '🍋',
+    title: 'Lemon',
+    gradient: [Color(0xFF56AB2F), Color(0xFFA8E063)],
+    badgeColor: Color(0xFFF1F8E9),
+    shadowColor: Color(0x6656AB2F),
+  ),
+};
+
 extension GameDifficultyTierExtension on GameDifficultyTier {
   String get label {
     switch (this) {
@@ -39,12 +128,38 @@ extension GameDifficultyTierExtension on GameDifficultyTier {
     }
   }
 
+  List<Color> get themeGradient {
+    switch (this) {
+      case GameDifficultyTier.gentle:
+        return const [Color(0xFF00B09B), Color(0xFF96C93D)];
+      case GameDifficultyTier.moderate:
+        return const [Color(0xFF2193B0), Color(0xFF6DD5ED)];
+      case GameDifficultyTier.challenging:
+        return const [Color(0xFF8E2DE2), Color(0xFF4A00E0)];
+      case GameDifficultyTier.master:
+        return const [Color(0xFFFF416C), Color(0xFFFF4B2B)];
+    }
+  }
+
+  Color get accentColor {
+    switch (this) {
+      case GameDifficultyTier.gentle:
+        return const Color(0xFF00A86B);
+      case GameDifficultyTier.moderate:
+        return const Color(0xFF0288D1);
+      case GameDifficultyTier.challenging:
+        return const Color(0xFF7B1FA2);
+      case GameDifficultyTier.master:
+        return const Color(0xFFE64A19);
+    }
+  }
+
   int get pairCount {
     switch (this) {
       case GameDifficultyTier.gentle:
         return 2; // 4 cards (2x2)
       case GameDifficultyTier.moderate:
-        return 4; // 8 cards (4x2 / 2x4)
+        return 4; // 8 cards (4x2)
       case GameDifficultyTier.challenging:
         return 6; // 12 cards (3x4)
       case GameDifficultyTier.master:
@@ -66,7 +181,6 @@ extension GameDifficultyTierExtension on GameDifficultyTier {
   }
 
   List<String> get availableEmojis {
-    // Curated high-contrast culturally grounded everyday symbols
     const all = ['🍎', '🌺', '☕', '📖', '🦚', '🔔', '🎨', '🌟', '🕊️', '🍋'];
     return all.sublist(0, pairCount);
   }
@@ -165,7 +279,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
 
       if (_cards[first].emoji == _cards[second].emoji) {
         // Match found!
-        Future.delayed(const Duration(milliseconds: 350), () {
+        Future.delayed(const Duration(milliseconds: 300), () {
           if (mounted) {
             setState(() {
               _cards[first].isMatched = true;
@@ -181,7 +295,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
         });
       } else {
         // No match
-        Future.delayed(const Duration(milliseconds: 800), () {
+        Future.delayed(const Duration(milliseconds: 750), () {
           if (mounted) {
             setState(() {
               _cards[first].isFlipped = false;
@@ -292,116 +406,167 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 64,
-              height: 64,
-              decoration: const BoxDecoration(
-                color: AppTheme.sageLight,
-                shape: BoxShape.circle,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
               ),
-              child: const Center(child: Text('🌟', style: TextStyle(fontSize: 32))),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Wonderful job!',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.forestGreen,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Completed ${_currentTier.pairCount} pairs in $_moves gentle turns ($durationSec seconds).',
-              style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textSecondary, height: 1.4),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 14),
-
-            // Performance and Adaptive Banner
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppTheme.sageLight.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppTheme.sageBorder),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Accuracy Score',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
-                      ),
-                      Text(
-                        '${score.toInt()}%',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.forestGreen),
-                      ),
-                    ],
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  if (_lastAdaptationMessage != null) ...[
-                    const Divider(height: 14),
-                    Text(
-                      _lastAdaptationMessage!,
-                      style: GoogleFonts.inter(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.forestGreen,
-                      ),
-                      textAlign: TextAlign.center,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFFD700).withOpacity(0.4),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
                     ),
                   ],
+                ),
+                child: const Center(child: Text('🏆', style: TextStyle(fontSize: 40))),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Spectacular Match!',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF1E293B),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Solved ${_currentTier.pairCount} pairs in $_moves turns ($durationSec seconds).',
+                style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF64748B), height: 1.4),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+
+              // Performance and Adaptive Banner
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      _currentTier.themeGradient[0].withOpacity(0.12),
+                      _currentTier.themeGradient[1].withOpacity(0.12),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: _currentTier.themeGradient[0].withOpacity(0.3)),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Accuracy Score',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF334155),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _currentTier.themeGradient[0],
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: Text(
+                            '${score.toInt()}%',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (_lastAdaptationMessage != null) ...[
+                      const Divider(height: 16),
+                      Text(
+                        _lastAdaptationMessage!,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF1E293B),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        setState(() {
+                          _currentTier = nextTier;
+                        });
+                        _initGame();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: BorderSide(color: _currentTier.themeGradient[0], width: 1.5),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                      ),
+                      child: Text(
+                        _isAdaptiveMode && nextTier != _currentTier ? 'Next Level 🚀' : 'Play Again 🔄',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w800,
+                          color: _currentTier.themeGradient[0],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        widget.onFinish();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0F172A),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                      ),
+                      child: Text('Done', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800)),
+                    ),
+                  ),
                 ],
               ),
-            ),
-
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      setState(() {
-                        _currentTier = nextTier;
-                      });
-                      _initGame();
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                    ),
-                    child: Text(_isAdaptiveMode && nextTier != _currentTier ? 'Next Level' : 'Play again'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      widget.onFinish();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.forestGreen,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                    ),
-                    child: const Text('Done'),
-                  ),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -430,27 +595,49 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: const Color(0xFFE2E8F0), height: 1),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppTheme.forestGreen),
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF1E293B)),
           onPressed: widget.onFinish,
         ),
-        title: Text(
-          'Memory Match Activity',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.forestGreen,
-          ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: _currentTier.themeGradient),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.extension_rounded, color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'Memory Match Activity',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+          ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: AppTheme.forestGreen),
-            tooltip: 'Restart',
+          IconButton.filledTonal(
+            icon: const Icon(Icons.refresh_rounded, size: 20),
+            tooltip: 'Restart Game',
             onPressed: _initGame,
+            style: IconButton.styleFrom(
+              backgroundColor: const Color(0xFFF1F5F9),
+              foregroundColor: const Color(0xFF334155),
+            ),
           ),
           const SizedBox(width: 12),
         ],
@@ -458,57 +645,33 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 820),
+            constraints: const BoxConstraints(maxWidth: 860),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 6.0),
+              padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 8.0),
               child: Column(
                 children: [
                   _buildDifficultyHeader(),
                   const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppTheme.surfaceBorder),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.02),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildStat('Turns', '$_moves', Icons.touch_app_rounded),
-                        Container(width: 1, height: 26, color: AppTheme.surfaceBorder),
-                        _buildStat('Matched', '$_matchesFound / ${_currentTier.pairCount}', Icons.auto_awesome_rounded),
-                        Container(width: 1, height: 26, color: AppTheme.surfaceBorder),
-                        _buildStat('Current Pace', _currentTier.shortTitle, Icons.speed_rounded),
-                      ],
-                    ),
-                  ),
+                  _buildColorfulStatsBar(),
                   const SizedBox(height: 12),
                   Expanded(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         final crossAxis = _currentTier.gridCrossAxisCount;
                         final rowCount = (_cards.length / crossAxis).ceil();
-                        final availableHeight = constraints.maxHeight - (rowCount - 1) * 10;
-                        final availableWidth = constraints.maxWidth - (crossAxis - 1) * 10;
+                        final availableHeight = constraints.maxHeight - (rowCount - 1) * 12;
+                        final availableWidth = constraints.maxWidth - (crossAxis - 1) * 12;
                         final cardWidth = availableWidth / crossAxis;
                         final cardHeight = availableHeight / rowCount;
-                        final ratio = (cardWidth / (cardHeight > 0 ? cardHeight : 1)).clamp(0.85, 1.25);
+                        final ratio = (cardWidth / (cardHeight > 0 ? cardHeight : 1)).clamp(0.75, 1.30);
 
                         return GridView.builder(
                           physics: const BouncingScrollPhysics(),
                           itemCount: _cards.length,
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: crossAxis,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
                             childAspectRatio: ratio,
                           ),
                           itemBuilder: (context, index) {
@@ -529,18 +692,113 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
     );
   }
 
+  Widget _buildColorfulStatsBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildStatPill(
+            label: 'Turns',
+            value: '$_moves',
+            icon: Icons.touch_app_rounded,
+            gradient: const [Color(0xFF3B82F6), Color(0xFF2563EB)],
+          ),
+          Container(width: 1, height: 28, color: const Color(0xFFE2E8F0)),
+          _buildStatPill(
+            label: 'Matched',
+            value: '$_matchesFound / ${_currentTier.pairCount}',
+            icon: Icons.stars_rounded,
+            gradient: const [Color(0xFFF59E0B), Color(0xFFD97706)],
+          ),
+          Container(width: 1, height: 28, color: const Color(0xFFE2E8F0)),
+          _buildStatPill(
+            label: 'Pace Tier',
+            value: _currentTier.shortTitle,
+            icon: Icons.bolt_rounded,
+            gradient: _currentTier.themeGradient,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatPill({
+    required String label,
+    required String value,
+    required IconData icon,
+    required List<Color> gradient,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: gradient),
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: gradient[0].withOpacity(0.35),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(icon, size: 18, color: Colors.white),
+        ),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF64748B),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildDifficultyHeader() {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.surfaceBorder),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withOpacity(0.03),
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -552,27 +810,33 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
             children: [
               Row(
                 children: [
-                  Icon(
-                    _isAdaptiveMode ? Icons.auto_awesome_rounded : Icons.tune_rounded,
-                    size: 18,
-                    color: _isAdaptiveMode ? AppTheme.forestGreen : AppTheme.warmTerracotta,
+                  Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: _isAdaptiveMode ? const Color(0xFFECFDF5) : const Color(0xFFFFF7ED),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      _isAdaptiveMode ? Icons.auto_awesome_rounded : Icons.tune_rounded,
+                      size: 16,
+                      color: _isAdaptiveMode ? const Color(0xFF10B981) : const Color(0xFFF97316),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    _isAdaptiveMode ? 'AI-Adaptive Pacing' : 'Manual Difficulty',
+                    _isAdaptiveMode ? 'AI-Adaptive Pacing' : 'Manual Pacing',
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF0F172A),
                     ),
                   ),
                 ],
               ),
               Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.background,
+                  color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(100),
-                  border: Border.all(color: AppTheme.surfaceBorder),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -607,15 +871,27 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 3.0),
                   child: InkWell(
                     onTap: () => _onManualDifficultySelected(tier),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
+                    borderRadius: BorderRadius.circular(14),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: isSelected ? AppTheme.forestGreen : AppTheme.background,
-                        borderRadius: BorderRadius.circular(12),
+                        gradient: isSelected ? LinearGradient(colors: tier.themeGradient) : null,
+                        color: isSelected ? null : const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: isSelected ? AppTheme.forestGreen : AppTheme.surfaceBorder,
+                          color: isSelected ? Colors.transparent : const Color(0xFFCBD5E1),
+                          width: isSelected ? 0 : 1,
                         ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: tier.themeGradient[0].withOpacity(0.4),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ]
+                            : null,
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -624,15 +900,17 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
                             tier.shortTitle,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 12.0,
-                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                              color: isSelected ? Colors.white : AppTheme.textPrimary,
+                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
+                              color: isSelected ? Colors.white : const Color(0xFF334155),
                             ),
                           ),
+                          const SizedBox(height: 2),
                           Text(
                             '${tier.pairCount * 2} Cards',
                             style: GoogleFonts.inter(
                               fontSize: 10.0,
-                              color: isSelected ? Colors.white.withOpacity(0.85) : AppTheme.textSecondary,
+                              fontWeight: FontWeight.w600,
+                              color: isSelected ? Colors.white.withOpacity(0.9) : const Color(0xFF64748B),
                             ),
                           ),
                         ],
@@ -657,17 +935,17 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(100),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         decoration: BoxDecoration(
-          color: isActive ? AppTheme.forestGreen : Colors.transparent,
+          color: isActive ? const Color(0xFF0F172A) : Colors.transparent,
           borderRadius: BorderRadius.circular(100),
         ),
         child: Text(
           label,
           style: GoogleFonts.plusJakartaSans(
-            fontSize: 12,
+            fontSize: 11.5,
             fontWeight: FontWeight.w700,
-            color: isActive ? Colors.white : AppTheme.textSecondary,
+            color: isActive ? Colors.white : const Color(0xFF64748B),
           ),
         ),
       ),
@@ -676,96 +954,176 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
 
   Widget _buildCardWidget(_CardItem card, int index) {
     final showFace = card.isFlipped || card.isMatched;
+    final theme = _kCardThemes[card.emoji] ??
+        const _CardThemeInfo(
+          emoji: '⭐',
+          title: 'Star',
+          gradient: [Color(0xFFFF9966), Color(0xFFFF5E62)],
+          badgeColor: Color(0xFFFFF3E0),
+          shadowColor: Color(0x66FF5E62),
+        );
 
     return GestureDetector(
       onTap: () => _onCardTap(index),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeInOut,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutBack,
         decoration: BoxDecoration(
-          color: showFace
-              ? (card.isMatched ? AppTheme.sageLight : Colors.white)
-              : AppTheme.sageLight.withOpacity(0.4),
-          borderRadius: BorderRadius.circular(18.0),
+          borderRadius: BorderRadius.circular(22.0),
+          gradient: showFace
+              ? LinearGradient(
+                  colors: theme.gradient,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : const LinearGradient(
+                  colors: [Color(0xFF1E293B), Color(0xFF334155)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
           border: Border.all(
             color: card.isMatched
-                ? AppTheme.forestGreen
-                : (showFace ? AppTheme.warmPeach : AppTheme.sageBorder),
-            width: card.isMatched ? 2.0 : 1.5,
+                ? const Color(0xFFFFD700)
+                : (showFace ? Colors.white.withOpacity(0.8) : const Color(0xFF475569)),
+            width: card.isMatched ? 3.0 : 1.5,
           ),
-          boxShadow: showFace
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : null,
-        ),
-        child: Center(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: showFace
-                ? Text(
-                    card.emoji,
-                    key: ValueKey('face_${card.id}'),
-                    style: TextStyle(
-                      fontSize: _currentTier == GameDifficultyTier.gentle ? 48.0 : 34.0,
-                    ),
-                  )
-                : Text(
-                    '🌿',
-                    key: ValueKey('back_${card.id}'),
-                    style: TextStyle(
-                      fontSize: _currentTier == GameDifficultyTier.gentle ? 36.0 : 26.0,
-                      color: AppTheme.forestGreen.withOpacity(0.6),
-                    ),
-                  ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStat(String label, String value, [IconData? icon]) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (icon != null) ...[
-          Container(
-            width: 28,
-            height: 28,
-            decoration: const BoxDecoration(
-              color: AppTheme.sageLight,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 15, color: AppTheme.forestGreen),
-          ),
-          const SizedBox(width: 8),
-        ],
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              value,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.forestGreen,
-              ),
-            ),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 11.0,
-                fontWeight: FontWeight.w500,
-                color: AppTheme.textSecondary,
-              ),
+          boxShadow: [
+            BoxShadow(
+              color: showFace ? theme.shadowColor : Colors.black.withOpacity(0.12),
+              blurRadius: showFace ? 14 : 8,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
-      ],
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22.0),
+          child: Stack(
+            children: [
+              // Background playful decorative shapes
+              Positioned(
+                top: -15,
+                right: -15,
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(showFace ? 0.15 : 0.05),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: -20,
+                left: -20,
+                child: Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(showFace ? 0.10 : 0.04),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+
+              // Card Content (Face vs Back)
+              Center(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 250),
+                  transitionBuilder: (child, animation) {
+                    return ScaleTransition(scale: animation, child: child);
+                  },
+                  child: showFace
+                      ? Column(
+                          key: ValueKey('face_${card.id}'),
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.92),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.15),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                card.emoji,
+                                style: TextStyle(
+                                  fontSize: _currentTier == GameDifficultyTier.gentle ? 44.0 : 32.0,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.25),
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: Text(
+                                card.isMatched ? 'MATCH! ⭐' : theme.title,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: card.isMatched ? const Color(0xFFFFD700) : Colors.white,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          key: ValueKey('back_${card.id}'),
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: _currentTier == GameDifficultyTier.gentle ? 56 : 42,
+                              height: _currentTier == GameDifficultyTier.gentle ? 56 : 42,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF38BDF8), Color(0xFF818CF8)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF38BDF8).withOpacity(0.4),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  Icons.star_rounded,
+                                  size: _currentTier == GameDifficultyTier.gentle ? 32 : 24,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'TAP ME',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF94A3B8),
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -783,3 +1141,4 @@ class _CardItem {
     this.isMatched = false,
   });
 }
+
