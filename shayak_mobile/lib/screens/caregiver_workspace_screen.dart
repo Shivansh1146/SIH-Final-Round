@@ -126,6 +126,22 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     } catch (_) {}
   }
 
+  void _handleResetDemoData() {
+    SessionService.instance.clearSessionsFor('patient-ramesh');
+    SessionService.instance.ensureDemoDataSeeded();
+    setState(() {
+      _caregiverDifficulty = 'Level 1 (Gentle)';
+      _caregiverAdaptiveMode = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Demo session state and caregiver metrics reset to default baseline.', style: GoogleFonts.inter()),
+        backgroundColor: AppTheme.forestGreen,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   void _simulateSync() {
     setState(() => _isSyncing = true);
     Future.delayed(const Duration(milliseconds: 700), () {
@@ -274,14 +290,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 onSelectIndex: (idx) {
                   setState(() => _sidebarIndex = idx);
                 },
-                onResetData: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Caregiver cache cleared and resynced.', style: GoogleFonts.inter()),
-                      backgroundColor: AppTheme.forestGreen,
-                    ),
-                  );
-                },
+                onResetData: _handleResetDemoData,
               ),
             )
           : null,
@@ -339,14 +348,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                       onSelectIndex: (idx) {
                         setState(() => _sidebarIndex = idx);
                       },
-                      onResetData: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Caregiver cache cleared and resynced.', style: GoogleFonts.inter()),
-                            backgroundColor: AppTheme.forestGreen,
-                          ),
-                        );
-                      },
+                      onResetData: _handleResetDemoData,
                     ),
 
                   Expanded(
