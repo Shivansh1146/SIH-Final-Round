@@ -791,6 +791,69 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
                 );
               },
             ),
+
+            // Doctor's Medical Profile Notes for this Particular Patient
+            ValueListenableBuilder<String?>(
+              valueListenable: PatientProfile.activeProfileNotifier,
+              builder: (context, _, __) {
+                final patient = PatientProfile.loadFromHive();
+                if (patient == null || patient.medicalNotes == null || patient.medicalNotes!.trim().isEmpty) {
+                  return const SizedBox.shrink();
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.only(top: 22.0),
+                  child: Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(isMobile ? 18.0 : 22.0),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFFBEB),
+                      borderRadius: BorderRadius.circular(24.0),
+                      border: Border.all(color: const Color(0xFFFDE68A), width: 1.2),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.description_rounded, size: 20, color: Color(0xFFB45309)),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                "Doctor's Clinical Notes (${patient.fullName})",
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 16.0,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF92400E),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFFCD34D)),
+                          ),
+                          child: Text(
+                            patient.medicalNotes!,
+                            style: GoogleFonts.inter(
+                              fontSize: 13.5,
+                              height: 1.5,
+                              color: const Color(0xFF451A03),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
           ],
         );
       },

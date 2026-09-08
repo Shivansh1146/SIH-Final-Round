@@ -1098,6 +1098,50 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
           ),
         ),
 
+        // Doctor's Medical Clinical Notes for Selected Patient
+        if (activePatient?.medicalNotes != null && activePatient!.medicalNotes!.trim().isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFBEB),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFFDE68A)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.description_rounded, size: 18, color: Color(0xFFB45309)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Doctor's Medical Record Notes:",
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF92400E),
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        activePatient!.medicalNotes!,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          height: 1.45,
+                          color: const Color(0xFF451A03),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+
         const SizedBox(height: 18),
 
         // 4 Stat Metric Cards Grid

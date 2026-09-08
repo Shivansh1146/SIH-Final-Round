@@ -33,6 +33,10 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   PatientProfile? _activeProfile;
   List<PatientProfile> _allPatients = [];
 
+  // Dedicated Doctor Medical Notes for Active Patient
+  final TextEditingController _medicalNotesController = TextEditingController();
+  bool _isSavingMedicalNotes = false;
+
   // Form State for Prescribing Feedback
   final TextEditingController _doctorNameController = TextEditingController(text: 'Dr. Debabrata Goswami, DM');
   final TextEditingController _hospitalController = TextEditingController(text: 'Assam Medical College & Hospital');
@@ -78,6 +82,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     if (_activeProfile == null && _allPatients.isNotEmpty) {
       _activeProfile = _allPatients.first;
     }
+    _medicalNotesController.text = _activeProfile?.medicalNotes ?? '';
   }
 
   void _onSelectPatient(String patientId) {
@@ -85,10 +90,51 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     setState(() {
       _activePatientId = patientId;
       _activeProfile = _allPatients.firstWhere((p) => p.id == patientId, orElse: () => _allPatients.first);
+      _medicalNotesController.text = _activeProfile?.medicalNotes ?? '';
       _notesController.clear();
       _currentDirectives.clear();
     });
     _fetchMlEvaluation();
+  }
+
+  void _savePatientMedicalNotes() {
+    if (_activeProfile == null) return;
+    setState(() => _isSavingMedicalNotes = true);
+
+    _activeProfile!.medicalNotes = _medicalNotesController.text.trim();
+    _activeProfile!.saveToHive();
+
+    // Also update in _allPatients list
+    final idx = _allPatients.indexWhere((p) => p.id == _activePatientId);
+    if (idx != -1) {
+      _allPatients[idx] = _activeProfile!;
+      PatientProfile.saveAllToHive(_allPatients);
+    }
+
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        setState(() => _isSavingMedicalNotes = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Doctor Notes for ${_activeProfile!.fullName} saved to patient record!',
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF059669),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    });
   }
 
   Future<void> _fetchMlEvaluation() async {
@@ -454,6 +500,205 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               ),
             ],
           ),
+
+          // Caregiver Information & Patient Snapshot Row
+          if (_activeProfile != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.people_alt_rounded, size: 18, color: Color(0xFF1D4ED8)),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Assigned Caregiver & Contact Details',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDBEAFE),
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: Text(
+                          _activeProfile!.linkCode,
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF1E40AF),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 8,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.person_pin_rounded, size: 15, color: Color(0xFF64748B)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Caregiver: ',
+                            style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
+                          ),
+                          Text(
+                            _activeProfile!.caregiverName?.isNotEmpty == true ? _activeProfile!.caregiverName! : 'Anita Kumar',
+                            style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B)),
+                          ),
+                          if (_activeProfile!.caregiverRelation?.isNotEmpty == true)
+                            Text(
+                              ' (${_activeProfile!.caregiverRelation})',
+                              style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF475569)),
+                            ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.phone_rounded, size: 15, color: Color(0xFF059669)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Emergency Phone: ',
+                            style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
+                          ),
+                          Text(
+                            _activeProfile!.caregiverPhone?.isNotEmpty == true ? _activeProfile!.caregiverPhone! : '+91 98450 12345',
+                            style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF059669)),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.location_on_rounded, size: 15, color: Color(0xFFD97706)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Location: ',
+                            style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
+                          ),
+                          Text(
+                            _activeProfile!.city?.isNotEmpty == true ? _activeProfile!.city! : 'Assam, India',
+                            style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.translate_rounded, size: 15, color: Color(0xFF7C3AED)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Language: ',
+                            style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
+                          ),
+                          Text(
+                            _activeProfile!.preferredLanguage.displayName,
+                            style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Doctor Medical Notes for this specific patient
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFBEB),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFFDE68A)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.note_alt_rounded, size: 18, color: Color(0xFFB45309)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "Doctor's Permanent Medical Notes for ${_activeProfile!.fullName}",
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF92400E),
+                          ),
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: _isSavingMedicalNotes ? null : _savePatientMedicalNotes,
+                        icon: _isSavingMedicalNotes
+                            ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : const Icon(Icons.save_rounded, size: 14),
+                        label: Text(
+                          _isSavingMedicalNotes ? 'Saving...' : 'Save Notes',
+                          style: GoogleFonts.plusJakartaSans(fontSize: 11.5, fontWeight: FontWeight.w700),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFB45309),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                          elevation: 0,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Clinical history, baseline neurological observations, comorbidities, and medication instructions persisted directly with this patient profile.',
+                    style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF78350F)),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _medicalNotesController,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      hintText: 'Enter clinical history, baseline conditions, or medical directives for this patient...',
+                      hintStyle: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFFA16207)),
+                      fillColor: Colors.white,
+                      filled: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFFFCD34D)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFFFCD34D)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFFB45309), width: 1.5),
+                      ),
+                      contentPadding: const EdgeInsets.all(12),
+                    ),
+                    style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF451A03), height: 1.4),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
