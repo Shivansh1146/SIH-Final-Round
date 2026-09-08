@@ -44,6 +44,48 @@ class AppSidebar extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Signature Brand Logo
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 18, top: 4),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(7.5),
+                      decoration: BoxDecoration(
+                        color: AppTheme.forestGreen,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.spa_rounded, color: Colors.white, size: 18),
+                    ),
+                    const SizedBox(width: 10),
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'SAHAYAK',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.forestGreen,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          TextSpan(
+                            text: '—AI',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.warmTerracotta,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
               // Header Card (PATIENT APP / CARE TEAM)
               Container(
                 width: double.infinity,
@@ -297,7 +339,7 @@ class AppSidebar extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'SHAYAK-AI provides a calm, supportive rhythm for memory, motor calm, and daily activities.',
+                        'SAHAYAK—AI provides a calm, supportive rhythm for memory, motor calm, and daily activities.',
                         style: GoogleFonts.inter(fontSize: 13, color: AppTheme.forestGreen, height: 1.35, fontWeight: FontWeight.w500),
                       ),
                     ),

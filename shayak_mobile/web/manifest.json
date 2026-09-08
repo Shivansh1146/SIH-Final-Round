@@ -1,11 +1,11 @@
 {
-    "name": "shayak_mobile",
-    "short_name": "shayak_mobile",
+    "name": "SAHAYAK—AI: Cognitive & Memory Platform",
+    "short_name": "SAHAYAK—AI",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "SAHAYAK—AI: Accessible Cognitive Health & Kinematic Stabilization Platform",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

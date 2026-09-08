@@ -5,7 +5,7 @@ import 'theme/app_theme.dart';
 import 'screens/main_navigation_screen.dart';
 
 /// ============================================================================
-/// SHAYAK-AI: Application Entrypoint & Theme Configuration
+/// SAHAYAK—AI: Application Entrypoint & Theme Configuration
 /// Serene Sage & Forest Green Elderly Cognitive Health Interface
 /// ============================================================================
 void main() async {
@@ -26,19 +26,19 @@ void main() async {
     await Hive.openBox('assessment_cache');
     await Hive.openBox('user_preferences');
   } catch (e) {
-    debugPrint('[SHAYAK-INIT] Hive local cache notice: $e');
+    debugPrint('[SAHAYAK-INIT] Hive local cache notice: $e');
   }
 
-  runApp(const ShayakApp());
+  runApp(const SahayakApp());
 }
 
-class ShayakApp extends StatelessWidget {
-  const ShayakApp({super.key});
+class SahayakApp extends StatelessWidget {
+  const SahayakApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SHAYAK-AI: Cognitive & Memory Support',
+      title: 'SAHAYAK—AI: Cognitive & Memory Support',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.themeData,
       home: const MainNavigationScreen(),

@@ -11,9 +11,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shayak_mobile/main.dart';
 
 void main() {
-  testWidgets('SHAYAK-AI App Smoke Test', (WidgetTester tester) async {
+  testWidgets('SAHAYAK—AI App Smoke Test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const ShayakApp());
+    await tester.pumpWidget(const SahayakApp());
 
     // Verify that title or navigation loads
     expect(find.byType(MaterialApp), findsOneWidget);
