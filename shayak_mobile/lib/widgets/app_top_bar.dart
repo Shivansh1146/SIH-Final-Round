@@ -394,8 +394,26 @@ class AppTopBar extends StatelessWidget {
 
                 const SizedBox(width: 6),
 
-                // Mode Switcher Button
-                if (currentMode == AppViewMode.patient)
+                // Mode Switcher Button (Compact on mobile)
+                if (screenWidth < 400)
+                  IconButton.filledTonal(
+                    onPressed: () => onModeChanged(
+                      currentMode == AppViewMode.patient ? AppViewMode.caregiver : AppViewMode.patient,
+                    ),
+                    icon: Icon(
+                      currentMode == AppViewMode.patient ? Icons.medical_services_outlined : Icons.person_outline_rounded,
+                      size: 16,
+                      color: AppTheme.forestGreen,
+                    ),
+                    tooltip: currentMode == AppViewMode.patient ? 'Switch to Caregiver' : 'Switch to Patient',
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: AppTheme.surfaceBorder),
+                      padding: const EdgeInsets.all(6),
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    ),
+                  )
+                else if (currentMode == AppViewMode.patient)
                   OutlinedButton.icon(
                     onPressed: () => onModeChanged(AppViewMode.caregiver),
                     icon: const Icon(Icons.person_outline_rounded, size: 14, color: AppTheme.textPrimary),
