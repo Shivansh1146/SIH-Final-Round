@@ -1089,12 +1089,12 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   Future<void> _callCaregiverViaPhoneLink(BuildContext context, [String rawPhoneNumber = '+919845012345']) async {
     const caregiverName = 'Anita Kumar';
     final cleanNumber = rawPhoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
-    final msPhoneUri = Uri.parse('ms-phone:call?PhoneNumber=$cleanNumber');
     final telUri = Uri.parse('tel:$cleanNumber');
+    final msPhoneUri = Uri.parse('ms-phone:call?PhoneNumber=$cleanNumber');
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('📞 Connecting call to $caregiverName ($rawPhoneNumber) via Phone Link...', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+        content: Text('📞 Opening Phone Link to call $caregiverName ($rawPhoneNumber)...', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
         backgroundColor: AppTheme.forestGreen,
         duration: const Duration(seconds: 4),
         behavior: SnackBarBehavior.floating,
@@ -1102,27 +1102,29 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       ),
     );
 
+    // Directly trigger standard telephony / Phone Link URI with _self target
     try {
-      if (await canLaunchUrl(msPhoneUri)) {
-        await launchUrl(msPhoneUri, mode: LaunchMode.externalApplication);
-        return;
+      final launched = await launchUrl(
+        telUri,
+        mode: LaunchMode.externalApplication,
+        webOnlyWindowName: '_self',
+      );
+      if (!launched) {
+        await launchUrl(
+          msPhoneUri,
+          mode: LaunchMode.externalApplication,
+          webOnlyWindowName: '_self',
+        );
       }
-    } catch (_) {}
-
-    try {
-      if (await canLaunchUrl(telUri)) {
-        await launchUrl(telUri, mode: LaunchMode.externalApplication);
-        return;
-      }
-    } catch (_) {}
-
-    try {
-      await launchUrl(msPhoneUri);
     } catch (_) {
       try {
-        await launchUrl(telUri);
+        await launchUrl(
+          msPhoneUri,
+          mode: LaunchMode.externalApplication,
+          webOnlyWindowName: '_self',
+        );
       } catch (e) {
-        debugPrint('Error connecting Phone Link call: $e');
+        debugPrint('Error launching Phone Link call: $e');
       }
     }
   }
