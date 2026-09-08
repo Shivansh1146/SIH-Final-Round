@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/session_service.dart';
 import 'package:http/http.dart' as http;
 import '../theme/app_theme.dart';
+import '../services/session_service.dart';
 
 enum GameDifficultyTier {
   gentle,
@@ -100,8 +100,9 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
   }
 
   Future<void> _fetchPatientDifficultyPreference() async {
+    final patientId = SessionService.activePatientId ?? 'PT-9042';
     try {
-      final res = await http.get(Uri.parse('http://127.0.0.1:8000/api/v1/patient/PT-9042/history'));
+      final res = await http.get(Uri.parse('http://127.0.0.1:8000/api/v1/patient/$patientId/history'));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         final levelStr = data['current_difficulty_level'] as String?;
@@ -198,29 +199,10 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
         ? DateTime.now().difference(_gameStartTime!).inSeconds
         : 60;
 
-    // Calculate accuracy ratio and performance score
+    final patientId = SessionService.activePatientId ?? 'PT-9042';
     final minTurns = _currentTier.pairCount;
     final accuracyRatio = (minTurns / (_moves > 0 ? _moves : minTurns)).clamp(0.2, 1.0);
     final score = (accuracyRatio * 100).roundToDouble();
-
-    // Persist to local SessionService
-    final patientId = SessionService.activePatientId ?? 'PT-9042';
-    final elapsedSec = durationSec.toDouble();
-    final responseSec = _moves > 0 ? (elapsedSec / _moves).clamp(0.5, 30.0) : 3.0;
-    SessionService.instance.saveSession(GameSession(
-      sessionId: SessionService.generateId(patientId, 'memory_match'),
-      patientId: patientId,
-      gameType: 'memory_match',
-      playedAt: DateTime.now(),
-      accuracyRatio: accuracyRatio,
-      responseTimeSec: responseSec,
-      totalMoves: _moves,
-      extras: {
-        'matchesFound': _matchesFound,
-        'totalPairs': _currentTier.pairCount,
-        'elapsedSec': elapsedSec,
-      },
-    ));
 
     GameDifficultyTier nextTier = _currentTier;
     String adaptationNotice = 'Maintaining your comfortable pacing.';
@@ -256,6 +238,23 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
     }
 
     _lastAdaptationMessage = adaptationNotice;
+
+    // Save to local SessionService
+    final responseTimeSec = durationSec > 0 ? durationSec / (_moves > 0 ? _moves : 1) : 3.0;
+    SessionService.instance.saveSession(GameSession(
+      sessionId: SessionService.generateId(patientId, 'memory_match'),
+      patientId: patientId,
+      gameType: 'memory_match',
+      playedAt: DateTime.now(),
+      accuracyRatio: accuracyRatio,
+      responseTimeSec: responseTimeSec.toDouble(),
+      totalMoves: _moves,
+      extras: {
+        'pairsMatched': _currentTier.pairCount,
+        'difficultyLevel': _currentTier.label,
+        'isAdaptive': _isAdaptiveMode,
+      },
+    ));
 
     // Broadcast session record to backend
     try {
@@ -413,10 +412,10 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
     });
     _initGame();
 
-    // Sync preference with backend
+    final patientId = SessionService.activePatientId ?? 'PT-9042';
     try {
       http.post(
-        Uri.parse('http://127.0.0.1:8000/api/v1/patient/PT-9042/difficulty'),
+        Uri.parse('http://127.0.0.1:8000/api/v1/patient/$patientId/difficulty'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'difficulty_level': tier.label,
@@ -463,12 +462,8 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
               child: Column(
                 children: [
-                  // 1. Difficulty & AI Adaptive Controller Header
                   _buildDifficultyHeader(),
-
                   const SizedBox(height: 12),
-
-                  // 2. Info stats banner
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                     decoration: BoxDecoration(
@@ -487,10 +482,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 16),
-
-                  // 3. Grid of Cards
                   Expanded(
                     child: GridView.builder(
                       itemCount: _cards.length,
@@ -506,7 +498,6 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
                       },
                     ),
                   ),
-
                   const SizedBox(height: 12),
                 ],
               ),
@@ -535,7 +526,6 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Row 1: Mode Switcher (Adaptive vs Manual)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -557,7 +547,6 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
                   ),
                 ],
               ),
-              // Segmented Toggle
               Container(
                 decoration: BoxDecoration(
                   color: AppTheme.background,
@@ -588,10 +577,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 10),
-
-          // Row 2: Difficulty Selector Chips
           Row(
             children: GameDifficultyTier.values.map((tier) {
               final isSelected = _currentTier == tier;
@@ -604,14 +590,10 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppTheme.forestGreen
-                            : AppTheme.background,
+                        color: isSelected ? AppTheme.forestGreen : AppTheme.background,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isSelected
-                              ? AppTheme.forestGreen
-                              : AppTheme.surfaceBorder,
+                          color: isSelected ? AppTheme.forestGreen : AppTheme.surfaceBorder,
                         ),
                       ),
                       child: Column(

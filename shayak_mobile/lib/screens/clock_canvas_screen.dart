@@ -88,7 +88,8 @@ class _ClockCanvasScreenState extends State<ClockCanvasScreen> {
   }
 
   void _submitDrawing(DrawingAssessmentSummary summary) async {
-    // ── Persist session data to SessionService ──────────────────────────
+    setState(() => _isAnalyzing = true);
+
     final patientId = SessionService.activePatientId ?? 'PT-9042';
     final jitter = summary.tremorJitterVariance.clamp(0.0, 50.0);
     final hesitations = summary.totalHesitations.clamp(0, 20);
@@ -96,6 +97,9 @@ class _ClockCanvasScreenState extends State<ClockCanvasScreen> {
     final accuracy = rawAccuracy.clamp(0.0, 1.0);
     final meanVel = summary.averageVelocity.clamp(0.01, 5.0);
     final responseSec = (3.0 / meanVel).clamp(0.5, 15.0);
+    final calculatedScore = _estimateClockScore(summary);
+
+    // Save locally to SessionService
     SessionService.instance.saveSession(GameSession(
       sessionId: SessionService.generateId(patientId, 'clock_drawing'),
       patientId: patientId,
@@ -112,9 +116,7 @@ class _ClockCanvasScreenState extends State<ClockCanvasScreen> {
       },
     ));
 
-    final calculatedScore = _estimateClockScore(summary);
-
-    // Save session locally and broadcast to backend
+    // Save session to FastAPI backend
     try {
       final backendId = patientId.startsWith('patient-') ? 'PT-9042' : patientId;
       final sessionRecord = {
