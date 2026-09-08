@@ -1120,54 +1120,17 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
         const SizedBox(height: 24),
 
-        // Activity Card 1: Memory Match
+        // Activity Card: Memory Match Activity
         _buildActivityItemCard(
           emoji: '🧠',
           tag: 'WORKING MEMORY',
           title: 'Memory Match Activity',
-          description: 'Turn over gentle pairs of everyday items at your own comfortable pace.',
+          description: 'Turn over gentle pairs of colorful items at your own comfortable pace.',
           duration: '5 minutes',
           difficulty: '$_currentDifficultyLevel${_isAdaptiveMode ? " (AI Adaptive)" : ""}',
           buttonColor: AppTheme.forestGreen,
           buttonText: 'Play Memory Match',
           onPlay: _startMemoryMatch,
-        ),
-
-        const SizedBox(height: 18),
-
-        // Activity Card 2: Clock Drawing Assessment
-        _buildActivityItemCard(
-          emoji: '⏰',
-          tag: 'KINEMATIC & EXECUTIVE PLANNING',
-          title: 'Clock Contour Assessment',
-          description: 'Draw a clock circle, write numbers 1 to 12, and set the hands to 10 past 11 with stylus / touch.',
-          duration: '3-5 minutes',
-          difficulty: 'AI Adaptive (Levels 1-3)',
-          buttonColor: AppTheme.warmTerracotta,
-          buttonText: 'Start Clock Drawing',
-          onPlay: _startClockDrawing,
-        ),
-
-        const SizedBox(height: 18),
-
-        // Activity Card 3: Cultural Pattern Sequence
-        _buildActivityItemCard(
-          emoji: '🌸',
-          tag: 'VISUAL-SPATIAL RHYTHM',
-          title: 'Cultural Pattern Sequence',
-          description: 'Recall rhythmic patterns of rangoli shapes and traditional Indian motifs.',
-          duration: '4 minutes',
-          difficulty: 'Gentle Flow',
-          buttonColor: AppTheme.forestGreen,
-          buttonText: 'Explore Patterns',
-          onPlay: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Starting Cultural Pattern Sequence session.', style: GoogleFonts.inter()),
-                backgroundColor: AppTheme.forestGreen,
-              ),
-            );
-          },
         ),
       ],
     );
