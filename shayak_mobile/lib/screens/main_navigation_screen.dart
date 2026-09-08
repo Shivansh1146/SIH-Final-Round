@@ -3,6 +3,7 @@ import '../widgets/app_top_bar.dart';
 import 'landing_screen.dart';
 import 'patient_home_screen.dart';
 import 'caregiver_workspace_screen.dart';
+import 'patient_registration_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -29,6 +30,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         return PatientHomeScreen(onNavigate: _onModeChanged);
       case AppViewMode.caregiver:
         return CaregiverWorkspaceScreen(onNavigate: _onModeChanged);
+      case AppViewMode.register:
+        return PatientRegistrationScreen(
+          onNavigate: _onModeChanged,
+          onRegistered: () => _onModeChanged(AppViewMode.patient),
+        );
     }
   }
 }

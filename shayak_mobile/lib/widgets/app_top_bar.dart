@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/patient_profile.dart';
 import '../theme/app_theme.dart';
 
-enum AppViewMode { landing, patient, caregiver }
+enum AppViewMode { landing, patient, caregiver, register }
 
 class AppTopBar extends StatelessWidget {
   final AppViewMode currentMode;
@@ -18,6 +19,8 @@ class AppTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 680;
+    final profile = PatientProfile.loadFromHive();
+    final patientName = profile?.fullName ?? 'Ramesh Kumar';
 
     return Container(
       height: isMobile ? 64 : 72,
@@ -69,7 +72,7 @@ class AppTopBar extends StatelessWidget {
                         text: TextSpan(
                           children: [
                             TextSpan(
-                              text: 'SHAYAK',
+                              text: 'SAHAYAK',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: isMobile ? 15 : 17,
                                 fontWeight: FontWeight.w800,
@@ -155,7 +158,7 @@ class AppTopBar extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Ramesh Kumar',
+                      patientName,
                       style: GoogleFonts.inter(
                         fontSize: 12.0,
                         fontWeight: FontWeight.w500,

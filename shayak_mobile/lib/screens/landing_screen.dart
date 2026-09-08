@@ -1,12 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/patient_profile.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_top_bar.dart';
 
-class LandingScreen extends StatelessWidget {
+class LandingScreen extends StatefulWidget {
   final ValueChanged<AppViewMode> onNavigate;
 
   const LandingScreen({super.key, required this.onNavigate});
+
+  @override
+  State<LandingScreen> createState() => _LandingScreenState();
+}
+
+class _LandingScreenState extends State<LandingScreen> {
+  PatientProfile? _profile;
+
+  @override
+  void initState() {
+    super.initState();
+    _profile = PatientProfile.loadFromHive();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +32,7 @@ class LandingScreen extends StatelessWidget {
             // Top Navigation Bar
             AppTopBar(
               currentMode: AppViewMode.landing,
-              onModeChanged: onNavigate,
+              onModeChanged: widget.onNavigate,
             ),
 
             // Hero Main Body
@@ -103,7 +117,7 @@ class LandingScreen extends StatelessWidget {
 
         const SizedBox(height: 22),
 
-        // Giant Heading with stylized terracotta memory.
+        // Giant Heading
         RichText(
           text: TextSpan(
             style: GoogleFonts.plusJakartaSans(
@@ -141,31 +155,80 @@ class LandingScreen extends StatelessWidget {
 
         const SizedBox(height: 36),
 
-        // Action Buttons
+        // ── Action Buttons (dynamic based on registration state) ──────────
+        if (_profile != null) ...[
+          // Patient already registered
+          _registeredPatientCTAs(context),
+        ] else ...[
+          // No patient yet
+          _newPatientCTAs(context),
+        ],
+      ],
+    );
+  }
+
+  Widget _registeredPatientCTAs(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Existing patient banner
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppTheme.sageLight,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppTheme.sageBorder),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40, height: 40,
+                decoration: const BoxDecoration(
+                  color: AppTheme.forestTealCard, shape: BoxShape.circle,
+                ),
+                child: const Center(child: Text('🌿', style: TextStyle(fontSize: 20))),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _profile!.fullName,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15, fontWeight: FontWeight.w800,
+                        color: AppTheme.forestGreen,
+                      ),
+                    ),
+                    Text(
+                      '${_profile!.age} yrs · ${_profile!.preferredLanguage.displayName} · ${_profile!.gender.displayName}',
+                      style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
         Wrap(
-          spacing: 16,
-          runSpacing: 14,
+          spacing: 12, runSpacing: 12,
           children: [
             ElevatedButton(
-              onPressed: () => onNavigate(AppViewMode.patient),
+              onPressed: () => widget.onNavigate(AppViewMode.patient),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.forestGreen,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(100),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
                 elevation: 0,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Open patient app',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 15.5,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    'Continue as ${_profile!.fullName.split(' ').first}',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(width: 8),
                   const Icon(Icons.arrow_forward_rounded, size: 18),
@@ -173,26 +236,74 @@ class LandingScreen extends StatelessWidget {
               ),
             ),
             OutlinedButton.icon(
-              onPressed: () => onNavigate(AppViewMode.caregiver),
+              onPressed: () => widget.onNavigate(AppViewMode.caregiver),
               icon: const Icon(Icons.favorite_border_rounded, size: 16, color: AppTheme.textPrimary),
               label: Text(
                 'Caregiver dashboard',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 15.0,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
-                ),
+                style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
               ),
               style: OutlinedButton.styleFrom(
                 backgroundColor: Colors.white,
                 side: const BorderSide(color: AppTheme.surfaceBorder, width: 1.5),
                 padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(100),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                PatientProfile.clearFromHive();
+                setState(() => _profile = null);
+              },
+              child: Text(
+                'Register different patient',
+                style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary),
               ),
             ),
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _newPatientCTAs(BuildContext context) {
+    return Wrap(
+      spacing: 16, runSpacing: 14,
+      children: [
+        ElevatedButton.icon(
+          onPressed: () => widget.onNavigate(AppViewMode.register),
+          icon: const Icon(Icons.person_add_rounded, size: 18),
+          label: Text(
+            'Register New Patient',
+            style: GoogleFonts.plusJakartaSans(fontSize: 15.5, fontWeight: FontWeight.w700),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.forestGreen,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+            elevation: 0,
+          ),
+        ),
+        OutlinedButton.icon(
+          onPressed: () => widget.onNavigate(AppViewMode.caregiver),
+          icon: const Icon(Icons.favorite_border_rounded, size: 16, color: AppTheme.textPrimary),
+          label: Text(
+            'Caregiver dashboard',
+            style: GoogleFonts.plusJakartaSans(fontSize: 15.0, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+          ),
+          style: OutlinedButton.styleFrom(
+            backgroundColor: Colors.white,
+            side: const BorderSide(color: AppTheme.surfaceBorder, width: 1.5),
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+          ),
+        ),
+        TextButton(
+          onPressed: () => widget.onNavigate(AppViewMode.patient),
+          child: Text(
+            'Skip for now →',
+            style: GoogleFonts.inter(fontSize: 13.5, color: AppTheme.textSecondary),
+          ),
         ),
       ],
     );

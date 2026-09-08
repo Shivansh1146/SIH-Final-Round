@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="shayak_mobile"
+        android:label="SAHAYAK-AI"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
