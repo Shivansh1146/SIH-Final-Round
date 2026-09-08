@@ -6,6 +6,8 @@ import '../models/patient_profile.dart';
 import '../theme/app_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'audio_narration_service.dart';
+
 class ReminderService extends ChangeNotifier {
   static final ReminderService instance = ReminderService._internal();
   ReminderService._internal();
@@ -133,6 +135,10 @@ class ReminderService extends ChangeNotifier {
 
     final patientName = PatientProfile.load()?.fullName.split(' ').first ?? 'Patient';
 
+    // Real-time audio narration for the alert
+    final alertSpeechText = 'Hello $patientName. It is ${item.formattedTime}, time for ${item.title}. ${item.notes ?? ''}';
+    AudioNarrationService.instance.speak(alertSpeechText);
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -228,6 +234,7 @@ class ReminderService extends ChangeNotifier {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () {
+                      AudioNarrationService.instance.stop();
                       snoozeReminder(item.id, 10);
                       Navigator.pop(alertCtx);
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -255,6 +262,7 @@ class ReminderService extends ChangeNotifier {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () {
+                      AudioNarrationService.instance.stop();
                       toggleComplete(item.id);
                       Navigator.pop(alertCtx);
                       ScaffoldMessenger.of(context).showSnackBar(

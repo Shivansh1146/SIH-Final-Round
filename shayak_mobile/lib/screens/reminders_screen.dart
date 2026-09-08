@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/reminder_item.dart';
 import '../models/patient_profile.dart';
 import '../services/reminder_service.dart';
+import '../services/audio_narration_service.dart';
 import '../theme/app_theme.dart';
 
 class RemindersScreen extends StatefulWidget {
@@ -534,6 +535,19 @@ class _RemindersScreenState extends State<RemindersScreen> {
     final pending = _items.where((e) => !e.isCompleted).toList();
     final name = PatientProfile.load()?.fullName.split(' ').first ?? 'Patient';
 
+    final StringBuffer speechText = StringBuffer();
+    speechText.write('Hello $name. Here is your schedule for today. ');
+    if (pending.isEmpty) {
+      speechText.write('All reminders are completed. Wonderful job!');
+    } else {
+      for (final p in pending) {
+        speechText.write('${p.title} scheduled for ${p.formattedTime}. ');
+      }
+    }
+
+    // Start real-time speech narration
+    AudioNarrationService.instance.speak(speechText.toString());
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -550,6 +564,28 @@ class _RemindersScreenState extends State<RemindersScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.pastelYellow,
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.graphic_eq_rounded, size: 14, color: AppTheme.warmTerracotta),
+                      const SizedBox(width: 4),
+                      Text(
+                        'SPEAKING ALOUD',
+                        style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.warmTerracotta),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             Text(
               'Here are your upcoming tasks for today, $name:',
               style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary),
@@ -579,9 +615,12 @@ class _RemindersScreenState extends State<RemindersScreen> {
         ),
         actions: [
           ElevatedButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () {
+              AudioNarrationService.instance.stop();
+              Navigator.pop(ctx);
+            },
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.forestGreen),
-            child: const Text('Close'),
+            child: const Text('Stop Audio & Close'),
           ),
         ],
       ),

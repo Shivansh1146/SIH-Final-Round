@@ -9,8 +9,8 @@ import '../widgets/app_sidebar.dart';
 import 'memory_match_screen.dart';
 import 'reminders_screen.dart';
 import 'clock_canvas_screen.dart';
-
 import '../services/reminder_service.dart';
+import '../services/audio_narration_service.dart';
 
 class PatientHomeScreen extends StatefulWidget {
   final ValueChanged<AppViewMode> onNavigate;
@@ -74,6 +74,9 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
   void _playListenAudio() {
     setState(() => _isPlayingAudio = true);
+    final narrationText = "Good morning, $_patientFirstName. Today's gentle activity is Memory Match. Find matching pairs at your own pace. There is no rush.";
+    AudioNarrationService.instance.speak(narrationText);
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -98,18 +101,19 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              '"Good morning, $_patientFirstName. Today\'s gentle activity is Memory Match. Find matching pairs at your own pace. There is no rush."',
+              '"$narrationText"',
               style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textSecondary, height: 1.5),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
+                AudioNarrationService.instance.stop();
                 setState(() => _isPlayingAudio = false);
                 Navigator.pop(ctx);
               },
               style: ElevatedButton.styleFrom(backgroundColor: AppTheme.forestGreen),
-              child: const Text('Close Audio'),
+              child: const Text('Stop Audio'),
             ),
           ],
         ),
