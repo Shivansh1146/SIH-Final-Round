@@ -46,9 +46,9 @@ class AppSidebar extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(14.0),
                 decoration: BoxDecoration(
-                  color: AppTheme.sageLight.withValues(alpha: 0.7),
+                  color: AppTheme.sageLight.withOpacity(0.7),
                   borderRadius: BorderRadius.circular(16.0),
-                  border: Border.all(color: AppTheme.sageBorder.withValues(alpha: 0.6)),
+                  border: Border.all(color: AppTheme.sageBorder.withOpacity(0.6)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,7 +186,7 @@ class AppSidebar extends StatelessWidget {
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
+                        color: Colors.black.withOpacity(0.03),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),

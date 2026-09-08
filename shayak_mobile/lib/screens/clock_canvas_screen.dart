@@ -462,7 +462,7 @@ class _ClockCanvasScreenState extends State<ClockCanvasScreen> {
         border: Border.all(color: AppTheme.surfaceBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -734,7 +734,7 @@ class _ClockCanvasScreenState extends State<ClockCanvasScreen> {
                             Border.all(color: AppTheme.sageBorder, width: 2),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
+                            color: Colors.black.withOpacity(0.03),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
