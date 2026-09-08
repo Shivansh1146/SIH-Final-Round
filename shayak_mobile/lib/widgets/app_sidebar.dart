@@ -236,39 +236,108 @@ class AppSidebar extends StatelessWidget {
   }
 
   void _showHelpDialog(BuildContext context) {
+    final currentLang = LocalizationService.instance.currentLanguage;
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 20, 20),
         title: Row(
           children: [
-            const Icon(Icons.help_outline_rounded, color: AppTheme.forestGreen),
-            const SizedBox(width: 10),
-            Text('Gentle Help & Guide', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800)),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.forestGreen.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.help_outline_rounded, color: AppTheme.forestGreen, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Gentle Help & Guide',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 19,
+                      color: AppTheme.forestGreen,
+                    ),
+                  ),
+                  Text(
+                    'Supportive tips for memory & routines',
+                    style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'SHAYAK-AI provides a calm, supportive rhythm for memory and daily cognitive activities.',
-              style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textSecondary, height: 1.4),
-            ),
-            const SizedBox(height: 16),
-            _helpRow(Icons.touch_app_rounded, 'Large Touch Targets: Tap anywhere on cards to begin.'),
-            const SizedBox(height: 10),
-            _helpRow(Icons.volume_up_rounded, 'Audio Narration: Tap "Listen" anytime to hear instructions read aloud.'),
-            const SizedBox(height: 10),
-            _helpRow(Icons.shield_outlined, 'Private & Local: Your activity metrics stay on this device.'),
-          ],
+        content: SizedBox(
+          width: 440,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.sageLight.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppTheme.forestGreen.withOpacity(0.2)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.wb_sunny_outlined, color: AppTheme.forestGreen, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'SHAYAK-AI provides a calm, supportive rhythm for memory, motor calm, and daily activities.',
+                        style: GoogleFonts.inter(fontSize: 13, color: AppTheme.forestGreen, height: 1.35, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              _helpRow(Icons.touch_app_rounded, 'Large Touch Targets: Tap anywhere on cards or buttons to begin.'),
+              const SizedBox(height: 12),
+              _helpRow(Icons.volume_up_rounded, 'Audio Narration: Tap "Listen" anytime to hear instructions read aloud.'),
+              const SizedBox(height: 12),
+              _helpRow(Icons.language_rounded, 'Multilingual Voice: Switch between English, Hindi, and NER languages in 1-tap.'),
+              const SizedBox(height: 12),
+              _helpRow(Icons.shield_outlined, 'Private & Local: Your activity metrics and logs stay secure on this device.'),
+            ],
+          ),
         ),
         actions: [
+          TextButton.icon(
+            onPressed: () {
+              const helpSpeech = 'Welcome to the Sahayak guide. Tap anywhere on cards to begin activities. '
+                  'Tap Listen anytime to hear instructions spoken aloud. '
+                  'You can choose English, Hindi, or North-Eastern regional languages anytime.';
+              AudioNarrationService.instance.speak(helpSpeech, language: currentLang);
+            },
+            icon: const Icon(Icons.volume_up_rounded, size: 18, color: AppTheme.forestGreen),
+            label: Text('Read Aloud', style: GoogleFonts.plusJakartaSans(color: AppTheme.forestGreen, fontWeight: FontWeight.w700)),
+          ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(ctx),
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.forestGreen),
-            child: const Text('Got it'),
+            onPressed: () {
+              AudioNarrationService.instance.stop();
+              Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.forestGreen,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+            child: Text('Got it', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -279,10 +348,20 @@ class AppSidebar extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: AppTheme.forestGreen),
-        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: AppTheme.forestGreen.withOpacity(0.08),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 16, color: AppTheme.forestGreen),
+        ),
+        const SizedBox(width: 10),
         Expanded(
-          child: Text(text, style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textPrimary)),
+          child: Text(
+            text,
+            style: GoogleFonts.inter(fontSize: 13.2, color: AppTheme.textPrimary, height: 1.35),
+          ),
         ),
       ],
     );
