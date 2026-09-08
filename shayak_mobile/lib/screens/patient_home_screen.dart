@@ -671,14 +671,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           ),
           const SizedBox(height: 14),
           OutlinedButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Connected to Caregiver Anita.', style: GoogleFonts.inter()),
-                  backgroundColor: AppTheme.forestGreen,
-                ),
-              );
-            },
+            onPressed: () => _showCaregiverCallDialog(context),
             icon: const Icon(Icons.phone_in_talk_rounded, size: 15, color: AppTheme.forestGreen),
             label: Text(
               'Call Caregiver Anita',
@@ -694,6 +687,150 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showCaregiverCallDialog(BuildContext context) {
+    AudioNarrationService.instance.speak(
+      'Calling Caregiver Anita Kumar. Please hold on a moment.',
+      language: AppLanguage.english,
+    );
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+            contentPadding: const EdgeInsets.all(28),
+            content: SizedBox(
+              width: 380,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Pulsing Caller Avatar
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        width: 90,
+                        height: 90,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppTheme.sageLight.withOpacity(0.6),
+                        ),
+                      ),
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppTheme.forestGreen,
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.person_rounded, size: 40, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'Anita Kumar',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Primary Caregiver · +91 98450 12345',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Call Status Pill
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.sageLight,
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.statusGreen,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Calling · Connecting to audio...',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.forestGreen,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Quick Action Buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // End Call Button
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          AudioNarrationService.instance.stop();
+                          Navigator.pop(ctx);
+                        },
+                        icon: const Icon(Icons.call_end_rounded, color: Colors.white, size: 18),
+                        label: const Text('End Call'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.alertCoral,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+
+                      // View Caregiver Portal Button
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          AudioNarrationService.instance.stop();
+                          Navigator.pop(ctx);
+                          widget.onNavigate(AppViewMode.caregiver);
+                        },
+                        icon: const Icon(Icons.dashboard_rounded, size: 16, color: AppTheme.forestGreen),
+                        label: const Text('Caregiver View'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppTheme.forestGreen,
+                          side: const BorderSide(color: AppTheme.forestGreen),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
