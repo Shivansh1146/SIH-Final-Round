@@ -456,24 +456,7 @@ class AppTopBar extends StatelessWidget {
 
               // Right Status & Actions
               if (currentMode == AppViewMode.landing) ...[
-                if (!isMobile)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(100),
-                      border: Border.all(color: AppTheme.surfaceBorder),
-                    ),
-                    child: Text(
-                      'Demo mode · local data',
-                      style: GoogleFonts.inter(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  )
-                else
+                if (isMobile)
                   IconButton(
                     icon: const Icon(Icons.touch_app_rounded, color: AppTheme.forestGreen, size: 20),
                     tooltip: 'Start',
