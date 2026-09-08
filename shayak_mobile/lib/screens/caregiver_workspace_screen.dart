@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import '../models/patient_profile.dart';
-import '../models/reminder_item.dart';
 import '../services/reminder_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_theme.dart';
@@ -49,42 +48,6 @@ class _CaregiverStatsData {
         'Recommended: Start with Memory Match or Clock Drawing Assessment.',
       ],
       statusLabel: 'Awaiting Assessment',
-      isLive: false,
-    );
-  }
-
-  /// Fallback: derive meaningful stats from local Hive data when AI is offline.
-  factory _CaregiverStatsData.fromLocal({
-    required int completedCount,
-    required int totalCount,
-    required String patientName,
-  }) {
-    final ratio = totalCount > 0 ? completedCount / totalCount : 0.6;
-    final accuracyPct = (55 + ratio * 40).clamp(55.0, 96.0).round();
-    final responseMs = (1800.0 - ratio * 800.0).clamp(800.0, 2000.0);
-    final responseSec = (responseMs / 1000).toStringAsFixed(1);
-    final games = completedCount;
-    final level = accuracyPct >= 85
-        ? 'Level 3'
-        : accuracyPct >= 70
-            ? 'Level 2'
-            : 'Level 1';
-    final base = ratio.clamp(0.50, 0.88);
-    const offsets = [0.0, -0.02, 0.03, -0.01, 0.02, 0.01, 0.04];
-    final sessions = List.generate(
-        7, (i) => (base - 0.08 + i * 0.012 + offsets[i]).clamp(0.42, 0.97));
-    return _CaregiverStatsData(
-      gamesCompleted: games,
-      averageAccuracy: '$accuracyPct%',
-      avgResponseTime: '${responseSec}s',
-      currentDifficulty: level,
-      sessionScores: sessions,
-      supportNotes: [
-        '$games activity(ies) completed for $patientName with consistent tracking.',
-        'Average accuracy is $accuracyPct% with an average response time of ${responseSec}s.',
-        'AI Adaptive Engine is actively calibrated to $level based on recent telemetry.',
-      ],
-      statusLabel: accuracyPct >= 70 ? 'Active Routine' : 'Monitoring',
       isLive: false,
     );
   }
@@ -364,23 +327,29 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
 
     final profile = PatientProfile.loadFromHive();
     final patientName = profile?.fullName ?? 'Patient';
-    final firstName = patientName.split(' ').first;
     final patientId = profile?.id ?? 'unknown';
 
     // ── Real game session data ─────────────────────────────────────────
     final sessionStats = SessionService.instance.getStatsFor(patientId);
     final hasSessions = sessionStats.totalSessions > 0;
 
-    // ── Reminder completion ratio (fallback seed when no sessions) ─────────
-    final reminders = ReminderService.instance.reminders;
-    final completedCount = reminders.where((r) => r.isCompleted).length;
-    final totalCount = reminders.length;
-    final reminderRatio = totalCount > 0 ? completedCount / totalCount : 0.6;
+    // If new patient with NO game sessions yet:
+    if (!hasSessions) {
+      if (mounted) {
+        setState(() {
+          _aiEvaluationData = null;
+          _statsData = _CaregiverStatsData.empty(patientName: patientName);
+          _isLoadingStats = false;
+        });
+      }
+      return;
+    }
 
-    // Use real accuracy from sessions if available, else reminder ratio
-    final ratio = hasSessions ? sessionStats.avgAccuracy : reminderRatio;
-    final avgResponseSec = hasSessions ? sessionStats.avgResponseSec : (1800.0 - reminderRatio * 800.0) / 1000.0;
-    final gamesPlayed = hasSessions ? sessionStats.totalSessions : completedCount + 7;
+    // When sessions exist, use real data:
+    final ratio = sessionStats.avgAccuracy;
+    final avgResponseSec = sessionStats.avgResponseSec;
+    final gamesPlayed = sessionStats.totalSessions;
+    final chartScores = sessionStats.last7Scores;
 
     try {
       final response = await http
@@ -398,7 +367,8 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
               // Real memory accuracy from actual gameplay
               'memory_recall_accuracy': ratio.clamp(0.0, 1.0),
               // Real response latency from actual gameplay (ms)
-              'pattern_sequence_latency_ms': (avgResponseSec * 1000).clamp(500.0, 3000.0),
+              'pattern_sequence_latency_ms':
+                  (avgResponseSec * 1000).clamp(500.0, 5000.0),
               'speech_hesitation_ratio': (0.28 - ratio * 0.08).clamp(0.0, 1.0),
               'phonation_jitter': (0.041 - ratio * 0.005).clamp(0.0, 0.1),
               'acoustic_energy_entropy': (3.0 + ratio * 0.5).clamp(0.0, 6.0),
@@ -408,28 +378,13 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final riskScore = (data['primary_risk_score'] as num?)?.toDouble() ?? 0.1;
-        final normalProb =
-            ((data['risk_probabilities'] as Map<String, dynamic>?)?['Normal Cognition'] as num?)
-                ?.toDouble() ?? (1.0 - riskScore);
-        final accuracy = (normalProb * 100).clamp(55.0, 97.0).round();
+        final accuracy = (ratio * 100).round().clamp(10, 100);
         final responseDisplay = avgResponseSec.toStringAsFixed(1);
-        final level = accuracy >= 85 ? 'Level 3' : accuracy >= 70 ? 'Level 2' : 'Level 1';
-
-        // Build session chart: use real last-7 if available, else synthetic
-        List<double> chartScores;
-        if (hasSessions && sessionStats.last7Scores.isNotEmpty) {
-          chartScores = sessionStats.last7Scores;
-          // Pad to 7 if fewer sessions exist
-          while (chartScores.length < 7) {
-            chartScores = [normalProb.clamp(0.5, 0.9) - 0.05, ...chartScores];
-          }
-        } else {
-          final base = normalProb.clamp(0.55, 0.92);
-          const offsets = [0.0, -0.02, 0.03, -0.01, 0.02, 0.01, 0.04];
-          chartScores = List.generate(
-              7, (i) => (base - 0.10 + i * 0.012 + offsets[i]).clamp(0.42, 0.97));
-        }
+        final level = accuracy >= 85
+            ? 'Level 3'
+            : accuracy >= 70
+                ? 'Level 2'
+                : 'Level 1';
 
         final recs = (data['clinical_recommendations'] as List<dynamic>?) ?? [];
         final thirdNote = recs.isNotEmpty
@@ -460,45 +415,33 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
       }
     } catch (_) {}
 
-    // ── Fallback: derive stats from local data (Hive sessions + reminders) ──
+    // Fallback when backend is offline:
     if (mounted) {
-      // If we have real sessions, use them even in offline fallback
-      if (hasSessions) {
-        final accPct = (sessionStats.avgAccuracy * 100).clamp(55.0, 96.0).round();
-        final respDisplay = sessionStats.avgResponseSec.toStringAsFixed(1);
-        final level = accPct >= 85 ? 'Level 3' : accPct >= 70 ? 'Level 2' : 'Level 1';
-        List<double> chartScores = sessionStats.last7Scores;
-        while (chartScores.length < 7) {
-          chartScores = [sessionStats.avgAccuracy.clamp(0.5, 0.9) - 0.05, ...chartScores];
-        }
-        setState(() {
-          _statsData = _CaregiverStatsData(
-            gamesCompleted: sessionStats.totalSessions,
-            averageAccuracy: '$accPct%',
-            avgResponseTime: '${respDisplay}s',
-            currentDifficulty: level,
-            sessionScores: chartScores,
-            supportNotes: [
-              '${sessionStats.totalSessions} activity(ies) completed for $patientName with consistent tracking.',
-              'Average accuracy is $accPct% with an average response time of ${respDisplay}s.',
-              'AI Adaptive Engine is actively calibrated to $level based on recent telemetry.',
-            ],
-            statusLabel: accPct >= 70 ? 'Active Routine' : 'Monitoring',
-            isLive: false,
-          );
-          _isLoadingStats = false;
-        });
-      } else {
-        // No sessions yet — derive from reminder completion ratio
-        setState(() {
-          _statsData = _CaregiverStatsData.fromLocal(
-            completedCount: completedCount,
-            totalCount: totalCount,
-            patientName: firstName,
-          );
-          _isLoadingStats = false;
-        });
-      }
+      final accPct = (sessionStats.avgAccuracy * 100).round().clamp(10, 100);
+      final respDisplay = sessionStats.avgResponseSec.toStringAsFixed(1);
+      final level = accPct >= 85
+          ? 'Level 3'
+          : accPct >= 70
+              ? 'Level 2'
+              : 'Level 1';
+
+      setState(() {
+        _statsData = _CaregiverStatsData(
+          gamesCompleted: sessionStats.totalSessions,
+          averageAccuracy: '$accPct%',
+          avgResponseTime: '${respDisplay}s',
+          currentDifficulty: level,
+          sessionScores: chartScores,
+          supportNotes: [
+            '${sessionStats.totalSessions} activity(ies) completed for $patientName with consistent tracking.',
+            'Average accuracy is $accPct% with an average response time of ${respDisplay}s.',
+            'AI Adaptive Engine is actively calibrated to $level based on recent telemetry.',
+          ],
+          statusLabel: accPct >= 70 ? 'Active Routine' : 'Monitoring',
+          isLive: false,
+        );
+        _isLoadingStats = false;
+      });
     }
   }
 
@@ -993,7 +936,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
           final cards = [
             card(
               'GAMES COMPLETED',
-              s?.gamesCompleted.toString() ?? '13',
+              s?.gamesCompleted.toString() ?? '0',
               'Across recent sessions',
               Icons.check_circle_outline_rounded,
               AppTheme.statusGreen,
@@ -1001,7 +944,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
             ),
             card(
               'AVERAGE ACCURACY',
-              s?.averageAccuracy ?? '76%',
+              s?.averageAccuracy ?? '--',
               'Gameplay performance',
               Icons.north_east_rounded,
               AppTheme.warmTerracotta,
@@ -1009,7 +952,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
             ),
             card(
               'AVERAGE RESPONSE',
-              s?.avgResponseTime ?? '4.3s',
+              s?.avgResponseTime ?? '--',
               'Per interaction',
               Icons.access_time_rounded,
               AppTheme.warmOchre,
@@ -1017,7 +960,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
             ),
             card(
               'CURRENT DIFFICULTY',
-              s?.currentDifficulty ?? 'Level 2',
+              s?.currentDifficulty ?? 'Baseline',
               'Adapts from performance',
               Icons.psychology_outlined,
               AppTheme.forestGreen,
@@ -1138,8 +1081,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
   }
 
   Widget _buildCognitivePerformanceCard({required bool isMobile}) {
-    final scores = _statsData?.sessionScores ??
-        [0.65, 0.70, 0.68, 0.74, 0.78, 0.75, 0.82];
+    final scores = _statsData?.sessionScores ?? const [];
 
     return Container(
       padding: EdgeInsets.all(isMobile ? 16.0 : 22.0),
@@ -1159,7 +1101,9 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'THE LAST 7 SESSIONS',
+                    scores.isEmpty
+                        ? 'COGNITIVE PERFORMANCE'
+                        : 'THE LAST ${scores.length} SESSION${scores.length > 1 ? 'S' : ''}',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 9.5,
                       fontWeight: FontWeight.w800,
@@ -1197,36 +1141,76 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
             ],
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
 
-          // Line chart drawn with CustomPainter
-          SizedBox(
-            height: 130,
-            width: double.infinity,
-            child: CustomPaint(
-              painter: _SessionLineChartPainter(scores: scores),
+          if (scores.isEmpty) ...[
+            Container(
+              height: 130,
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: AppTheme.background,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppTheme.surfaceBorder),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.show_chart_rounded,
+                      color: AppTheme.textLight, size: 30),
+                  const SizedBox(height: 8),
+                  Text(
+                    'No session activity recorded yet',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Play games on the Patient tab to begin cognitive telemetry.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                        fontSize: 11.5, color: AppTheme.textLight),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ] else ...[
+            // Line chart drawn with CustomPainter
+            SizedBox(
+              height: 130,
+              width: double.infinity,
+              child: CustomPaint(
+                painter: _SessionLineChartPainter(scores: scores),
+              ),
+            ),
 
-          const SizedBox(height: 8),
+            const SizedBox(height: 8),
 
-          // Session x-axis labels (aligned to chart left margin)
-          Padding(
-            padding: const EdgeInsets.only(left: 26.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(
-                7,
-                (i) => Text(
-                  'Session ${i + 1}',
-                  style: GoogleFonts.inter(
-                    fontSize: isMobile ? 8.0 : 9.0,
-                    color: AppTheme.textLight,
+            // Session x-axis labels (aligned to chart left margin)
+            Padding(
+              padding: const EdgeInsets.only(left: 26.0),
+              child: Row(
+                mainAxisAlignment: scores.length > 1
+                    ? MainAxisAlignment.spaceBetween
+                    : MainAxisAlignment.center,
+                children: List.generate(
+                  scores.length,
+                  (i) => Text(
+                    scores.length == 1
+                        ? 'Session 1 (Initial Calibration)'
+                        : 'Session ${i + 1}',
+                    style: GoogleFonts.inter(
+                      fontSize: isMobile ? 8.0 : 9.0,
+                      color: AppTheme.textLight,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
