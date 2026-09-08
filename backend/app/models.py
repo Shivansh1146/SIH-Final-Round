@@ -4,6 +4,7 @@ Defines validated input schemas for multi-modal clinical biomarkers
 and structured output schemas optimized for React 19 + Recharts dashboards.
 """
 
+from datetime import datetime, timezone
 from typing import List, Dict, Literal
 from pydantic import BaseModel, Field
 
@@ -135,16 +136,16 @@ class PatientSessionRecord(BaseModel):
     """
     Completed cognitive assessment session record (Clock Drawing, Memory Match, or Multi-modal).
     """
-    session_id: str = Field(..., description="Unique session identifier")
-    patient_id: str = Field(..., description="Patient identifier")
-    activity_type: Literal["clock_drawing", "memory_match", "pattern_sequence", "multimodal_full"]
-    score: float = Field(..., ge=0.0, le=100.0, description="Normalized score 0-100")
-    duration_seconds: int = Field(..., ge=0, description="Duration of session in seconds")
+    session_id: str = Field(default_factory=lambda: f"session-{int(datetime.now().timestamp())}", description="Unique session identifier")
+    patient_id: str = Field(default="PT-9042", description="Patient identifier")
+    activity_type: str = Field(default="routine_sequencer", description="Activity name")
+    score: float = Field(default=80.0, ge=0.0, le=100.0, description="Normalized score 0-100")
+    duration_seconds: int = Field(default=30, ge=0, description="Duration of session in seconds")
     difficulty_level: str = Field(default="Level 2 (Moderate)", description="Difficulty level during session")
     is_adaptive: bool = Field(default=True, description="Whether adaptive difficulty was enabled")
     metrics: Dict[str, float] = Field(default_factory=dict, description="Detailed biomarker metric dictionary")
     notes: str = Field(default="", description="Optional caregiver or system notes")
-    timestamp: str = Field(..., description="ISO 8601 timestamp")
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description="ISO 8601 timestamp")
 
 
 class PatientDifficultyUpdateRequest(BaseModel):
