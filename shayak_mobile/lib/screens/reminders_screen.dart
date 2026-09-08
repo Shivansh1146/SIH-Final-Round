@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/reminder_item.dart';
+import '../models/patient_profile.dart';
+import '../services/reminder_service.dart';
 import '../theme/app_theme.dart';
 
 class RemindersScreen extends StatefulWidget {
@@ -31,6 +33,11 @@ class _RemindersScreenState extends State<RemindersScreen> {
   void initState() {
     super.initState();
     _loadFromStorage();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ReminderService.instance.initialize(context);
+      }
+    });
   }
 
   void _loadFromStorage() {
@@ -118,13 +125,13 @@ class _RemindersScreenState extends State<RemindersScreen> {
     );
   }
 
-  void _showAddReminderModal() {
-    final titleController = TextEditingController();
-    final notesController = TextEditingController();
-    TimeOfDay selectedTime = const TimeOfDay(hour: 9, minute: 0);
-    String selectedEmoji = '💊';
-    ReminderCategory selectedCategory = ReminderCategory.medicine;
-    bool isDaily = true;
+  void _showReminderModal([ReminderItem? existingItem]) {
+    final titleController = TextEditingController(text: existingItem?.title ?? '');
+    final notesController = TextEditingController(text: existingItem?.notes ?? '');
+    TimeOfDay selectedTime = existingItem?.time ?? const TimeOfDay(hour: 9, minute: 0);
+    String selectedEmoji = existingItem?.emoji ?? '💊';
+    ReminderCategory selectedCategory = existingItem?.category ?? ReminderCategory.medicine;
+    bool isDaily = existingItem?.isRepeatingDaily ?? true;
 
     final presetOptions = [
       {'emoji': '💊', 'label': 'Medicine', 'cat': ReminderCategory.medicine},
@@ -175,7 +182,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Add New Reminder',
+                        existingItem == null ? 'Add New Reminder' : 'Edit Reminder',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
@@ -454,7 +461,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                         }
 
                         final newItem = ReminderItem(
-                          id: 'rem-${DateTime.now().millisecondsSinceEpoch}',
+                          id: existingItem?.id ?? 'rem-${DateTime.now().millisecondsSinceEpoch}',
                           title: title,
                           time: selectedTime,
                           emoji: selectedEmoji,
@@ -463,11 +470,16 @@ class _RemindersScreenState extends State<RemindersScreen> {
                           notes: notesController.text.trim().isNotEmpty
                               ? notesController.text.trim()
                               : null,
-                          isCompleted: false,
+                          isCompleted: existingItem?.isCompleted ?? false,
                         );
 
                         setState(() {
-                          _items.add(newItem);
+                          if (existingItem != null) {
+                            final idx = _items.indexWhere((r) => r.id == existingItem.id);
+                            if (idx != -1) _items[idx] = newItem;
+                          } else {
+                            _items.add(newItem);
+                          }
                           // Sort by time
                           _items.sort((a, b) {
                             final aMin = a.time.hour * 60 + a.time.minute;
@@ -476,11 +488,15 @@ class _RemindersScreenState extends State<RemindersScreen> {
                           });
                         });
                         _saveToStorage();
+                        ReminderService.instance.loadReminders();
+
                         Navigator.pop(ctx);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              '✓  "${newItem.title}" reminder added!',
+                              existingItem == null
+                                  ? '✓  "${newItem.title}" reminder added!'
+                                  : '✓  "${newItem.title}" reminder updated!',
                               style: GoogleFonts.inter(fontWeight: FontWeight.w600),
                             ),
                             backgroundColor: AppTheme.forestGreen,
@@ -497,7 +513,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
                       ),
                       child: Text(
-                        'Save Reminder',
+                        existingItem == null ? 'Save Reminder' : 'Update Reminder',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
@@ -516,6 +532,8 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
   void _playScheduleAudio() {
     final pending = _items.where((e) => !e.isCompleted).toList();
+    final name = PatientProfile.load()?.fullName.split(' ').first ?? 'Patient';
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -533,7 +551,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Here are your upcoming tasks for today:',
+              'Here are your upcoming tasks for today, $name:',
               style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 12),
@@ -554,7 +572,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                 )),
             if (pending.isEmpty)
               Text(
-                'All reminders completed! Wonderful job, Ramesh.',
+                'All reminders completed! Wonderful job, $name.',
                 style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: AppTheme.forestGreen),
               ),
           ],
@@ -645,7 +663,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                 ),
                 const SizedBox(width: 4),
                 ElevatedButton.icon(
-                  onPressed: _showAddReminderModal,
+                  onPressed: () => _showReminderModal(),
                   icon: const Icon(Icons.add_rounded, size: 18),
                   label: Text(
                     isMobile ? 'Add' : 'Add Reminder',
@@ -839,30 +857,29 @@ class _RemindersScreenState extends State<RemindersScreen> {
                     ),
                   ],
                 ),
-                child: InkWell(
-                  onTap: () => _toggleComplete(index),
-                  borderRadius: BorderRadius.circular(18.0),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-                    child: Row(
-                      children: [
-                        // Category Emoji Avatar
-                        Container(
-                          width: 42,
-                          height: 42,
-                          decoration: BoxDecoration(
-                            color: isDone ? AppTheme.background : AppTheme.sageLight,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Center(
-                            child: Text(item.emoji, style: const TextStyle(fontSize: 20)),
-                          ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                  child: Row(
+                    children: [
+                      // Category Emoji Avatar
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: isDone ? AppTheme.background : AppTheme.sageLight,
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        child: Center(
+                          child: Text(item.emoji, style: const TextStyle(fontSize: 20)),
+                        ),
+                      ),
 
-                        const SizedBox(width: 14),
+                      const SizedBox(width: 14),
 
-                        // Title, Time & Notes
-                        Expanded(
+                      // Title, Time & Notes
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => _toggleComplete(index),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -911,29 +928,37 @@ class _RemindersScreenState extends State<RemindersScreen> {
                             ],
                           ),
                         ),
+                      ),
 
-                        // Large Accessible Checkbox Toggle
-                        InkWell(
-                          onTap: () => _toggleComplete(index),
-                          borderRadius: BorderRadius.circular(100),
-                          child: Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: isDone ? AppTheme.forestGreen : Colors.white,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: isDone ? AppTheme.forestGreen : AppTheme.surfaceBorder,
-                                width: 2.0,
-                              ),
+                      // Edit Button
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.textSecondary),
+                        tooltip: 'Edit Reminder',
+                        onPressed: () => _showReminderModal(item),
+                      ),
+                      const SizedBox(width: 4),
+
+                      // Large Accessible Checkbox Toggle
+                      InkWell(
+                        onTap: () => _toggleComplete(index),
+                        borderRadius: BorderRadius.circular(100),
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: isDone ? AppTheme.forestGreen : Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isDone ? AppTheme.forestGreen : AppTheme.surfaceBorder,
+                              width: 2.0,
                             ),
-                            child: isDone
-                                ? const Icon(Icons.check_rounded, color: Colors.white, size: 20)
-                                : null,
                           ),
+                          child: isDone
+                              ? const Icon(Icons.check_rounded, color: Colors.white, size: 20)
+                              : null,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),

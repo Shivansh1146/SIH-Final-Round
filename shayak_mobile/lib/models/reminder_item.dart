@@ -42,6 +42,28 @@ class ReminderItem {
         'notes': notes,
       };
 
+  ReminderItem copyWith({
+    String? id,
+    String? title,
+    TimeOfDay? time,
+    ReminderCategory? category,
+    String? emoji,
+    bool? isCompleted,
+    bool? isRepeatingDaily,
+    String? notes,
+  }) {
+    return ReminderItem(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      time: time ?? this.time,
+      category: category ?? this.category,
+      emoji: emoji ?? this.emoji,
+      isCompleted: isCompleted ?? this.isCompleted,
+      isRepeatingDaily: isRepeatingDaily ?? this.isRepeatingDaily,
+      notes: notes ?? this.notes,
+    );
+  }
+
   factory ReminderItem.fromMap(Map<dynamic, dynamic> map) {
     return ReminderItem(
       id: map['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),

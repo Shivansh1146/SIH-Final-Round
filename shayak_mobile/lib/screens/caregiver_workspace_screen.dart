@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import '../models/patient_profile.dart';
+import '../models/reminder_item.dart';
+import '../services/reminder_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/app_sidebar.dart';
@@ -275,7 +278,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                 child: Row(
                   children: [
                     Text(
-                      'Ramesh Kumar',
+                      PatientProfile.load()?.fullName ?? 'Ramesh Kumar',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,

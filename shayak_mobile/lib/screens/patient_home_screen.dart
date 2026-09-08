@@ -10,6 +10,8 @@ import 'memory_match_screen.dart';
 import 'reminders_screen.dart';
 import 'clock_canvas_screen.dart';
 
+import '../services/reminder_service.dart';
+
 class PatientHomeScreen extends StatefulWidget {
   final ValueChanged<AppViewMode> onNavigate;
 
@@ -35,6 +37,27 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     super.initState();
     _profile = PatientProfile.loadFromHive();
     _loadReminders();
+    ReminderService.instance.addListener(_onReminderServiceChanged);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ReminderService.instance.initialize(context);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    ReminderService.instance.removeListener(_onReminderServiceChanged);
+    super.dispose();
+  }
+
+  void _onReminderServiceChanged() {
+    if (mounted) {
+      setState(() {
+        _loadReminders();
+      });
+    }
   }
 
   void _loadReminders() {
