@@ -1,10 +1,13 @@
 import 'dart:convert';
+import 'dart:math' show max;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import '../theme/app_theme.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/app_sidebar.dart';
+import '../services/session_service.dart';
+import '../models/patient_profile.dart';
 
 class CaregiverWorkspaceScreen extends StatefulWidget {
   final ValueChanged<AppViewMode> onNavigate;
@@ -62,6 +65,18 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     super.initState();
     _fetchAiDecisions();
     _fetchPatientDifficulty();
+    // Re-render line graph whenever a game session is saved
+    SessionService.instance.addListener(_onSessionUpdate);
+  }
+
+  void _onSessionUpdate() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    SessionService.instance.removeListener(_onSessionUpdate);
+    super.dispose();
   }
 
   Future<void> _fetchPatientDifficulty() async {
@@ -1006,56 +1021,48 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
 
           const SizedBox(height: 20),
 
-          // Custom visual chart representing 7 sessions trend
-          SizedBox(
-            height: 120,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // Live line graph – updates after every game session
+          Builder(builder: (context) {
+            final patientId = PatientProfile.loadFromHive()?.id ?? 'patient-ramesh';
+            final stats = SessionService.instance.getStatsFor(patientId);
+            final scores = stats.last7Scores.isEmpty
+                ? [0.65, 0.70, 0.68, 0.74, 0.72, 0.78, 0.81] // fallback demo
+                : stats.last7Scores;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildChartBar('Session 1', 0.65, '65%'),
-                _buildChartBar('Session 2', 0.70, '70%'),
-                _buildChartBar('Session 3', 0.68, '68%'),
-                _buildChartBar('Session 4', 0.74, '74%'),
-                _buildChartBar('Session 5', 0.78, '78%'),
-                _buildChartBar('Session 6', 0.75, '75%'),
-                _buildChartBar('Session 7', 0.82, '82%', isCurrent: true),
+                SizedBox(
+                  height: 130,
+                  child: CustomPaint(
+                    painter: _LineChartPainter(
+                      scores: scores,
+                      lineColor: AppTheme.forestGreen,
+                      fillColor: AppTheme.forestGreen.withOpacity(0.08),
+                      dotColor: AppTheme.forestGreen,
+                    ),
+                    size: const Size(double.infinity, 130),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(scores.length, (i) {
+                    final isLast = i == scores.length - 1;
+                    return Text(
+                      'S${i + 1}',
+                      style: GoogleFonts.inter(
+                        fontSize: 10.0,
+                        fontWeight: isLast ? FontWeight.w700 : FontWeight.w400,
+                        color: isLast ? AppTheme.forestGreen : AppTheme.textLight,
+                      ),
+                    );
+                  }),
+                ),
               ],
-            ),
-          ),
+            );
+          }),
         ],
       ),
-    );
-  }
-
-  Widget _buildChartBar(String label, double pct, String value, {bool isCurrent = false}) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Text(
-          value,
-          style: GoogleFonts.inter(
-            fontSize: 10.5,
-            fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
-            color: isCurrent ? AppTheme.forestGreen : AppTheme.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          width: 24,
-          height: 70 * pct,
-          decoration: BoxDecoration(
-            color: isCurrent ? AppTheme.forestGreen : AppTheme.sageLight,
-            borderRadius: BorderRadius.circular(6),
-            border: isCurrent ? null : Border.all(color: AppTheme.sageBorder),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          label.replaceAll('Session ', 'S'),
-          style: GoogleFonts.inter(fontSize: 10.0, color: AppTheme.textLight),
-        ),
-      ],
     );
   }
 
@@ -1737,4 +1744,124 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     );
   }
 }
+
+// ─── Line Chart CustomPainter ────────────────────────────────────────────────
+class _LineChartPainter extends CustomPainter {
+  final List<double> scores;
+  final Color lineColor;
+  final Color fillColor;
+  final Color dotColor;
+
+  const _LineChartPainter({
+    required this.scores,
+    required this.lineColor,
+    required this.fillColor,
+    required this.dotColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (scores.isEmpty) return;
+
+    const double paddingTop = 12;
+    const double paddingBottom = 8;
+    final double drawH = size.height - paddingTop - paddingBottom;
+    final int n = scores.length;
+
+    // Find min/max for Y scaling (with small padding so line isn't flush)
+    double minV = scores.reduce((a, b) => a < b ? a : b);
+    double maxV = scores.reduce((a, b) => a > b ? a : b);
+    if ((maxV - minV) < 0.05) {
+      minV = max(0.0, minV - 0.1);
+      maxV = (maxV + 0.1).clamp(0.0, 1.0);
+    }
+
+    Offset _pt(int i, double v) {
+      final x = n == 1 ? size.width / 2 : i / (n - 1) * size.width;
+      final y = paddingTop + drawH * (1 - (v - minV) / (maxV - minV));
+      return Offset(x, y);
+    }
+
+    final points = List.generate(n, (i) => _pt(i, scores[i]));
+
+    // Grid lines
+    final gridPaint = Paint()
+      ..color = const Color(0xFFE5EDE8)
+      ..strokeWidth = 1.0;
+    for (int row = 0; row <= 3; row++) {
+      final y = paddingTop + drawH * row / 3;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    // Filled area path
+    final fillPath = Path()..moveTo(points.first.dx, points.first.dy);
+    if (n > 1) {
+      for (int i = 0; i < n - 1; i++) {
+        final cp1 = Offset((points[i].dx + points[i + 1].dx) / 2, points[i].dy);
+        final cp2 = Offset((points[i].dx + points[i + 1].dx) / 2, points[i + 1].dy);
+        fillPath.cubicTo(cp1.dx, cp1.dy, cp2.dx, cp2.dy, points[i + 1].dx, points[i + 1].dy);
+      }
+    }
+    fillPath
+      ..lineTo(points.last.dx, size.height - paddingBottom)
+      ..lineTo(points.first.dx, size.height - paddingBottom)
+      ..close();
+
+    canvas.drawPath(fillPath, Paint()..color = fillColor..style = PaintingStyle.fill);
+
+    // Line path
+    final linePath = Path()..moveTo(points.first.dx, points.first.dy);
+    if (n > 1) {
+      for (int i = 0; i < n - 1; i++) {
+        final cp1 = Offset((points[i].dx + points[i + 1].dx) / 2, points[i].dy);
+        final cp2 = Offset((points[i].dx + points[i + 1].dx) / 2, points[i + 1].dy);
+        linePath.cubicTo(cp1.dx, cp1.dy, cp2.dx, cp2.dy, points[i + 1].dx, points[i + 1].dy);
+      }
+    }
+    canvas.drawPath(
+      linePath,
+      Paint()
+        ..color = lineColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.4
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // Dots + value labels
+    for (int i = 0; i < n; i++) {
+      final pt = points[i];
+      final isLast = i == n - 1;
+
+      // Outer glow for last dot
+      if (isLast) {
+        canvas.drawCircle(pt, 8, Paint()..color = dotColor.withOpacity(0.18));
+      }
+      canvas.drawCircle(pt, isLast ? 5.0 : 3.5,
+          Paint()..color = isLast ? dotColor : dotColor.withOpacity(0.55));
+      canvas.drawCircle(pt, isLast ? 2.5 : 1.8,
+          Paint()..color = Colors.white);
+
+      // Percentage label above each dot
+      final label = '${(scores[i] * 100).round()}%';
+      final tp = TextPainter(
+        text: TextSpan(
+          text: label,
+          style: TextStyle(
+            color: isLast ? dotColor : const Color(0xFF8FA89A),
+            fontSize: isLast ? 10.5 : 9.5,
+            fontWeight: isLast ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      tp.paint(canvas, Offset(pt.dx - tp.width / 2, pt.dy - tp.height - 6));
+    }
+  }
+
+  @override
+  bool shouldRepaint(_LineChartPainter old) =>
+      old.scores.toString() != scores.toString() ||
+      old.lineColor != lineColor;
+}
+
 
