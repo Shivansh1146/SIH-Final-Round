@@ -418,7 +418,7 @@ class _LandingScreenState extends State<LandingScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Good morning, Ramesh',
+                'Good morning, ${_profile?.fullName.split(' ').first ?? 'Ramesh'}',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 18.0,
                   fontWeight: FontWeight.w800,
