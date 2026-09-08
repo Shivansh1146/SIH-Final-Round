@@ -80,8 +80,8 @@ class SessionService extends ChangeNotifier {
   /// Returns all sessions for the active patient, most recent first.
   List<GameSession> getSessionsFor(String patientId) {
     try {
-      if (patientId == 'patient-ramesh') {
-        ensureDemoDataSeeded();
+      if (patientId == 'patient-ramesh' || patientId == 'PT-9042') {
+        ensureDemoDataSeeded(patientId: patientId);
       }
       final box = Hive.box(_boxKey);
       final raw = box.get(_hiveKey);
@@ -89,7 +89,7 @@ class SessionService extends ChangeNotifier {
       return raw
           .cast<Map<dynamic, dynamic>>()
           .map(GameSession.fromMap)
-          .where((s) => s.patientId == patientId)
+          .where((s) => s.patientId == patientId || (patientId == 'PT-9042' && s.patientId == 'patient-ramesh'))
           .toList()
         ..sort((a, b) => b.playedAt.compareTo(a.playedAt));
     } catch (e) {
@@ -167,9 +167,9 @@ class SessionService extends ChangeNotifier {
     }
   }
 
-  /// Seeds initial demonstration sessions ONLY for 'patient-ramesh' (the demo profile)
+  /// Seeds initial demonstration sessions for 'patient-ramesh' / 'PT-9042'
   /// so fresh installs show realistic data for Ramesh, while any new patient starts at 0.
-  void ensureDemoDataSeeded({bool forceRefresh = false}) {
+  void ensureDemoDataSeeded({String patientId = 'patient-ramesh', bool forceRefresh = false}) {
     try {
       final box = Hive.box(_boxKey);
       final raw = box.get(_hiveKey);
@@ -177,8 +177,9 @@ class SessionService extends ChangeNotifier {
       if (raw is List) {
         all.addAll(raw.cast<Map<dynamic, dynamic>>());
       }
+      final targetId = patientId == 'PT-9042' ? 'patient-ramesh' : patientId;
       final rameshSessions =
-          all.where((m) => m['patientId'] == 'patient-ramesh').toList();
+          all.where((m) => m['patientId'] == targetId).toList();
 
       final now = DateTime.now();
       bool needsReseed = rameshSessions.isEmpty || forceRefresh;
@@ -193,7 +194,7 @@ class SessionService extends ChangeNotifier {
       }
 
       if (needsReseed) {
-        all.removeWhere((m) => m['patientId'] == 'patient-ramesh');
+        all.removeWhere((m) => m['patientId'] == targetId);
         final demoAccuracies = [0.65, 0.70, 0.68, 0.74, 0.72, 0.78, 0.81];
         final demoResponses = [2.8, 2.5, 2.6, 2.3, 2.4, 2.1, 1.9];
         for (int i = 0; i < demoAccuracies.length; i++) {
@@ -202,7 +203,7 @@ class SessionService extends ChangeNotifier {
               : now.subtract(Duration(days: demoAccuracies.length - 1 - i, hours: 2));
           final s = GameSession(
             sessionId: 'demo-ramesh-$i',
-            patientId: 'patient-ramesh',
+            patientId: targetId,
             gameType: i.isEven ? 'memory_match' : 'clock_drawing',
             playedAt: sessionTime,
             accuracyRatio: demoAccuracies[i],
