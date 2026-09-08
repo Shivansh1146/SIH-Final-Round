@@ -361,6 +361,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                       setState(() => _sidebarIndex = idx);
                     },
                     onResetData: _handleResetDemoData,
+                    onSwitchMode: () => widget.onNavigate(AppViewMode.patient),
                   ),
                 )
               : null,
@@ -419,6 +420,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                             setState(() => _sidebarIndex = idx);
                           },
                           onResetData: _handleResetDemoData,
+                          onSwitchMode: () => widget.onNavigate(AppViewMode.patient),
                         ),
 
                       Expanded(
