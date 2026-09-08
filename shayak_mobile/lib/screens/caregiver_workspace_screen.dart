@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' show max;
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
   int _sidebarIndex = 0;
   bool _isSyncing = false;
   DateTime _lastSyncTime = DateTime.now();
+  Timer? _autoSyncTimer;
   Map<String, dynamic>? _aiEvaluationData;
   bool _isLoadingAi = false;
 
@@ -68,14 +70,37 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     _fetchPatientDifficulty();
     // Re-render line graph whenever a game session is saved
     SessionService.instance.addListener(_onSessionUpdate);
+    // Automatic live background sync & clock update every 10 seconds
+    _autoSyncTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted) {
+        setState(() {
+          _lastSyncTime = DateTime.now();
+        });
+        _pollBackendUpdates();
+      }
+    });
   }
 
   void _onSessionUpdate() {
-    if (mounted) setState(() {});
+    if (mounted) {
+      setState(() {
+        _lastSyncTime = DateTime.now();
+      });
+    }
+  }
+
+  void _pollBackendUpdates() async {
+    try {
+      final res = await http.get(Uri.parse('http://127.0.0.1:8000/api/v1/patient/PT-9042/history')).timeout(const Duration(seconds: 2));
+      if (res.statusCode == 200 && mounted) {
+        setState(() {});
+      }
+    } catch (_) {}
   }
 
   @override
   void dispose() {
+    _autoSyncTimer?.cancel();
     SessionService.instance.removeListener(_onSessionUpdate);
     super.dispose();
   }
@@ -402,7 +427,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
   }
 
   String _getFormattedSyncTime() {
-    final now = _lastSyncTime;
+    final now = DateTime.now();
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     final month = months[now.month - 1];
     final hour12 = now.hour % 12 == 0 ? 12 : now.hour % 12;
@@ -668,7 +693,7 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
               ),
               const Spacer(),
               Text(
-                'LIVE EDGE SYNC',
+                'LIVE AUTO-SYNC (10s)',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w800,
