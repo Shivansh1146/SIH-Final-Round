@@ -366,34 +366,55 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    LocalizationService.getTimeGreeting(),
+                    LocalizationService.getTimeGreeting(lang),
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 15.0,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textSecondary,
                     ),
                   ),
-                  OutlinedButton.icon(
-                    onPressed: _playListenAudio,
-                    icon: Icon(
-                      _isPlayingAudio ? Icons.volume_up_rounded : Icons.volume_down_rounded,
-                      size: 15,
-                      color: AppTheme.forestGreen,
-                    ),
-                    label: Text(
-                      LocalizationService.tr('listen'),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.forestGreen,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: _playListenAudio,
+                        icon: Icon(
+                          _isPlayingAudio ? Icons.volume_up_rounded : Icons.volume_down_rounded,
+                          size: 15,
+                          color: AppTheme.forestGreen,
+                        ),
+                        label: Text(
+                          LocalizationService.tr('listen', lang),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.forestGreen,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          side: const BorderSide(color: AppTheme.surfaceBorder),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                        ),
                       ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: const BorderSide(color: AppTheme.surfaceBorder),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                    ),
+                      const SizedBox(width: 6),
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppTheme.surfaceBorder),
+                        ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          tooltip: 'Language & Voice Settings',
+                          icon: const Icon(Icons.tune_rounded, size: 16, color: AppTheme.textSecondary),
+                          onPressed: () => LocalizationService.showLanguageDialog(context),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -415,7 +436,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                LocalizationService.tr('calm_quote'),
+                LocalizationService.tr('calm_quote', lang),
                 style: GoogleFonts.inter(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w400,
@@ -433,7 +454,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      LocalizationService.getTimeGreeting(),
+                      LocalizationService.getTimeGreeting(lang),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 16.0,
                         fontWeight: FontWeight.w600,
@@ -458,7 +479,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      LocalizationService.tr('calm_quote'),
+                      LocalizationService.tr('calm_quote', lang),
                       style: GoogleFonts.inter(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w400,
@@ -480,7 +501,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                       color: AppTheme.forestGreen,
                     ),
                     label: Text(
-                      LocalizationService.tr('listen'),
+                      LocalizationService.tr('listen', lang),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
@@ -505,8 +526,9 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                     ),
                     child: IconButton(
                       padding: EdgeInsets.zero,
+                      tooltip: 'Language & Voice Settings',
                       icon: const Icon(Icons.tune_rounded, size: 17, color: AppTheme.textSecondary),
-                      onPressed: () {},
+                      onPressed: () => LocalizationService.showLanguageDialog(context),
                     ),
                   ),
                 ],

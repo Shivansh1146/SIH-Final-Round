@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/patient_profile.dart';
+import '../theme/app_theme.dart';
 import 'audio_narration_service.dart';
 
 class LocalizationService {
@@ -30,6 +32,63 @@ class LocalizationService {
     if (profile != null) {
       languageNotifier.value = profile.preferredLanguage;
     }
+  }
+
+  static void showLanguageDialog(BuildContext context) {
+    final currentLang = LocalizationService.instance.currentLanguage;
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Select Language / भाषा चुनें',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: AppLanguage.values.map((lang) {
+                    final isSelected = lang == currentLang;
+                    return ListTile(
+                      dense: true,
+                      selected: isSelected,
+                      selectedTileColor: AppTheme.sageLight,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      leading: Text(lang.flag, style: const TextStyle(fontSize: 20)),
+                      title: Text(
+                        lang.displayName,
+                        style: GoogleFonts.inter(
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected ? AppTheme.forestGreen : AppTheme.textPrimary,
+                        ),
+                      ),
+                      trailing: isSelected ? const Icon(Icons.check_circle_rounded, color: AppTheme.forestGreen) : null,
+                      onTap: () {
+                        LocalizationService.instance.setLanguage(lang, speakPreview: true);
+                        Navigator.pop(ctx);
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void setLanguage(AppLanguage lang, {bool speakPreview = true}) {
