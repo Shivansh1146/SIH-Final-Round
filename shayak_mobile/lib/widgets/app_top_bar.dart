@@ -307,7 +307,7 @@ class AppTopBar extends StatelessWidget {
 
         return Container(
           height: isMobile ? 60 : 72,
-          padding: EdgeInsets.symmetric(horizontal: isMobile ? 12.0 : 28.0),
+          padding: EdgeInsets.symmetric(horizontal: isMobile ? 8.0 : 28.0),
           decoration: const BoxDecoration(
             color: AppTheme.background,
             border: Border(
@@ -325,7 +325,7 @@ class AppTopBar extends StatelessWidget {
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 2),
               ],
 
               // Logo & Branding
@@ -338,8 +338,8 @@ class AppTopBar extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: isMobile ? 30 : 38,
-                        height: isMobile ? 30 : 38,
+                        width: isMobile ? 28 : 38,
+                        height: isMobile ? 28 : 38,
                         decoration: BoxDecoration(
                           color: AppTheme.forestGreen,
                           shape: BoxShape.circle,
@@ -355,11 +355,11 @@ class AppTopBar extends StatelessWidget {
                           child: Icon(
                             Icons.eco_rounded,
                             color: Colors.white,
-                            size: isMobile ? 15 : 20,
+                            size: isMobile ? 14 : 20,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,7 +370,7 @@ class AppTopBar extends StatelessWidget {
                                 TextSpan(
                                   text: 'SAHAYAK',
                                   style: GoogleFonts.plusJakartaSans(
-                                    fontSize: isMobile ? 14.5 : 17,
+                                    fontSize: isMobile ? 14.0 : 17,
                                     fontWeight: FontWeight.w800,
                                     color: AppTheme.forestGreen,
                                     letterSpacing: 0.5,
@@ -379,7 +379,7 @@ class AppTopBar extends StatelessWidget {
                                 TextSpan(
                                   text: '—AI',
                                   style: GoogleFonts.plusJakartaSans(
-                                    fontSize: isMobile ? 14.5 : 17,
+                                    fontSize: isMobile ? 14.0 : 17,
                                     fontWeight: FontWeight.w800,
                                     color: AppTheme.warmTerracotta,
                                     letterSpacing: 0.5,
@@ -416,8 +416,8 @@ class AppTopBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(100),
                     child: Container(
                       padding: EdgeInsets.symmetric(
-                        horizontal: isMobile ? 8 : 12,
-                        vertical: isMobile ? 5 : 6,
+                        horizontal: isMobile ? 6 : 12,
+                        vertical: isMobile ? 4 : 6,
                       ),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -427,21 +427,22 @@ class AppTopBar extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(lang.flag, style: const TextStyle(fontSize: 14)),
-                          const SizedBox(width: 5),
-                          if (!isTiny)
+                          Text(lang.flag, style: const TextStyle(fontSize: 13)),
+                          if (!isMobile) ...[
+                            const SizedBox(width: 5),
                             Text(
-                              isMobile ? lang.name.toUpperCase().substring(0, 2) : lang.displayName.split(' ').first,
+                              lang.displayName.split(' ').first,
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 12.0,
                                 fontWeight: FontWeight.w700,
                                 color: AppTheme.textPrimary,
                               ),
                             ),
-                          const SizedBox(width: 3),
+                          ],
+                          const SizedBox(width: 2),
                           const Icon(
                             Icons.keyboard_arrow_down_rounded,
-                            size: 15,
+                            size: 14,
                             color: AppTheme.textSecondary,
                           ),
                         ],
@@ -451,7 +452,7 @@ class AppTopBar extends StatelessWidget {
                 },
               ),
 
-              const SizedBox(width: 6),
+              const SizedBox(width: 4),
 
               // Right Status & Actions
               if (currentMode == AppViewMode.landing) ...[
@@ -526,7 +527,7 @@ class AppTopBar extends StatelessWidget {
                     onTap: () => _showProfileSwitcherModal(context),
                     borderRadius: BorderRadius.circular(100),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(100),
@@ -536,20 +537,20 @@ class AppTopBar extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            width: 7,
-                            height: 7,
+                            width: 6,
+                            height: 6,
                             decoration: const BoxDecoration(
                               color: AppTheme.statusGreen,
                               shape: BoxShape.circle,
                             ),
                           ),
-                          const SizedBox(width: 5),
+                          const SizedBox(width: 4),
                           ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: isTiny ? 60 : 75),
+                            constraints: BoxConstraints(maxWidth: isTiny ? 45 : 60),
                             child: Text(
                               patientName.split(' ').first,
                               style: GoogleFonts.inter(
-                                fontSize: 11.5,
+                                fontSize: 11.0,
                                 fontWeight: FontWeight.w600,
                                 color: AppTheme.textSecondary,
                               ),
@@ -558,7 +559,7 @@ class AppTopBar extends StatelessWidget {
                           ),
                           const Icon(
                             Icons.keyboard_arrow_down_rounded,
-                            size: 14,
+                            size: 13,
                             color: AppTheme.textSecondary,
                           ),
                         ],
@@ -566,69 +567,51 @@ class AppTopBar extends StatelessWidget {
                     ),
                   ),
 
-                const SizedBox(width: 6),
-
-                // Mode Switcher Button (Compact on mobile)
-                if (screenWidth < 400)
-                  IconButton.filledTonal(
-                    onPressed: () => onModeChanged(
-                      currentMode == AppViewMode.patient ? AppViewMode.caregiver : AppViewMode.patient,
-                    ),
-                    icon: Icon(
-                      currentMode == AppViewMode.patient ? Icons.medical_services_outlined : Icons.person_outline_rounded,
-                      size: 16,
-                      color: AppTheme.forestGreen,
-                    ),
-                    tooltip: currentMode == AppViewMode.patient ? 'Switch to Caregiver' : 'Switch to Patient',
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: const BorderSide(color: AppTheme.surfaceBorder),
-                      padding: const EdgeInsets.all(6),
-                    ),
-                  )
-                else if (currentMode == AppViewMode.patient)
-                  OutlinedButton.icon(
-                    onPressed: () => onModeChanged(AppViewMode.caregiver),
-                    icon: const Icon(Icons.person_outline_rounded, size: 14, color: AppTheme.textPrimary),
-                    label: Text(
-                      LocalizationService.tr('caregiver'),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: isMobile ? 11.5 : 13.0,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                if (!isMobile) ...[
+                  const SizedBox(width: 6),
+                  if (currentMode == AppViewMode.patient)
+                    OutlinedButton.icon(
+                      onPressed: () => onModeChanged(AppViewMode.caregiver),
+                      icon: const Icon(Icons.person_outline_rounded, size: 14, color: AppTheme.textPrimary),
+                      label: Text(
+                        LocalizationService.tr('caregiver'),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13.0,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        side: const BorderSide(color: AppTheme.surfaceBorder),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                      ),
+                    )
+                  else
+                    OutlinedButton.icon(
+                      onPressed: () => onModeChanged(AppViewMode.patient),
+                      icon: const Icon(Icons.person_outline_rounded, size: 14, color: AppTheme.textPrimary),
+                      label: Text(
+                        LocalizationService.tr('patient'),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13.0,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        side: const BorderSide(color: AppTheme.surfaceBorder),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(100),
+                        ),
                       ),
                     ),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: const BorderSide(color: AppTheme.surfaceBorder),
-                      padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 14, vertical: isMobile ? 6 : 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                    ),
-                  )
-                else
-                  OutlinedButton.icon(
-                    onPressed: () => onModeChanged(AppViewMode.patient),
-                    icon: const Icon(Icons.person_outline_rounded, size: 14, color: AppTheme.textPrimary),
-                    label: Text(
-                      LocalizationService.tr('patient'),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: isMobile ? 11.5 : 13.0,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: const BorderSide(color: AppTheme.surfaceBorder),
-                      padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 14, vertical: isMobile ? 6 : 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                    ),
-                  ),
+                ],
               ],
             ],
           ),

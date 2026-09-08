@@ -510,335 +510,515 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
     final avgRespStr = '${avgRespSec.toStringAsFixed(1)}s';
     final lastActivityStr = _getLastActivityTime(sessions);
     final latestScore = stats.last7Scores.isNotEmpty ? stats.last7Scores.last : 0.82;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header Section
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        if (isMobile) ...[
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.favorite_border_rounded, size: 14, color: AppTheme.forestGreen),
-                      const SizedBox(width: 6),
-                      Text(
-                        LocalizationService.tr('caregiver_workspace', lang),
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12.0,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.forestGreen,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
+                  const Icon(Icons.favorite_border_rounded, size: 14, color: AppTheme.forestGreen),
+                  const SizedBox(width: 6),
                   Text(
-                    _getGreeting(lang),
+                    LocalizationService.tr('caregiver_workspace', lang),
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 34.0,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.w700,
                       color: AppTheme.forestGreen,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    LocalizationService.tr('caregiver_sub', lang),
-                    style: GoogleFonts.inter(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w400,
-                      color: AppTheme.textSecondary,
                     ),
                   ),
                 ],
               ),
-            ),
-
-            // Interactive Dropdown & Simulate Sync
-            Row(
-              children: [
-                PopupMenuButton<String>(
-                  onSelected: (selectedId) {
-                    PatientProfile.setActiveProfile(selectedId);
-                    setState(() {});
-                    _fetchPatientDifficulty();
-                    final updatedProfile = PatientProfile.loadFromHive();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Active patient switched to ${updatedProfile?.fullName ?? selectedId}',
-                          style: GoogleFonts.inter(),
-                        ),
-                        backgroundColor: AppTheme.forestGreen,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  color: Colors.white,
-                  elevation: 6,
-                  offset: const Offset(0, 42),
-                  itemBuilder: (ctx) {
-                    final allProfiles = PatientProfile.loadAllFromHive();
-                    return allProfiles.map((p) {
-                      final isCurrent = p.id == patientId;
-                      return PopupMenuItem<String>(
-                        value: p.id,
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 30,
-                              height: 30,
-                              decoration: BoxDecoration(
-                              color: isCurrent ? AppTheme.forestGreen : AppTheme.sageLight,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                p.fullName.isNotEmpty ? p.fullName[0] : 'P',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: isCurrent ? Colors.white : AppTheme.forestGreen,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  p.fullName,
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 13.5,
-                                    fontWeight: isCurrent ? FontWeight.w800 : FontWeight.w600,
-                                    color: isCurrent ? AppTheme.forestGreen : AppTheme.textPrimary,
-                                  ),
-                                ),
-                                Text(
-                                  'Age ${p.age} · ${p.diagnosis ?? "Cognitive Monitoring"}',
-                                  style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textSecondary),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (isCurrent)
-                            const Icon(Icons.check_rounded, color: AppTheme.forestGreen, size: 18),
-                        ],
-                      ),
-                    );
-                  }).toList();
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(100),
-                    border: Border.all(color: AppTheme.surfaceBorder),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        patientName,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppTheme.textSecondary),
-                    ],
-                  ),
+              const SizedBox(height: 4),
+              Text(
+                _getGreeting(lang),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 28.0,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.forestGreen,
+                  letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(width: 8),
-              OutlinedButton.icon(
-                onPressed: _simulateSync,
-                icon: _isSyncing
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.forestGreen),
-                      )
-                    : const Icon(Icons.sync_rounded, size: 15, color: AppTheme.textPrimary),
-                label: Text(
-                  LocalizationService.tr('simulate_sync', lang),
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13.0,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
+              const SizedBox(height: 4),
+              Text(
+                LocalizationService.tr('caregiver_sub', lang),
+                style: GoogleFonts.inter(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w400,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: PopupMenuButton<String>(
+                      onSelected: (selectedId) {
+                        PatientProfile.setActiveProfile(selectedId);
+                        setState(() {});
+                        _fetchPatientDifficulty();
+                        final updatedProfile = PatientProfile.loadFromHive();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Active patient switched to ${updatedProfile?.fullName ?? selectedId}',
+                              style: GoogleFonts.inter(),
+                            ),
+                            backgroundColor: AppTheme.forestGreen,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      color: Colors.white,
+                      elevation: 6,
+                      offset: const Offset(0, 42),
+                      itemBuilder: (ctx) {
+                        final allProfiles = PatientProfile.loadAllFromHive();
+                        return allProfiles.map((p) {
+                          final isCurrent = p.id == patientId;
+                          return PopupMenuItem<String>(
+                            value: p.id,
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 30,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    color: isCurrent ? AppTheme.forestGreen : AppTheme.sageLight,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      p.fullName.isNotEmpty ? p.fullName[0] : 'P',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: isCurrent ? Colors.white : AppTheme.forestGreen,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        p.fullName,
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 13,
+                                          fontWeight: isCurrent ? FontWeight.bold : FontWeight.w600,
+                                          color: isCurrent ? AppTheme.forestGreen : AppTheme.textPrimary,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Age ${p.age} · ${p.diagnosis ?? "Cognitive Monitoring"}',
+                                        style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textLight),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (isCurrent)
+                                  const Icon(Icons.check_rounded, color: AppTheme.forestGreen, size: 18),
+                              ],
+                            ),
+                          );
+                        }).toList();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(100),
+                          border: Border.all(color: AppTheme.surfaceBorder),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                patientName,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.textPrimary,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppTheme.textSecondary),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: _simulateSync,
+                    icon: _isSyncing
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.forestGreen),
+                          )
+                        : const Icon(Icons.sync_rounded, size: 14, color: AppTheme.textPrimary),
+                    label: Text(
+                      LocalizationService.tr('simulate_sync', lang),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12.0,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: AppTheme.surfaceBorder),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ] else ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.favorite_border_rounded, size: 14, color: AppTheme.forestGreen),
+                        const SizedBox(width: 6),
+                        Text(
+                          LocalizationService.tr('caregiver_workspace', lang),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12.0,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.forestGreen,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _getGreeting(lang),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 34.0,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.forestGreen,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      LocalizationService.tr('caregiver_sub', lang),
+                      style: GoogleFonts.inter(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w400,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
-                style: OutlinedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  side: const BorderSide(color: AppTheme.surfaceBorder),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                ),
+              ),
+
+              // Interactive Dropdown & Simulate Sync
+              Row(
+                children: [
+                  PopupMenuButton<String>(
+                    onSelected: (selectedId) {
+                      PatientProfile.setActiveProfile(selectedId);
+                      setState(() {});
+                      _fetchPatientDifficulty();
+                      final updatedProfile = PatientProfile.loadFromHive();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Active patient switched to ${updatedProfile?.fullName ?? selectedId}',
+                            style: GoogleFonts.inter(),
+                          ),
+                          backgroundColor: AppTheme.forestGreen,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    color: Colors.white,
+                    elevation: 6,
+                    offset: const Offset(0, 42),
+                    itemBuilder: (ctx) {
+                      final allProfiles = PatientProfile.loadAllFromHive();
+                      return allProfiles.map((p) {
+                        final isCurrent = p.id == patientId;
+                        return PopupMenuItem<String>(
+                          value: p.id,
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 30,
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  color: isCurrent ? AppTheme.forestGreen : AppTheme.sageLight,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    p.fullName.isNotEmpty ? p.fullName[0] : 'P',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: isCurrent ? Colors.white : AppTheme.forestGreen,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      p.fullName,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 13,
+                                        fontWeight: isCurrent ? FontWeight.bold : FontWeight.w600,
+                                        color: isCurrent ? AppTheme.forestGreen : AppTheme.textPrimary,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Age ${p.age} · ${p.diagnosis ?? "Cognitive Monitoring"}',
+                                      style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textLight),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (isCurrent)
+                                const Icon(Icons.check_rounded, color: AppTheme.forestGreen, size: 18),
+                            ],
+                          ),
+                        );
+                      }).toList();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(100),
+                        border: Border.all(color: AppTheme.surfaceBorder),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            patientName,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppTheme.textSecondary),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: _simulateSync,
+                    icon: _isSyncing
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.forestGreen),
+                          )
+                        : const Icon(Icons.sync_rounded, size: 15, color: AppTheme.textPrimary),
+                    label: Text(
+                      LocalizationService.tr('simulate_sync', lang),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13.0,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: AppTheme.surfaceBorder),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ],
-      ),
 
-      const SizedBox(height: 18),
+        const SizedBox(height: 18),
 
-      // Status Sync Banner
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(color: AppTheme.surfaceBorder),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 7,
-              height: 7,
-              decoration: const BoxDecoration(
-                color: AppTheme.statusGreen,
-                shape: BoxShape.circle,
+        // Status Sync Banner
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(100),
+            border: Border.all(color: AppTheme.surfaceBorder),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 7,
+                height: 7,
+                decoration: const BoxDecoration(
+                  color: AppTheme.statusGreen,
+                  shape: BoxShape.circle,
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              _getFormattedSyncTime(),
-              style: GoogleFonts.inter(
-                fontSize: 12.0,
-                fontWeight: FontWeight.w500,
-                color: AppTheme.textSecondary,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              LocalizationService.tr('live_auto_sync', lang),
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.forestGreen,
-                letterSpacing: 0.8,
-              ),
-            ),
-          ],
-        ),
-      ),
-
-      const SizedBox(height: 18),
-
-      // Selected Patient Card
-      Container(
-        padding: const EdgeInsets.all(20.0),
-        decoration: BoxDecoration(
-          color: AppTheme.sageLight.withOpacity(0.6),
-          borderRadius: BorderRadius.circular(20.0),
-          border: Border.all(color: AppTheme.sageBorder),
-        ),
-        child: Row(
-          children: [
-            // Avatar
-            Container(
-              width: 48,
-              height: 48,
-              decoration: const BoxDecoration(
-                color: AppTheme.forestGreen,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
+              const SizedBox(width: 8),
+              Expanded(
                 child: Text(
-                  patientInitials.isNotEmpty ? patientInitials : 'PT',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                  _getFormattedSyncTime(),
+                  style: GoogleFonts.inter(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textSecondary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                LocalizationService.tr('live_auto_sync', lang),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 10.0,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.forestGreen,
+                  letterSpacing: 0.6,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 18),
+
+        // Selected Patient Card
+        Container(
+          padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
+          decoration: BoxDecoration(
+            color: AppTheme.sageLight.withOpacity(0.6),
+            borderRadius: BorderRadius.circular(20.0),
+            border: Border.all(color: AppTheme.sageBorder),
+          ),
+          child: Row(
+            children: [
+              // Avatar
+              Container(
+                width: isMobile ? 42 : 48,
+                height: isMobile ? 42 : 48,
+                decoration: const BoxDecoration(
+                  color: AppTheme.forestGreen,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    patientInitials.isNotEmpty ? patientInitials : 'PT',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: isMobile ? 14.0 : 16.0,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    LocalizationService.tr('selected_patient', lang),
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 10.0,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.forestGreen,
-                      letterSpacing: 0.6,
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      LocalizationService.tr('selected_patient', lang),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10.0,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.forestGreen,
+                        letterSpacing: 0.6,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    patientName,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary,
+                    const SizedBox(height: 2),
+                    Text(
+                      patientName,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: isMobile ? 16.0 : 18.0,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textPrimary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Age ${activePatient?.age ?? 68} · Caregiver Anita Kumar · Preferred language ${lang.displayName}',
-                    style: GoogleFonts.inter(
-                      fontSize: 12.5,
-                      color: AppTheme.textSecondary,
+                    const SizedBox(height: 2),
+                    Text(
+                      'Age ${activePatient?.age ?? 68} · Preferred: ${lang.displayName.split(' ').first}',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            // Last Activity Badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppTheme.surfaceBorder),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    LocalizationService.tr('last_activity', lang),
-                    style: GoogleFonts.inter(fontSize: 10.5, color: AppTheme.textLight),
-                  ),
-                  Text(
-                    lastActivityStr,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+              // Last Activity Badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.surfaceBorder),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      LocalizationService.tr('last_activity', lang),
+                      style: GoogleFonts.inter(fontSize: 9.5, color: AppTheme.textLight),
                     ),
-                  ),
-                ],
+                    Text(
+                      lastActivityStr,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11.0,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
 
-      const SizedBox(height: 18),
+        const SizedBox(height: 18),
 
-      // 4 Stat Metric Cards Grid
-      LayoutBuilder(
+        // 4 Stat Metric Cards Grid
+        LayoutBuilder(
         builder: (context, constraints) {
           final isWide = constraints.maxWidth > 700;
           return GridView.count(

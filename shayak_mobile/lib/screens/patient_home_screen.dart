@@ -735,55 +735,57 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        LocalizationService.tr('today', lang),
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.textSecondary,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                      if (totalCount > 0) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1.5),
-                          decoration: BoxDecoration(
-                            color: pending.isEmpty ? AppTheme.sageLight : AppTheme.pastelYellow,
-                            borderRadius: BorderRadius.circular(100),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          LocalizationService.tr('today', lang),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.textSecondary,
+                            letterSpacing: 0.8,
                           ),
-                          child: Text(
-                            pending.isEmpty
-                                ? LocalizationService.tr('all_done', lang)
-                                : '${pending.length} ${LocalizationService.tr('pending', lang)}',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: pending.isEmpty ? AppTheme.forestGreen : AppTheme.warmTerracotta,
+                        ),
+                        if (totalCount > 0) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: pending.isEmpty ? AppTheme.sageLight : AppTheme.pastelYellow,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Text(
+                              pending.isEmpty
+                                  ? LocalizationService.tr('all_done', lang)
+                                  : '${pending.length} ${LocalizationService.tr('pending', lang)}',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                color: pending.isEmpty ? AppTheme.forestGreen : AppTheme.warmTerracotta,
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ],
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    LocalizationService.tr('reminders', lang),
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    Text(
+                      LocalizationService.tr('reminders', lang),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 17.0,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              Wrap(
-                spacing: 4,
+              Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Test Alarm Quick Preview
                   Tooltip(
@@ -792,11 +794,11 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                       onPressed: () {
                         ReminderService.instance.triggerTestAlert(context);
                       },
-                      icon: const Icon(Icons.notifications_active_rounded, size: 14, color: AppTheme.warmTerracotta),
+                      icon: const Icon(Icons.notifications_active_rounded, size: 13, color: AppTheme.warmTerracotta),
                       label: Text(
-                        'Test Alarm 🔔',
+                        'Test 🔔',
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11.5,
+                          fontSize: 11.0,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.warmTerracotta,
                         ),
@@ -804,24 +806,25 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: AppTheme.pastelYellow),
                         backgroundColor: AppTheme.pastelYellow.withOpacity(0.3),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
                       ),
                     ),
                   ),
+                  const SizedBox(width: 4),
                   TextButton(
                     onPressed: () => setState(() => _sidebarIndex = 2),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                     child: Text(
-                      'View all ($totalCount)',
+                      'All ($totalCount)',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12.5,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.forestGreen,
                       ),
@@ -1304,38 +1307,41 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  LocalizationService.tr('gentle_activities'),
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11.0,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.forestGreen,
-                    letterSpacing: 0.8,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    LocalizationService.tr('gentle_activities'),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11.0,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.forestGreen,
+                      letterSpacing: 0.8,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  LocalizationService.tr('games_exercises'),
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 32.0,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.forestGreen,
-                    letterSpacing: -0.5,
+                  const SizedBox(height: 4),
+                  Text(
+                    LocalizationService.tr('games_exercises'),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 28.0,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.forestGreen,
+                      letterSpacing: -0.5,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  LocalizationService.tr('games_sub'),
-                  style: GoogleFonts.inter(
-                    fontSize: 14.5,
-                    color: AppTheme.textSecondary,
+                  const SizedBox(height: 4),
+                  Text(
+                    LocalizationService.tr('games_sub'),
+                    style: GoogleFonts.inter(
+                      fontSize: 13.5,
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             IconButton(
               icon: const Icon(Icons.volume_up_rounded, color: AppTheme.forestGreen),
