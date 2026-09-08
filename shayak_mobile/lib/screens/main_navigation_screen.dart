@@ -32,8 +32,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         return CaregiverWorkspaceScreen(onNavigate: _onModeChanged);
       case AppViewMode.register:
         return PatientRegistrationScreen(
-          onNavigate: _onModeChanged,
           onRegistered: () => _onModeChanged(AppViewMode.patient),
+          onNavigate: _onModeChanged,
         );
     }
   }

@@ -1,22 +1,56 @@
-# Environments & Python
-.venv/
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 .pytest_cache/
 
-# Flutter / Dart
+# Flutter & Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+shayak_mobile/build/
 shayak_mobile/.dart_tool/
+shayak_mobile/.packages
 shayak_mobile/.flutter-plugins
 shayak_mobile/.flutter-plugins-dependencies
-shayak_mobile/build/
-shayak_mobile/.pub-cache/
-shayak_mobile/.pub/
-*.apk
-*.aab
+shayak_mobile/flutter_*.log
 
-# IDE & OS
-.vscode/
+# C/C++ / ESP-IDF Firmware
+firmware/**/build/
+firmware/**/sdkconfig.old
+firmware/**/managed_components/
+
+# IDE & Editor
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 .idea/
-*.DS_Store
+*.iml
+*.iws
+*.ipr
+.DS_Store
 Thumbs.db

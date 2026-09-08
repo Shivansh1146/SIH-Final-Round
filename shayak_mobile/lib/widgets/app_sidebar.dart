@@ -39,9 +39,9 @@ class AppSidebar extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
-              color: AppTheme.sageLight.withValues(alpha: 0.7),
+              color: AppTheme.sageLight.withOpacity(0.7),
               borderRadius: BorderRadius.circular(16.0),
-              border: Border.all(color: AppTheme.sageBorder.withValues(alpha: 0.6)),
+              border: Border.all(color: AppTheme.sageBorder.withOpacity(0.6)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,12 +86,13 @@ class AppSidebar extends StatelessWidget {
           if (!isCaregiver) ...[
             _buildNavItem(0, Icons.home_outlined, 'Home'),
             _buildNavItem(1, Icons.psychology_outlined, 'Games'),
-            _buildNavItem(2, Icons.auto_awesome_outlined, 'Reminders'),
-            _buildNavItem(3, Icons.grid_view_rounded, 'Progress'),
+            _buildNavItem(2, Icons.alarm_outlined, 'Reminders'),
+            _buildNavItem(3, Icons.bar_chart_rounded, 'Progress'),
           ] else ...[
-            _buildNavItem(0, Icons.grid_view_rounded, 'Overview'),
+            _buildNavItem(0, Icons.dashboard_outlined, 'Overview'),
             _buildNavItem(1, Icons.auto_awesome_outlined, 'AI decisions'),
-            _buildNavItem(2, Icons.psychology_outlined, 'Reminders'),
+            _buildNavItem(2, Icons.calendar_today_outlined, 'Care plan'),
+            _buildNavItem(3, Icons.sensors_rounded, 'ESP32 Device'),
           ],
 
           const Spacer(),
@@ -160,7 +161,7 @@ class AppSidebar extends StatelessWidget {
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
+                        color: Colors.black.withOpacity(0.03),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
