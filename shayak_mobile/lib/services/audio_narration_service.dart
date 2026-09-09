@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/patient_profile.dart';
+import 'localization_service.dart';
 import 'speech_platform_stub.dart'
     if (dart.library.html) 'speech_platform_web.dart'
     if (dart.library.io) 'speech_platform_io.dart';
@@ -17,7 +18,7 @@ class AudioNarrationService extends ChangeNotifier {
   Future<void> init() async {}
 
   Future<void> speak(String text, {AppLanguage? language}) async {
-    final targetLang = language ?? PatientProfile.loadFromHive()?.preferredLanguage ?? AppLanguage.english;
+    final targetLang = language ?? LocalizationService.instance.currentLanguage;
     _currentlySpeakingText = text;
     _isSpeaking = true;
     notifyListeners();

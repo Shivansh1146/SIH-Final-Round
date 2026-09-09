@@ -679,10 +679,9 @@ class AppTopBar extends StatelessWidget {
     final telUri = Uri.parse('tel:$cleanNumber');
     final msPhoneUri = Uri.parse('ms-phone:call?PhoneNumber=$cleanNumber');
 
-    AudioNarrationService.instance.speak(
-      "Emergency SOS activated. Contacting caregiver immediately.",
-      language: LocalizationService.instance.currentLanguage,
-    );
+    final currentLang = LocalizationService.instance.currentLanguage;
+    final speechText = LocalizationService.getCaregiverCallSpeech(currentLang);
+    AudioNarrationService.instance.speak(speechText, language: currentLang);
 
     try {
       final launched = await launchUrl(telUri, mode: LaunchMode.platformDefault);
