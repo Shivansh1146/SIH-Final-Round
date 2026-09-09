@@ -571,11 +571,10 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         // Hero Today's Activity Banner
         _buildHeroActivityBanner(context, lang),
 
+        const SizedBox(height: 20),
+
         // Reminiscence & Validation Therapy Companion Card ("Talk to me")
-        if (CompanionService.instance.isAvailable || !CompanionService.instance.hasChecked) ...[
-          const SizedBox(height: 20),
-          _buildTalkToMeCard(context, lang),
-        ],
+        _buildTalkToMeCard(context, lang),
 
         const SizedBox(height: 24),
 

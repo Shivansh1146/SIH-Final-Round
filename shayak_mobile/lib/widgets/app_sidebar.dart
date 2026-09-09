@@ -5,6 +5,7 @@ import '../models/patient_profile.dart';
 import '../services/localization_service.dart';
 import '../services/audio_narration_service.dart';
 import '../theme/app_theme.dart';
+import 'companion_modal.dart';
 
 class AppSidebar extends StatelessWidget {
   final bool isCaregiver;
@@ -64,6 +65,23 @@ class AppSidebar extends StatelessWidget {
                     _buildNavItem(context, 1, Icons.psychology_outlined, LocalizationService.tr('games', lang)),
                     _buildNavItem(context, 2, Icons.alarm_outlined, LocalizationService.tr('reminders', lang)),
                     _buildNavItem(context, 3, Icons.bar_chart_rounded, LocalizationService.tr('progress', lang)),
+                    const SizedBox(height: 6),
+                    _buildActionItem(
+                      context,
+                      Icons.record_voice_over_rounded,
+                      'Talk to me 🌿',
+                      onTap: () {
+                        if (Scaffold.maybeOf(context)?.isDrawerOpen ?? false) {
+                          Navigator.of(context).pop();
+                        }
+                        final profile = PatientProfile.loadFromHive();
+                        CompanionModal.show(
+                          context,
+                          patientId: profile?.id ?? 'PT-9042',
+                          patientName: profile?.fullName ?? 'Ramesh Kumar',
+                        );
+                      },
+                    ),
                   ],
 
                   const SizedBox(height: 24),
