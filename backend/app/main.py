@@ -456,6 +456,60 @@ def get_all_patients():
     return db.get_all_patients()
 
 
+# ============================================================================
+# Offline Conversational AI Reminiscence Companion (Ollama + Gemma 4 E2B)
+# ============================================================================
+from app.companion_service import (
+    CompanionChatRequest,
+    CompanionChatResponse,
+    CompanionStatusResponse,
+    generate_companion_reply,
+    check_ollama_availability,
+    OLLAMA_MODEL,
+    OLLAMA_HOST,
+)
+
+
+@app.get(
+    "/companion/status",
+    tags=["Companion AI"],
+    response_model=CompanionStatusResponse,
+    summary="Check local Ollama and Gemma 4 E2B availability for graceful degradation",
+)
+async def get_companion_status():
+    """Returns whether local offline Ollama service is online."""
+    available = await check_ollama_availability()
+    return CompanionStatusResponse(
+        available=available,
+        model=OLLAMA_MODEL,
+        ollama_host=OLLAMA_HOST,
+    )
+
+
+@app.post(
+    "/companion/chat",
+    tags=["Companion AI"],
+    response_model=CompanionChatResponse,
+    summary="Reminiscence & Validation Therapy conversation endpoint",
+)
+async def companion_chat(payload: CompanionChatRequest):
+    """
+    Receives message or native audio from patient, applies safety checks,
+    invokes local Gemma 4 E2B via Ollama, and returns warm reminiscence response.
+    """
+    user_msg = payload.message or "Hello"
+    reply_text = await generate_companion_reply(
+        patient_id=payload.patientId,
+        user_message=user_msg,
+        conversation_id=payload.conversationId,
+    )
+    return CompanionChatResponse(
+        text=reply_text,
+        audioUrl=None,
+        available=True,
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
     import os

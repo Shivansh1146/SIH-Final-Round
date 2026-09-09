@@ -22,6 +22,8 @@ import 'memory_lane_screen.dart';
 import 'local_language_naming_screen.dart';
 import 'memory_story_screen.dart';
 import '../widgets/patient_progress_dashboard.dart';
+import '../services/companion_service.dart';
+import '../widgets/companion_modal.dart';
 
 class PatientHomeScreen extends StatefulWidget {
   final ValueChanged<AppViewMode> onNavigate;
@@ -114,6 +116,12 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           });
         }
       }
+    } catch (_) {}
+
+    // Gracefully probe local companion status (Ollama + Gemma 4 E2B)
+    try {
+      await CompanionService.instance.checkAvailability();
+      if (mounted) setState(() {});
     } catch (_) {}
   }
 
@@ -563,6 +571,12 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         // Hero Today's Activity Banner
         _buildHeroActivityBanner(context, lang),
 
+        // Reminiscence & Validation Therapy Companion Card ("Talk to me")
+        if (CompanionService.instance.isAvailable || !CompanionService.instance.hasChecked) ...[
+          const SizedBox(height: 20),
+          _buildTalkToMeCard(context, lang),
+        ],
+
         const SizedBox(height: 24),
 
         // Bottom Grid: Reminders & Need Help
@@ -590,6 +604,116 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildTalkToMeCard(BuildContext context, AppLanguage lang) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24.0),
+        border: Border.all(color: AppTheme.sageBorder, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.forestGreen.withOpacity(0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: AppTheme.sageLight,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppTheme.sageBorder),
+            ),
+            child: const Center(
+              child: Text('🌿', style: TextStyle(fontSize: 28)),
+            ),
+          ),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Talk to me',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 18.0,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.forestGreen,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppTheme.sageLight,
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      child: Text(
+                        'Offline AI',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.forestGreen,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Share a warm memory or story from your past.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13.0,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton.icon(
+            onPressed: () {
+              CompanionModal.show(
+                context,
+                patientId: _patientId,
+                patientName: _patientDisplayName,
+              );
+            },
+            icon: const Icon(Icons.mic_rounded, size: 18, color: Colors.white),
+            label: Text(
+              'Listen & Talk',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.forestTealCard,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28.0),
+              ),
+              elevation: 0,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
