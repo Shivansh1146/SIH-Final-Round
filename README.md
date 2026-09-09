@@ -144,6 +144,18 @@ flutter run -d <device_id>
 
 ---
 
+## 🔄 Recent Updates
+
+| Date | Change |
+|------|--------|
+| Sep 2026 | ✅ Fixed `RenderFlex` overflow in **Doctor Dashboard** patient selector dropdown — consolidated Row into single `Text` with `TextOverflow.ellipsis` |
+| Sep 2026 | ✅ Fixed overflow in **Doctor Dashboard** physician feedback history, header tags, appointment cards |
+| Sep 2026 | ✅ Fixed overflow in **Caregiver Workspace** appointment headers and date/phone rows |
+| Sep 2026 | ✅ Restored original **Landing Screen** design ("Support for memory. Made human.") |
+| Sep 2026 | ✅ Added responsive `Wrap` layouts across all dashboard screens for physical device compatibility |
+
+---
+
 ## 📄 License
 
 Distributed under the **MIT License**. See `LICENSE` for details.

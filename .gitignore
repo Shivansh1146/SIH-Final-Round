@@ -54,3 +54,8 @@ firmware/**/managed_components/
 *.ipr
 .DS_Store
 Thumbs.db
+
+# Temporary artifacts & build outputs
+.tmp_artifacts/
+*.zip
+*.db

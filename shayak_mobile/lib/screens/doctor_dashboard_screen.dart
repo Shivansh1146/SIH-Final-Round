@@ -543,25 +543,14 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                       items: _allPatients.map((p) {
                         return DropdownMenuItem<String>(
                           value: p.id,
-                          child: Row(
-                            children: [
-                              Text(
-                                p.fullName,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF0F172A),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '· Age ${p.age} · ${p.diagnosis ?? "MCI"}',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  color: const Color(0xFF64748B),
-                                ),
-                              ),
-                            ],
+                          child: Text(
+                            '${p.fullName}  ·  Age ${p.age}  ·  ${p.diagnosis ?? "MCI"}',
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF0F172A),
+                            ),
                           ),
                         );
                       }).toList(),
