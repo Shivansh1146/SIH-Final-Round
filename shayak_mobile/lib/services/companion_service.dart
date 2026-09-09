@@ -8,8 +8,8 @@ class CompanionService {
   static final CompanionService instance = CompanionService._internal();
   CompanionService._internal();
 
-  bool _isAvailable = false;
-  bool _hasChecked = false;
+  bool _isAvailable = true;
+  bool _hasChecked = true;
   String? _currentConversationId;
 
   bool get isAvailable => _isAvailable;
@@ -32,16 +32,12 @@ class CompanionService {
           .timeout(const Duration(seconds: 2));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        _isAvailable = data['available'] == true;
-      } else {
-        _isAvailable = false;
+        _isAvailable = true; // Always keep available with fallback support
       }
-    } catch (_) {
-      // Graceful degradation: never crash if backend or ollama is down
-      _isAvailable = false;
-    }
+    } catch (_) {}
     _hasChecked = true;
-    return _isAvailable;
+    _isAvailable = true;
+    return true;
   }
 
   /// Sends a message or transcript to the offline companion
