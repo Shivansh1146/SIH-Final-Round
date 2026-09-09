@@ -436,21 +436,14 @@ class AppTopBar extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.emergency_rounded, size: 13, color: Colors.white),
-                        const SizedBox(width: 3),
-                        Text(
-                          'SOS',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      'SOS',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: isMobile ? 12.0 : 13.0,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 0.6,
+                      ),
                     ),
                   ),
                 ),
