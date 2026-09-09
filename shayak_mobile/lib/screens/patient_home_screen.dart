@@ -1238,13 +1238,13 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         return Container(
           padding: const EdgeInsets.all(22.0),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20.0),
-            border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
+            color: const Color(0xFFFFF5F5),
+            borderRadius: BorderRadius.circular(24.0),
+            border: Border.all(color: const Color(0xFFFECDD3), width: 1.6),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.02),
-                blurRadius: 10,
+                color: const Color(0xFFE11D48).withOpacity(0.08),
+                blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
             ],
@@ -1252,55 +1252,92 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: const BoxDecoration(
-                  color: AppTheme.pastelYellow,
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Text('?', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppTheme.warmTerracotta)),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFE4E6),
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(color: const Color(0xFFFDA4AF)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.emergency_rounded, size: 14, color: Color(0xFFBE123C)),
+                        const SizedBox(width: 6),
+                        Text(
+                          '24/7 EMERGENCY SOS',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFFBE123C),
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFE4E6),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFFFDA4AF)),
+                    ),
+                    child: const Center(
+                      child: Text('🆘', style: TextStyle(fontSize: 18)),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               Text(
-                LocalizationService.tr('need_help', lang),
+                'Emergency SOS & Caregiver Help',
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18.0,
+                  fontSize: 19.0,
                   fontWeight: FontWeight.w800,
-                  color: AppTheme.textPrimary,
+                  color: const Color(0xFF881337),
+                  letterSpacing: -0.3,
                 ),
               ),
               const SizedBox(height: 6),
               Text(
-                LocalizationService.tr('need_help_sub', lang),
+                'Tap to instantly dial your primary caregiver or trigger a 24/7 emergency dispatch alert.',
                 style: GoogleFonts.inter(
                   fontSize: 13.0,
                   fontWeight: FontWeight.w400,
-                  color: AppTheme.textSecondary,
+                  color: const Color(0xFF9F1239),
                   height: 1.4,
                 ),
               ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () => _callCaregiverViaPhoneLink(context, rawPhoneNumber: caregiverPhone, realCaregiverName: caregiverName),
-                icon: const Icon(Icons.phone_in_talk_rounded, size: 16, color: Colors.white),
-                label: Text(
-                  '${LocalizationService.tr('call_caregiver', lang)} $caregiverFirstName ($caregiverPhone)',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+              const SizedBox(height: 18),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () => _callCaregiverViaPhoneLink(context, rawPhoneNumber: caregiverPhone, realCaregiverName: caregiverName),
+                    icon: const Icon(Icons.phone_in_talk_rounded, size: 18, color: Colors.white),
+                    label: Text(
+                      'Call $caregiverFirstName ($caregiverPhone)',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFBE123C),
+                      foregroundColor: Colors.white,
+                      elevation: 2,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                    ),
                   ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.forestGreen,
-                  foregroundColor: Colors.white,
-                  elevation: 2,
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                ),
+                ],
               ),
             ],
           ),
