@@ -148,6 +148,26 @@ class _CompanionModalState extends State<CompanionModal> {
     }
   }
 
+  void _onTapSpeak() {
+    AudioNarrationService.instance.stop();
+    final currentTyped = _textController.text.trim();
+    if (currentTyped.isNotEmpty) {
+      _handleSendMessage(currentTyped);
+      return;
+    }
+
+    final lang = LocalizationService.instance.currentLanguage;
+    final defaultPrompts = {
+      AppLanguage.hindi: "नमस्ते! मुझे अपने गांव या बचपन की कोई अच्छी याद सुनाएं।",
+      AppLanguage.assamese: "নমস্কাৰ! মোক আপোনাৰ গাঁও বা শৈশৱৰ সুন্দৰ স্মৃতি কওক।",
+      AppLanguage.bengali: "নমস্কার! আমাকে আপনার শৈশব বা গ্রামের একটি মিষ্টি স্মৃতি বলুন।",
+      AppLanguage.english: "Hello Sahayak! Tell me a comforting memory or story from the past.",
+    };
+
+    final prompt = defaultPrompts[lang] ?? "Hello Sahayak! Tell me a comforting memory or story from the past.";
+    _handleSendMessage(prompt);
+  }
+
   void _onStartHoldSpeak() {
     setState(() {
       _isHoldingToSpeak = true;
@@ -172,12 +192,7 @@ class _CompanionModalState extends State<CompanionModal> {
       _isHoldingToSpeak = false;
     });
 
-    final currentTyped = _textController.text.trim();
-    if (currentTyped.isNotEmpty) {
-      _handleSendMessage(currentTyped);
-    } else {
-      _handleSendMessage("Hello Gemma! Tell me a nice story or thought.");
-    }
+    _onTapSpeak();
   }
 
   @override
@@ -495,47 +510,52 @@ class _CompanionModalState extends State<CompanionModal> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Hold to speak button (28px rounded primary button)
-                      GestureDetector(
-                        onTapDown: (_) => _onStartHoldSpeak(),
-                        onTapUp: (_) => _onStopHoldSpeak(),
-                        onTapCancel: () => _onStopHoldSpeak(),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 150),
-                          width: double.infinity,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            color: _isHoldingToSpeak ? AppTheme.warmTerracotta : AppTheme.forestGreen,
-                            borderRadius: BorderRadius.circular(28.0),
-                            boxShadow: [
-                              BoxShadow(
-                                color: (_isHoldingToSpeak ? AppTheme.warmTerracotta : AppTheme.forestGreen).withOpacity(0.3),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  _isHoldingToSpeak ? Icons.mic_rounded : Icons.mic_none_rounded,
-                                  color: Colors.white,
-                                  size: 22,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _isHoldingToSpeak
-                                      ? 'Listening... ($_holdSeconds s) · Release to send'
-                                      : 'Hold to Speak / बोलें',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
+                      // Hold or Tap to speak button
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _onTapSpeak,
+                          onTapDown: (_) => _onStartHoldSpeak(),
+                          onTapUp: (_) => _onStopHoldSpeak(),
+                          onTapCancel: () => _onStopHoldSpeak(),
+                          borderRadius: BorderRadius.circular(28.0),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            width: double.infinity,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: _isHoldingToSpeak ? AppTheme.warmTerracotta : AppTheme.forestGreen,
+                              borderRadius: BorderRadius.circular(28.0),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: (_isHoldingToSpeak ? AppTheme.warmTerracotta : AppTheme.forestGreen).withOpacity(0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
+                            ),
+                            child: Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    _isHoldingToSpeak ? Icons.mic_rounded : Icons.mic_none_rounded,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    _isHoldingToSpeak
+                                        ? 'Listening... ($_holdSeconds s) · Release to send'
+                                        : 'Tap or Hold to Speak / बोलें',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
