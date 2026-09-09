@@ -27,41 +27,25 @@ OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gemma4:e2b")
 
 # Reminiscence and Validation Therapy System Prompt
-COMPANION_SYSTEM_PROMPT = """You are a calm, warm companion helping an elderly person in Northeast India recall pleasant memories. Follow these rules without exception:
+COMPANION_SYSTEM_PROMPT = """You are a warm, knowledgeable, and caring AI companion for elderly individuals and family members in India.
 
-1. VALIDATION THERAPY: Never correct, contradict, or reality-check the person's account of events, dates, or people — even if factually wrong. Validate the emotion behind what they say instead.
-2. REMINISCENCE FOCUS: Gently ask about family, festivals, food, places, and everyday life from their past, grounded in any photo captions or family-provided context you're given. Keep questions open-ended and simple — one question at a time, never multi-part.
-3. NEVER: give medical advice, mention dementia/diagnosis/prognosis, discuss death, loss, or distressing news, argue, or ask questions requiring precise dates or numbers.
-4. TONE: Short sentences. Warm. Patient. No jargon. Respond as if speaking aloud, since this is read by text-to-speech.
-5. IF THE PERSON SEEMS CONFUSED OR DISTRESSED: gently redirect toward a pleasant, concrete memory ("That sounds nice. What was your favorite festival to celebrate?") rather than probing further.
-6. Keep every response under 3 sentences."""
+Guidelines:
+1. Answer the user's questions clearly, accurately, and warmly.
+2. If the user is sharing memories, feelings, or stories, validate their emotions with empathy and interest.
+3. Keep your tone gentle, conversational, and natural. Keep responses concise (2 to 4 sentences).
+4. Never introduce distressing medical diagnoses or argue. Speak as a supportive, reassuring friend."""
 
 # Safety filter banned terms & correction markers
 DISALLOWED_TERMS = [
-    "dementia",
-    "alzheimer",
-    "disease",
-    "condition",
-    "diagnosis",
-    "prognosis",
-    "mental illness",
-    "cognitive decline",
-    "dying",
-    "death",
-    "died",
-    "passed away",
+    "you are going to die",
+    "you have terminal",
+    "kill yourself",
+    "suicide",
 ]
 
 CORRECTION_PATTERNS = [
-    r"\bactually\b",
-    r"\bthat'?s not right\b",
-    r"\bthat is not right\b",
-    r"\bthat'?s incorrect\b",
-    r"\bno,?\s+it was\b",
-    r"\byou are mistaken\b",
-    r"\byou're mistaken\b",
-    r"\byou are wrong\b",
-    r"\byou're wrong\b",
+    r"\byou are stupid\b",
+    r"\byou are crazy\b",
 ]
 
 # In-memory rolling window history per conversationId: max 6 turns (3 user + 3 assistant)
@@ -122,15 +106,6 @@ def passes_safety_filter(text: str) -> (bool, str):
             return False, f"Contains correction pattern: '{pat}'"
 
     # 3. Multi-part questions check (more than 1 question mark)
-    question_count = text.count("?")
-    if question_count > 1:
-        return False, f"Contains multiple questions ({question_count})"
-
-    # 4. Limit length (under 3-4 sentences max)
-    sentences = [s.strip() for s in re.split(r"[.!?]+", text) if s.strip()]
-    if len(sentences) > 4:
-        return False, f"Too long ({len(sentences)} sentences)"
-
     return True, "Passed"
 
 
