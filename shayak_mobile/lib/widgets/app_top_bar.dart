@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/patient_profile.dart';
 import '../services/localization_service.dart';
 import '../services/audio_narration_service.dart';
@@ -416,7 +417,45 @@ class AppTopBar extends StatelessWidget {
                     onPressed: () => onModeChanged(AppViewMode.patient),
                   ),
               ] else ...[
-                // Profile Switcher Pill / Chip
+                // High-Visibility Emergency SOS Button in Top Navigation Bar
+                InkWell(
+                  onTap: () => _triggerTopBarSosCall(context, profile),
+                  borderRadius: BorderRadius.circular(100),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isTiny ? 9 : 12,
+                      vertical: isTiny ? 4 : 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFBE123C),
+                      borderRadius: BorderRadius.circular(100),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFBE123C).withOpacity(0.35),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.emergency_rounded, size: 14, color: Colors.white),
+                        const SizedBox(width: 4),
+                        Text(
+                          'SOS',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 if (screenWidth > 600)
                   InkWell(
                     onTap: () => _showProfileSwitcherModal(context),
@@ -638,5 +677,30 @@ class AppTopBar extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _triggerTopBarSosCall(BuildContext context, PatientProfile? profile) async {
+    final rawPhoneNumber = (profile?.caregiverPhone?.trim().isNotEmpty ?? false)
+        ? profile!.caregiverPhone!
+        : '+919456029330';
+    final cleanNumber = rawPhoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
+    final telUri = Uri.parse('tel:$cleanNumber');
+    final msPhoneUri = Uri.parse('ms-phone:call?PhoneNumber=$cleanNumber');
+
+    AudioNarrationService.instance.speak(
+      "Emergency SOS activated. Contacting caregiver immediately.",
+      language: LocalizationService.instance.currentLanguage,
+    );
+
+    try {
+      final launched = await launchUrl(telUri, mode: LaunchMode.platformDefault);
+      if (!launched) {
+        await launchUrl(msPhoneUri, mode: LaunchMode.platformDefault);
+      }
+    } catch (_) {
+      try {
+        await launchUrl(msPhoneUri, mode: LaunchMode.platformDefault);
+      } catch (_) {}
+    }
   }
 }
