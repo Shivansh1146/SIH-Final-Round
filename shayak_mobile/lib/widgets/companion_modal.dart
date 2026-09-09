@@ -7,6 +7,18 @@ import '../services/audio_narration_service.dart';
 import '../services/companion_service.dart';
 import '../services/localization_service.dart';
 
+class ChatMessage {
+  final String text;
+  final bool isUser;
+  final DateTime timestamp;
+
+  ChatMessage({
+    required this.text,
+    required this.isUser,
+    required this.timestamp,
+  });
+}
+
 class CompanionModal extends StatefulWidget {
   final String patientId;
   final String patientName;
@@ -32,28 +44,50 @@ class CompanionModal extends StatefulWidget {
 
 class _CompanionModalState extends State<CompanionModal> {
   final TextEditingController _textController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
-  
+
   bool _isLoading = false;
   bool _isHoldingToSpeak = false;
   Timer? _holdTimer;
   int _holdSeconds = 0;
 
-  String _currentPrompt = "Hello! Tell me about something happy from your days.";
-  String? _lastUserSpoken;
+  final List<ChatMessage> _messages = [];
 
   @override
   void initState() {
     super.initState();
-    // Greet with validation/reminiscence prompt
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _speakResponse(_currentPrompt);
+    _initFirstGreeting();
+  }
+
+  Future<void> _initFirstGreeting() async {
+    setState(() {
+      _isLoading = true;
     });
+
+    // Ask Gemma LLM directly for an opening greeting
+    final greeting = await CompanionService.instance.sendMessage(
+      patientId: widget.patientId,
+      message: "Greet me warmly and ask me about a pleasant memory from my youth.",
+    );
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        _messages.add(ChatMessage(
+          text: greeting,
+          isUser: false,
+          timestamp: DateTime.now(),
+        ));
+      });
+      _speakResponse(greeting);
+    }
   }
 
   @override
   void dispose() {
     _textController.dispose();
+    _scrollController.dispose();
     _focusNode.dispose();
     _holdTimer?.cancel();
     AudioNarrationService.instance.stop();
@@ -65,27 +99,51 @@ class _CompanionModalState extends State<CompanionModal> {
     await AudioNarrationService.instance.speak(text, language: lang);
   }
 
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
   Future<void> _handleSendMessage(String userText) async {
     if (userText.trim().isEmpty) return;
 
+    final trimmed = userText.trim();
     setState(() {
+      _messages.add(ChatMessage(
+        text: trimmed,
+        isUser: true,
+        timestamp: DateTime.now(),
+      ));
       _isLoading = true;
-      _lastUserSpoken = userText.trim();
       _textController.clear();
     });
 
+    _scrollToBottom();
     _focusNode.unfocus();
 
+    // Call live local Ollama Gemma LLM API
     final reply = await CompanionService.instance.sendMessage(
       patientId: widget.patientId,
-      message: userText,
+      message: trimmed,
     );
 
     if (mounted) {
       setState(() {
         _isLoading = false;
-        _currentPrompt = reply;
+        _messages.add(ChatMessage(
+          text: reply,
+          isUser: false,
+          timestamp: DateTime.now(),
+        ));
       });
+      _scrollToBottom();
       await _speakResponse(reply);
     }
   }
@@ -132,7 +190,7 @@ class _CompanionModalState extends State<CompanionModal> {
       valueListenable: LocalizationService.languageNotifier,
       builder: (context, lang, _) {
         return Container(
-          height: MediaQuery.of(context).size.height * 0.82,
+          height: MediaQuery.of(context).size.height * 0.88,
           decoration: const BoxDecoration(
             color: AppTheme.background,
             borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
@@ -140,9 +198,9 @@ class _CompanionModalState extends State<CompanionModal> {
           child: SafeArea(
             child: Column(
               children: [
-                // Top drag handle & header
+                // Top Header
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   child: Column(
                     children: [
                       Center(
@@ -155,7 +213,7 @@ class _CompanionModalState extends State<CompanionModal> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 14),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -177,16 +235,51 @@ class _CompanionModalState extends State<CompanionModal> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    'Warm Companion',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppTheme.forestGreen,
-                                    ),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'Sahayak Companion',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppTheme.forestGreen,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFE6F4EA),
+                                          borderRadius: BorderRadius.circular(100),
+                                          border: Border.all(color: const Color(0xFF34A853).withOpacity(0.3)),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width: 6,
+                                              height: 6,
+                                              decoration: const BoxDecoration(
+                                                color: Color(0xFF34A853),
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Gemma 2B LLM',
+                                              style: GoogleFonts.plusJakartaSans(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w700,
+                                                color: const Color(0xFF137333),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   Text(
-                                    'Sharing pleasant memories · Offline',
+                                    'Real-time offline conversational reminiscence',
                                     style: GoogleFonts.inter(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
@@ -213,159 +306,181 @@ class _CompanionModalState extends State<CompanionModal> {
 
                 const Divider(color: AppTheme.surfaceBorder, height: 1),
 
-                // Main Spoken Memory / Story Area (No chat-bubble clutter, natural speaking feel)
+                // Real-Time Chat Conversation Stream
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (_lastUserSpoken != null) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: AppTheme.surfaceBorder),
-                            ),
-                            child: Row(
-                              children: [
-                                const Text('🗣️', style: TextStyle(fontSize: 18)),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    _lastUserSpoken!,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 14.5,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppTheme.textSecondary,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
+                  child: _messages.isEmpty && _isLoading
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const CircularProgressIndicator(color: AppTheme.forestGreen),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Starting Gemma LLM Neural Model...',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  color: AppTheme.textSecondary,
+                                  fontStyle: FontStyle.italic,
                                 ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-
-                        // Main Companion Response (Large, high legibility for elderly readers)
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: AppTheme.sageBorder, width: 1.5),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.forestGreen.withOpacity(0.06),
-                                blurRadius: 16,
-                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.sageLight,
-                                          borderRadius: BorderRadius.circular(100),
-                                        ),
-                                        child: Text(
-                                          'Listening & Reminiscing 🌸',
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w700,
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          itemCount: _messages.length + (_isLoading ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index == _messages.length && _isLoading) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12.0),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(color: AppTheme.sageBorder),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
                                             color: AppTheme.forestGreen,
                                           ),
                                         ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          'Thinking with Gemma...',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 13.5,
+                                            color: AppTheme.textSecondary,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
+
+                            final msg = _messages[index];
+                            final isMe = msg.isUser;
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 14.0),
+                              child: Align(
+                                alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                                child: Container(
+                                  constraints: BoxConstraints(
+                                    maxWidth: MediaQuery.of(context).size.width * 0.78,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                                  decoration: BoxDecoration(
+                                    color: isMe ? AppTheme.forestTealCard : Colors.white,
+                                    borderRadius: BorderRadius.circular(20).copyWith(
+                                      bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(20),
+                                      bottomLeft: !isMe ? const Radius.circular(4) : const Radius.circular(20),
+                                    ),
+                                    border: isMe ? null : Border.all(color: AppTheme.sageBorder, width: 1.2),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.04),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 3),
                                       ),
                                     ],
                                   ),
-                                  IconButton(
-                                    icon: const Icon(Icons.volume_up_rounded, color: AppTheme.forestGreen, size: 24),
-                                    tooltip: 'Listen again',
-                                    onPressed: () => _speakResponse(_currentPrompt),
+                                  child: Column(
+                                    crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        msg.text,
+                                        style: isMe
+                                            ? GoogleFonts.inter(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.white,
+                                                height: 1.4,
+                                              )
+                                            : GoogleFonts.plusJakartaSans(
+                                                fontSize: 16.5,
+                                                fontWeight: FontWeight.w600,
+                                                color: AppTheme.textPrimary,
+                                                height: 1.45,
+                                              ),
+                                      ),
+                                      if (!isMe) ...[
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            InkWell(
+                                              onTap: () => _speakResponse(msg.text),
+                                              borderRadius: BorderRadius.circular(100),
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.sageLight,
+                                                  borderRadius: BorderRadius.circular(100),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(Icons.volume_up_rounded, size: 14, color: AppTheme.forestGreen),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      'Listen',
+                                                      style: GoogleFonts.plusJakartaSans(
+                                                        fontSize: 11,
+                                                        fontWeight: FontWeight.w700,
+                                                        color: AppTheme.forestGreen,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
-                              const SizedBox(height: 16),
-                              if (_isLoading) ...[
-                                Row(
-                                  children: [
-                                    const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.5,
-                                        color: AppTheme.forestGreen,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 14),
-                                    Text(
-                                      'Recalling gentle thoughts...',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 15,
-                                        color: AppTheme.textSecondary,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ] else ...[
-                                Text(
-                                  _currentPrompt,
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppTheme.textPrimary,
-                                    height: 1.45,
-                                    letterSpacing: -0.2,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
+                            );
+                          },
                         ),
+                ),
 
-                        const SizedBox(height: 20),
-
-                        // Suggested gentle reminiscence prompts
-                        Text(
-                          'Tap a topic to talk about:',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: [
-                            _buildQuickChip('🌾 Village Festivals', 'Tell me about festivals you celebrated in your village.'),
-                            _buildQuickChip('🍲 Favorite Foods', 'What was your favorite home-cooked dish?'),
-                            _buildQuickChip('🌸 Childhood Courtyard', 'Tell me about the courtyard in your childhood home.'),
-                            _buildQuickChip('🎶 Favorite Songs', 'What songs did people sing during harvests?'),
-                          ],
-                        ),
+                // Quick Suggestion Topics
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildQuickTopicChip('🌾 Village Festivals', 'Tell me about festivals you celebrated in your village.'),
+                        const SizedBox(width: 8),
+                        _buildQuickTopicChip('🍲 Favorite Foods', 'What was your favorite home-cooked dish?'),
+                        const SizedBox(width: 8),
+                        _buildQuickTopicChip('🌸 Courtyard Days', 'Tell me about the courtyard in your childhood home.'),
+                        const SizedBox(width: 8),
+                        _buildQuickTopicChip('🌿 Tea Gardens', 'I loved walking through the morning tea gardens.'),
                       ],
                     ),
                   ),
                 ),
 
-                // Bottom Action: Tap-and-hold to speak OR Type
+                // Bottom Input: Hold to speak OR Type
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     border: Border(top: BorderSide(color: AppTheme.surfaceBorder, width: 1.2)),
@@ -381,15 +496,15 @@ class _CompanionModalState extends State<CompanionModal> {
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 150),
                           width: double.infinity,
-                          height: 58,
+                          height: 52,
                           decoration: BoxDecoration(
                             color: _isHoldingToSpeak ? AppTheme.warmTerracotta : AppTheme.forestGreen,
                             borderRadius: BorderRadius.circular(28.0),
                             boxShadow: [
                               BoxShadow(
                                 color: (_isHoldingToSpeak ? AppTheme.warmTerracotta : AppTheme.forestGreen).withOpacity(0.3),
-                                blurRadius: 14,
-                                offset: const Offset(0, 6),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
@@ -400,15 +515,15 @@ class _CompanionModalState extends State<CompanionModal> {
                                 Icon(
                                   _isHoldingToSpeak ? Icons.mic_rounded : Icons.mic_none_rounded,
                                   color: Colors.white,
-                                  size: 24,
+                                  size: 22,
                                 ),
-                                const SizedBox(width: 10),
+                                const SizedBox(width: 8),
                                 Text(
                                   _isHoldingToSpeak
                                       ? 'Listening... ($_holdSeconds s) · Release to send'
                                       : 'Hold to Speak / बोलें',
                                   style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 16,
+                                    fontSize: 15,
                                     fontWeight: FontWeight.w700,
                                     color: Colors.white,
                                   ),
@@ -419,14 +534,14 @@ class _CompanionModalState extends State<CompanionModal> {
                         ),
                       ),
 
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
 
-                      // Or type text input field
+                      // Text input field
                       Row(
                         children: [
                           Expanded(
                             child: Container(
-                              height: 48,
+                              height: 46,
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               decoration: BoxDecoration(
                                 color: AppTheme.background,
@@ -438,22 +553,22 @@ class _CompanionModalState extends State<CompanionModal> {
                                 focusNode: _focusNode,
                                 style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textPrimary),
                                 decoration: InputDecoration(
-                                  hintText: 'Or type your thought here...',
+                                  hintText: 'Type any thought or question...',
                                   hintStyle: GoogleFonts.inter(fontSize: 13.5, color: AppTheme.textLight),
                                   border: InputBorder.none,
                                   isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 13),
                                 ),
                                 onSubmitted: (val) => _handleSendMessage(val),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 8),
                           IconButton(
-                            icon: const Icon(Icons.send_rounded, color: AppTheme.forestGreen, size: 22),
+                            icon: const Icon(Icons.send_rounded, color: AppTheme.forestGreen, size: 20),
                             style: IconButton.styleFrom(
                               backgroundColor: AppTheme.sageLight,
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.all(10),
                             ),
                             onPressed: () => _handleSendMessage(_textController.text),
                           ),
@@ -470,12 +585,12 @@ class _CompanionModalState extends State<CompanionModal> {
     );
   }
 
-  Widget _buildQuickChip(String label, String prompt) {
+  Widget _buildQuickTopicChip(String label, String prompt) {
     return InkWell(
       onTap: () => _handleSendMessage(prompt),
       borderRadius: BorderRadius.circular(100),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(100),
@@ -484,7 +599,7 @@ class _CompanionModalState extends State<CompanionModal> {
         child: Text(
           label,
           style: GoogleFonts.plusJakartaSans(
-            fontSize: 12.5,
+            fontSize: 12,
             fontWeight: FontWeight.w600,
             color: AppTheme.forestGreen,
           ),
