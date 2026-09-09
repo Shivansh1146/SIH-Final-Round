@@ -46,33 +46,43 @@ class CompanionService {
     required String message,
     String? audioBase64,
   }) async {
-    try {
-      final payload = {
-        'patientId': patientId,
-        'message': message,
-        'audioBase64': audioBase64,
-        'conversationId': conversationId,
-      };
+    final payload = {
+      'patientId': patientId,
+      'message': message,
+      'audioBase64': audioBase64,
+      'conversationId': conversationId,
+    };
 
-      final res = await http
-          .post(
-            Uri.parse('${ApiConfig.baseUrl}/companion/chat'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode(payload),
-          )
-          .timeout(const Duration(seconds: 10));
+    final urlsToTry = [
+      '${ApiConfig.baseUrl}/companion/chat',
+      'http://10.10.140.90:8000/companion/chat',
+    ];
 
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        return data['text'] ?? "That's a lovely thought. Tell me more about that day.";
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Companion chat call error or timeout: $e');
+    String lastErr = '';
+
+    for (final url in urlsToTry) {
+      try {
+        final res = await http
+            .post(
+              Uri.parse(url),
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode(payload),
+            )
+            .timeout(const Duration(seconds: 15));
+
+        if (res.statusCode == 200) {
+          final data = jsonDecode(res.body);
+          if (data['text'] != null && data['text'].toString().trim().isNotEmpty) {
+            return data['text'].toString().trim();
+          }
+        } else {
+          lastErr = 'HTTP ${res.statusCode}';
+        }
+      } catch (e) {
+        lastErr = e.toString();
       }
     }
 
-    // Fixed graceful fallback response if anything fails or times out
-    return "That's a lovely thought. Tell me more about that day.";
+    return "⚠️ Server connection failed ($lastErr). Please ensure ADB reverse or Wi-Fi is active.";
   }
 }

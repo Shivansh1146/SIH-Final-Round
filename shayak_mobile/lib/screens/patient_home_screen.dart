@@ -513,13 +513,16 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        Text(
-                          _patientDisplayName,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 34.0,
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.forestGreen,
-                            letterSpacing: -0.5,
+                        Flexible(
+                          child: Text(
+                            _patientDisplayName,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 34.0,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.forestGreen,
+                              letterSpacing: -0.5,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -609,7 +612,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   Widget _buildTalkToMeCard(BuildContext context, AppLanguage lang) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(22.0),
+      padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24.0),
@@ -622,69 +625,72 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           ),
         ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 54,
-            height: 54,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 440;
+
+          final iconWidget = Container(
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: AppTheme.sageLight,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppTheme.sageBorder),
             ),
             child: const Center(
-              child: Text('🌿', style: TextStyle(fontSize: 28)),
+              child: Text('🌿', style: TextStyle(fontSize: 24)),
             ),
-          ),
-          const SizedBox(width: 18),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Talk to me',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.forestGreen,
-                        letterSpacing: -0.3,
-                      ),
+          );
+
+          final textContent = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  Text(
+                    'Talk to me',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.forestGreen,
+                      letterSpacing: -0.3,
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppTheme.sageLight,
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: Text(
-                        'Offline AI',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.forestGreen,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  'Share a warm memory or story from your past.',
-                  style: GoogleFonts.inter(
-                    fontSize: 13.0,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textSecondary,
                   ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppTheme.sageLight,
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Text(
+                      'Offline AI',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.forestGreen,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 3),
+              Text(
+                'Share a warm memory or story from your past.',
+                style: GoogleFonts.inter(
+                  fontSize: 13.0,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.textSecondary,
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          ElevatedButton.icon(
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          );
+
+          final buttonWidget = ElevatedButton.icon(
             onPressed: () {
               CompanionModal.show(
                 context,
@@ -710,8 +716,40 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               ),
               elevation: 0,
             ),
-          ),
-        ],
+          );
+
+          if (isCompact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    iconWidget,
+                    const SizedBox(width: 14),
+                    Expanded(child: textContent),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: buttonWidget,
+                ),
+              ],
+            );
+          } else {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                iconWidget,
+                const SizedBox(width: 16),
+                Expanded(child: textContent),
+                const SizedBox(width: 12),
+                buttonWidget,
+              ],
+            );
+          }
+        },
       ),
     );
   }

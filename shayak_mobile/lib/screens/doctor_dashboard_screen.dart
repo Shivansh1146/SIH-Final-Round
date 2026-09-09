@@ -543,13 +543,18 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                       items: _allPatients.map((p) {
                         return DropdownMenuItem<String>(
                           value: p.id,
-                          child: Text(
-                            '${p.fullName}  ·  Age ${p.age}  ·  ${p.diagnosis ?? "MCI"}',
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF0F172A),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.6),
+                            child: Text(
+                              '${p.fullName}  ·  Age ${p.age}  ·  ${p.diagnosis ?? "MCI"}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: false,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF0F172A),
+                              ),
                             ),
                           ),
                         );
@@ -1236,16 +1241,20 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                 ),
                               ],
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEFF6FF),
-                                borderRadius: BorderRadius.circular(100),
-                                border: Border.all(color: const Color(0xFFBFDBFE)),
-                              ),
-                              child: Text(
-                                f.clinicalImpression,
-                                style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEFF6FF),
+                                  borderRadius: BorderRadius.circular(100),
+                                  border: Border.all(color: const Color(0xFFBFDBFE)),
+                                ),
+                                child: Text(
+                                  f.clinicalImpression,
+                                  style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ),
                           ],

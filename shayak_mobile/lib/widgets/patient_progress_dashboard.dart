@@ -685,38 +685,48 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 12,
+                        runSpacing: 8,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEFF6FF),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: const Color(0xFFDBEAFE)),
-                            ),
-                            child: const Icon(Icons.medical_services_rounded, size: 20, color: Color(0xFF1D4ED8)),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Doctor's Clinical Notes & Care Directives",
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 16.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppTheme.textPrimary,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEFF6FF),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: const Color(0xFFDBEAFE)),
                                 ),
-                                Text(
-                                  '${latest.doctorName} · ${latest.specialty}',
-                                  style: GoogleFonts.inter(fontSize: 12.0, color: AppTheme.textSecondary),
-                                  overflow: TextOverflow.ellipsis,
+                                child: const Icon(Icons.medical_services_rounded, size: 20, color: Color(0xFF1D4ED8)),
+                              ),
+                              const SizedBox(width: 12),
+                              Flexible(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      "Doctor's Clinical Notes",
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 16.0,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppTheme.textPrimary,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      '${latest.doctorName} · ${latest.specialty}',
+                                      style: GoogleFonts.inter(fontSize: 12.0, color: AppTheme.textSecondary),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -732,6 +742,8 @@ class _PatientProgressDashboardState extends State<PatientProgressDashboard> {
                                 fontWeight: FontWeight.w700,
                                 color: const Color(0xFF1D4ED8),
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],

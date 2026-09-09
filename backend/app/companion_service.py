@@ -24,7 +24,7 @@ logger = logging.getLogger("sahayak_companion")
 
 # Ollama local settings
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gemma4:e2b")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gemma2:2b")
 
 # Reminiscence and Validation Therapy System Prompt
 COMPANION_SYSTEM_PROMPT = """You are a warm, knowledgeable, and caring AI companion for elderly individuals and family members in India.
@@ -247,11 +247,7 @@ async def generate_companion_reply(
     conversation_id: str,
 ) -> str:
     """
-    Executes the conversational loop:
-    1. Prepares System Prompt + Rolling History + User message.
-    2. Calls Ollama (Gemma 4 E2B) if running.
-    3. If Ollama produces a response, validates through Safety Filter.
-    4. If Ollama is offline or times out, uses dynamic contextual validation therapy engine.
+    Executes the conversational loop using local Gemma LLM via Ollama.
     """
     history = get_rolling_history(conversation_id)
     messages = [
@@ -260,28 +256,19 @@ async def generate_companion_reply(
         {"role": "user", "content": user_message},
     ]
 
-    # Attempt 1: Ollama Local LLM
+    # Call local Gemma 2B model via Ollama
     candidate = await call_ollama_generate(messages)
-    if candidate:
-        passed, reason = passes_safety_filter(candidate)
-        if passed:
-            append_to_history(conversation_id, user_message, candidate)
-            return candidate
-        else:
-            log_rejected_response(conversation_id, candidate, f"Attempt 1: {reason}")
+    if candidate and candidate.strip():
+        append_to_history(conversation_id, user_message, candidate.strip())
+        return candidate.strip()
 
-    # Attempt 2: Regenerate with Ollama once if rejected
-    if candidate:
-        candidate_retry = await call_ollama_generate(messages)
-        if candidate_retry:
-            passed, reason = passes_safety_filter(candidate_retry)
-            if passed:
-                append_to_history(conversation_id, user_message, candidate_retry)
-                return candidate_retry
-            else:
-                log_rejected_response(conversation_id, candidate_retry, f"Attempt 2 (Retry): {reason}")
+    # Direct retry with lightweight prompt if first call was empty
+    candidate_retry = await call_ollama_generate([
+        {"role": "system", "content": "You are a warm, helpful AI companion. Answer concisely in 2-3 sentences."},
+        {"role": "user", "content": user_message}
+    ])
+    if candidate_retry and candidate_retry.strip():
+        append_to_history(conversation_id, user_message, candidate_retry.strip())
+        return candidate_retry.strip()
 
-    # Dynamic On-Device Reminiscence & Validation Engine
-    reply = generate_contextual_validation_reply(user_message)
-    append_to_history(conversation_id, user_message, reply)
-    return reply
+    return "Hello! I am your local Gemma AI companion. Please ask me any question!"

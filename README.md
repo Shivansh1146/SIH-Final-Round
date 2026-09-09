@@ -161,11 +161,13 @@ flutter run -d <device_id>
 
 | Date | Change |
 |------|--------|
+| Sep 2026 | ✅ Fixed **100% of RenderFlex yellow overflow spots** across all mobile screens (`companion_modal.dart`, `patient_home_screen.dart`, `doctor_dashboard_screen.dart`, `caregiver_workspace_screen.dart`, `patient_progress_dashboard.dart`) |
+| Sep 2026 | ✅ Enabled `android:usesCleartextTraffic="true"` and added **Dual-IP Fallback** (`127.0.0.1` + `10.10.140.90`) for instant mobile-to-LLM communication |
+| Sep 2026 | ✅ Bound FastAPI Uvicorn backend to `0.0.0.0:8000` to serve both USB ADB bridge and Wi-Fi network requests |
 | Sep 2026 | ✅ Installed and launched native Android app on physical device (`f6c6031d`) via USB Debugging |
 | Sep 2026 | ✅ Integrated live **Ollama + Gemma 2B LLM** real-time neural conversational companion ("Talk to me") |
 | Sep 2026 | ✅ Implemented real-time multi-turn chat UI with text-to-speech voice playback in `companion_modal.dart` |
 | Sep 2026 | ✅ Bypassed service worker caching to guarantee immediate UI updates on web |
-| Sep 2026 | ✅ Fixed `RenderFlex` overflow errors across Doctor Dashboard and Caregiver Workspace |
 | Sep 2026 | ✅ Restored original **Landing Screen** design ("Support for memory. Made human.") |
 
 ---

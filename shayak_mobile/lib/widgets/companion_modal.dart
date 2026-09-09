@@ -172,16 +172,12 @@ class _CompanionModalState extends State<CompanionModal> {
       _isHoldingToSpeak = false;
     });
 
-    // Simulated speech recognition / native audio pass-through
-    final simulatedPhrases = [
-      "We used to celebrate Bihu with the whole family in our village.",
-      "My grandmother used to make the best pithas during harvest festival.",
-      "I was remembering the river bank where we used to walk every evening.",
-      "The tea gardens in the morning always smelled so fresh.",
-      "We had a big courtyard with mango trees where all the children played.",
-    ];
-    final chosen = (simulatedPhrases..shuffle()).first;
-    _handleSendMessage(chosen);
+    final currentTyped = _textController.text.trim();
+    if (currentTyped.isNotEmpty) {
+      _handleSendMessage(currentTyped);
+    } else {
+      _handleSendMessage("Hello Gemma! Tell me a nice story or thought.");
+    }
   }
 
   @override
@@ -217,82 +213,93 @@ class _CompanionModalState extends State<CompanionModal> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: AppTheme.sageLight,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: AppTheme.sageBorder),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.sageLight,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: AppTheme.sageBorder),
+                                  ),
+                                  child: const Center(
+                                    child: Text('🌿', style: TextStyle(fontSize: 22)),
+                                  ),
                                 ),
-                                child: const Center(
-                                  child: Text('🌿', style: TextStyle(fontSize: 22)),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        'Sahayak Companion',
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.w800,
-                                          color: AppTheme.forestGreen,
-                                        ),
+                                      Wrap(
+                                        crossAxisAlignment: WrapCrossAlignment.center,
+                                        spacing: 6,
+                                        runSpacing: 2,
+                                        children: [
+                                          Text(
+                                            'Sahayak Companion',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w800,
+                                              color: AppTheme.forestGreen,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFE6F4EA),
+                                              borderRadius: BorderRadius.circular(100),
+                                              border: Border.all(color: const Color(0xFF34A853).withOpacity(0.3)),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Container(
+                                                  width: 6,
+                                                  height: 6,
+                                                  decoration: const BoxDecoration(
+                                                    color: Color(0xFF34A853),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  'Gemma 2B LLM',
+                                                  style: GoogleFonts.plusJakartaSans(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: const Color(0xFF137333),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(width: 6),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFE6F4EA),
-                                          borderRadius: BorderRadius.circular(100),
-                                          border: Border.all(color: const Color(0xFF34A853).withOpacity(0.3)),
+                                      Text(
+                                        'Real-time offline conversational reminiscence',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppTheme.textSecondary,
                                         ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              width: 6,
-                                              height: 6,
-                                              decoration: const BoxDecoration(
-                                                color: Color(0xFF34A853),
-                                                shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              'Gemma 2B LLM',
-                                              style: GoogleFonts.plusJakartaSans(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w700,
-                                                color: const Color(0xFF137333),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
-                                  Text(
-                                    'Real-time offline conversational reminiscence',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppTheme.textSecondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                ),
+                              ],
+                            ),
                           ),
+                          const SizedBox(width: 6),
                           IconButton(
                             onPressed: () => Navigator.pop(context),
-                            icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary, size: 24),
+                            icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary, size: 22),
                             style: IconButton.styleFrom(
                               backgroundColor: Colors.white,
                               side: const BorderSide(color: AppTheme.surfaceBorder),
