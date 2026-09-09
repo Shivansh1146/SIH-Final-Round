@@ -308,7 +308,7 @@ class AppTopBar extends StatelessWidget {
 
         return Container(
           height: isMobile ? 60 : 72,
-          padding: EdgeInsets.symmetric(horizontal: isMobile ? 8.0 : 28.0),
+          padding: EdgeInsets.symmetric(horizontal: isMobile ? 6.0 : 28.0),
           decoration: const BoxDecoration(
             color: AppTheme.background,
             border: Border(
@@ -324,7 +324,7 @@ class AppTopBar extends StatelessWidget {
                   onPressed: onMenuPressed,
                   tooltip: 'Open menu',
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                 ),
                 const SizedBox(width: 2),
               ],
@@ -339,8 +339,8 @@ class AppTopBar extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: isMobile ? 28 : 38,
-                        height: isMobile ? 28 : 38,
+                        width: isMobile ? 26 : 38,
+                        height: isMobile ? 26 : 38,
                         decoration: BoxDecoration(
                           color: AppTheme.forestGreen,
                           shape: BoxShape.circle,
@@ -356,11 +356,11 @@ class AppTopBar extends StatelessWidget {
                           child: Icon(
                             Icons.eco_rounded,
                             color: Colors.white,
-                            size: isMobile ? 14 : 20,
+                            size: isMobile ? 13 : 20,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -371,19 +371,19 @@ class AppTopBar extends StatelessWidget {
                                 TextSpan(
                                   text: 'SAHAYAK',
                                   style: GoogleFonts.plusJakartaSans(
-                                    fontSize: isMobile ? 14.0 : 17,
+                                    fontSize: isMobile ? 12.5 : 17,
                                     fontWeight: FontWeight.w800,
                                     color: AppTheme.forestGreen,
-                                    letterSpacing: 0.5,
+                                    letterSpacing: 0.3,
                                   ),
                                 ),
                                 TextSpan(
                                   text: '—AI',
                                   style: GoogleFonts.plusJakartaSans(
-                                    fontSize: isMobile ? 14.0 : 17,
+                                    fontSize: isMobile ? 12.5 : 17,
                                     fontWeight: FontWeight.w800,
                                     color: AppTheme.warmTerracotta,
-                                    letterSpacing: 0.5,
+                                    letterSpacing: 0.3,
                                   ),
                                 ),
                               ],
@@ -408,7 +408,6 @@ class AppTopBar extends StatelessWidget {
 
               const Spacer(),
 
-
               if (currentMode == AppViewMode.landing) ...[
                 if (isMobile)
                   IconButton(
@@ -423,8 +422,8 @@ class AppTopBar extends StatelessWidget {
                   borderRadius: BorderRadius.circular(100),
                   child: Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: isTiny ? 9 : 12,
-                      vertical: isTiny ? 4 : 6,
+                      horizontal: isMobile ? 8 : 12,
+                      vertical: isMobile ? 4 : 6,
                     ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFBE123C),
@@ -440,22 +439,22 @@ class AppTopBar extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.emergency_rounded, size: 14, color: Colors.white),
-                        const SizedBox(width: 4),
+                        const Icon(Icons.emergency_rounded, size: 13, color: Colors.white),
+                        const SizedBox(width: 3),
                         Text(
                           'SOS',
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w900,
                             color: Colors.white,
-                            letterSpacing: 0.6,
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 4),
                 if (screenWidth > 600)
                   InkWell(
                     onTap: () => _showProfileSwitcherModal(context),
@@ -502,7 +501,7 @@ class AppTopBar extends StatelessWidget {
                     onTap: () => _showProfileSwitcherModal(context),
                     borderRadius: BorderRadius.circular(100),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(100),
@@ -519,13 +518,13 @@ class AppTopBar extends StatelessWidget {
                               shape: BoxShape.circle,
                             ),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 3),
                           ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: isTiny ? 45 : 60),
+                            constraints: BoxConstraints(maxWidth: isTiny ? 35 : 48),
                             child: Text(
                               patientName.split(' ').first,
                               style: GoogleFonts.inter(
-                                fontSize: 11.0,
+                                fontSize: 10.5,
                                 fontWeight: FontWeight.w600,
                                 color: AppTheme.textSecondary,
                               ),
