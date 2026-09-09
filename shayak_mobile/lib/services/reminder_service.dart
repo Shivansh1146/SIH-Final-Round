@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'audio_narration_service.dart';
 import 'localization_service.dart';
+import 'notification_service.dart';
 
 class ReminderService extends ChangeNotifier {
   static final ReminderService instance = ReminderService._internal();
@@ -231,6 +232,13 @@ class ReminderService extends ChangeNotifier {
 
     final displayTitle = LocalizationService.trReminderTitle(item.title, lang);
     final displayNotes = LocalizationService.trReminderNotes(item.notes, lang);
+
+    NotificationService.instance.showImmediateNotification(
+      id: item.id.hashCode,
+      title: '⏰ $displayTitle',
+      body: alertSpeechText,
+      payload: alertSpeechText,
+    );
 
     showDialog(
       context: context,

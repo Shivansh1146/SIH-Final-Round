@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'theme/app_theme.dart';
 import 'screens/main_navigation_screen.dart';
 import 'services/local_database_service.dart';
+import 'services/notification_service.dart';
 
 /// ============================================================================
 /// SAHAYAK—AI: Application Entrypoint & Theme Configuration
@@ -27,6 +28,7 @@ void main() async {
     await Hive.openBox('assessment_cache');
     await Hive.openBox('user_preferences');
     await LocalDatabaseService.init();
+    await NotificationService.instance.init();
   } catch (e) {
     debugPrint('[SAHAYAK-INIT] Local database notice: $e');
   }
