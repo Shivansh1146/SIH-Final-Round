@@ -162,11 +162,24 @@ def append_to_history(conversation_id: str, user_text: str, assistant_text: str)
 
 
 async def call_ollama_generate(messages: List[Dict[str, str]]) -> Optional[str]:
-    """Direct HTTP call to Ollama /api/chat with 8s timeout."""
+    """Direct HTTP call to Ollama /api/chat with auto-detection of available downloaded model."""
     try:
-        async with httpx.AsyncClient(timeout=8.0) as client:
+        async with httpx.AsyncClient(timeout=12.0) as client:
+            # 1. Fetch available models from Ollama
+            model_to_use = OLLAMA_MODEL
+            try:
+                tags_res = await client.get(f"{OLLAMA_HOST}/api/tags")
+                if tags_res.status_code == 200:
+                    models = [m.get("name", "") for m in tags_res.json().get("models", [])]
+                    if models:
+                        # Prefer gemma or use the first downloaded model
+                        gemma_match = next((m for m in models if "gemma" in m), models[0])
+                        model_to_use = gemma_match
+            except Exception:
+                pass
+
             payload = {
-                "model": OLLAMA_MODEL,
+                "model": model_to_use,
                 "messages": messages,
                 "stream": False,
                 "options": {
