@@ -407,54 +407,7 @@ class AppTopBar extends StatelessWidget {
 
               const Spacer(),
 
-              // Language Switcher Pill Button
-              ValueListenableBuilder<AppLanguage>(
-                valueListenable: LocalizationService.languageNotifier,
-                builder: (context, lang, _) {
-                  return InkWell(
-                    onTap: () => _showLanguageSwitcherModal(context),
-                    borderRadius: BorderRadius.circular(100),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isMobile ? 6 : 12,
-                        vertical: isMobile ? 4 : 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(100),
-                        border: Border.all(color: AppTheme.surfaceBorder),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(lang.flag, style: const TextStyle(fontSize: 13)),
-                          if (!isMobile) ...[
-                            const SizedBox(width: 5),
-                            Text(
-                              lang.displayName.split(' ').first,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12.0,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.textPrimary,
-                              ),
-                            ),
-                          ],
-                          const SizedBox(width: 2),
-                          const Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            size: 14,
-                            color: AppTheme.textSecondary,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
 
-              const SizedBox(width: 4),
-
-              // Right Status & Actions
               if (currentMode == AppViewMode.landing) ...[
                 if (isMobile)
                   IconButton(

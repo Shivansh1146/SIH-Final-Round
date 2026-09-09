@@ -29,6 +29,10 @@ from app.models import (
     MedicalNotesRequest,
 )
 from app.ml_engine import ml_engine, FEATURE_METADATA
+import app.db as db
+
+# Initialize SQLite database schema and baseline data
+db.init_db()
 
 app = FastAPI(
     title="SHAYAK-AI Clinical Engine API",
@@ -48,14 +52,6 @@ DIFFICULTY_TIERS = [
     "Level 3 (Challenging)",
     "Level 4 (Master)",
 ]
-
-patient_difficulty_store = {
-    "PT-9042": {
-        "difficulty_level": "Level 2 (Moderate)",
-        "is_adaptive": True,
-        "last_updated": datetime.now(timezone.utc).isoformat(),
-    }
-}
 
 # Enable CORS for React 19 Caregiver Portal and Flutter client access
 app.add_middleware(
@@ -164,18 +160,15 @@ def get_patient_history(patient_id: str):
     """
     Returns session progression, completed games, and latest clinical evaluation.
     """
-    sessions = ml_engine.patient_sessions.get(patient_id, [])
+    sessions = db.get_patient_sessions(patient_id)
     
     # Calculate aggregate metrics
     avg_acc = 76.0
     if sessions:
         avg_acc = round(sum(s.get("score", 75.0) for s in sessions) / len(sessions), 1)
 
-    # Get difficulty configuration
-    p_diff = patient_difficulty_store.get(
-        patient_id,
-        {"difficulty_level": "Level 2 (Moderate)", "is_adaptive": True},
-    )
+    # Get difficulty configuration from SQLite
+    p_diff = db.get_difficulty(patient_id)
 
     # Compute baseline evaluation
     baseline_req = ClinicalEvaluationRequest(
@@ -196,7 +189,7 @@ def get_patient_history(patient_id: str):
 
     return LongitudinalPatientHistory(
         patient_id=patient_id,
-        patient_name="Ramesh Kumar" if patient_id == "PT-9042" else f"Patient {patient_id}",
+        patient_name="Ramesh Kumar" if patient_id in ("PT-9042", "patient-ramesh") else f"Patient {patient_id}",
         age=68,
         caregiver_name="Anita Kumar",
         total_sessions_completed=len(sessions) + 10,
@@ -218,12 +211,12 @@ def update_patient_difficulty(patient_id: str, payload: PatientDifficultyUpdateR
     """
     Allows patient or caregiver to manually override difficulty or toggle AI-adaptive mode.
     """
-    patient_difficulty_store[patient_id] = {
-        "difficulty_level": payload.difficulty_level,
-        "is_adaptive": payload.is_adaptive,
-        "last_updated": datetime.now(timezone.utc).isoformat(),
-        "caregiver_override": payload.caregiver_override,
-    }
+    db.set_difficulty(
+        patient_id=patient_id,
+        difficulty_level=payload.difficulty_level,
+        is_adaptive=payload.is_adaptive,
+        caregiver_override=payload.caregiver_override,
+    )
     return {
         "status": "updated",
         "patient_id": patient_id,
@@ -240,21 +233,15 @@ def update_patient_difficulty(patient_id: str, payload: PatientDifficultyUpdateR
 )
 def record_patient_session(patient_id: str, session: PatientSessionRecord):
     """
-    Appends a new cognitive or drawing assessment session to the patient's record.
+    Appends a new cognitive or drawing assessment session to the SQLite database.
     If adaptive difficulty is enabled, evaluates performance score and automatically
     transitions difficulty tier up or down.
     """
-    if patient_id not in ml_engine.patient_sessions:
-        ml_engine.patient_sessions[patient_id] = []
-
     session_dict = session.model_dump()
-    ml_engine.patient_sessions[patient_id].insert(0, session_dict)
+    db.insert_session(session_dict)
 
-    # Fetch current difficulty state
-    diff_state = patient_difficulty_store.setdefault(
-        patient_id,
-        {"difficulty_level": session.difficulty_level, "is_adaptive": session.is_adaptive},
-    )
+    # Fetch current difficulty state from SQLite
+    diff_state = db.get_difficulty(patient_id)
 
     adaptation_event = "maintained"
     new_difficulty = diff_state["difficulty_level"]
@@ -266,13 +253,14 @@ def record_patient_session(patient_id: str, session: PatientSessionRecord):
         if session.score >= 85.0 and curr_idx < len(DIFFICULTY_TIERS) - 1:
             new_difficulty = DIFFICULTY_TIERS[curr_idx + 1]
             adaptation_event = "advanced"
-            diff_state["difficulty_level"] = new_difficulty
+            db.set_difficulty(patient_id, new_difficulty, True)
         # High struggle / low score -> gentle step down
         elif session.score < 55.0 and curr_idx > 0:
             new_difficulty = DIFFICULTY_TIERS[curr_idx - 1]
             adaptation_event = "gentle_assist"
-            diff_state["difficulty_level"] = new_difficulty
+            db.set_difficulty(patient_id, new_difficulty, True)
 
+    total_sessions = len(db.get_patient_sessions(patient_id))
     return {
         "status": "recorded",
         "session_id": session.session_id,
@@ -280,7 +268,7 @@ def record_patient_session(patient_id: str, session: PatientSessionRecord):
         "adaptation_event": adaptation_event,
         "current_difficulty": new_difficulty,
         "is_adaptive": diff_state.get("is_adaptive", True),
-        "total_sessions": len(ml_engine.patient_sessions[patient_id]),
+        "total_sessions": total_sessions,
     }
 
 
@@ -400,64 +388,72 @@ patient_medical_notes_store: dict[str, str] = {
 }
 
 
-@app.get("/api/v1/appointments", tags=["Appointments"], summary="List all appointments")
+@app.get("/api/v1/appointments", tags=["Appointments"], summary="List all appointments from SQLite")
 def get_all_appointments(patient_id: str | None = None):
-    if patient_id:
-        return [a for a in appointments_store if a["patient_id"] == patient_id]
-    return appointments_store
+    return db.get_all_appointments(patient_id=patient_id)
 
 
-@app.post("/api/v1/appointments", status_code=status.HTTP_201_CREATED, tags=["Appointments"], summary="Book a new doctor appointment")
+@app.post("/api/v1/appointments", status_code=status.HTTP_201_CREATED, tags=["Appointments"], summary="Book a new doctor appointment into SQLite")
 def book_appointment(appointment: DoctorAppointmentModel):
     appt_dict = appointment.model_dump()
-    appointments_store.insert(0, appt_dict)
-    return {"status": "booked", "appointment": appt_dict}
+    saved = db.insert_appointment(appt_dict)
+    return {"status": "booked", "appointment": saved}
 
 
-@app.patch("/api/v1/appointments/{appointment_id}/feedback", tags=["Appointments"], summary="Send doctor feedback to caregiver for this appointment")
+@app.patch("/api/v1/appointments/{appointment_id}/feedback", tags=["Appointments"], summary="Send doctor feedback to caregiver for this appointment in SQLite")
 def update_appointment_feedback(appointment_id: str, payload: AppointmentFeedbackRequest):
-    for a in appointments_store:
-        if a["id"] == appointment_id:
-            a["doctor_feedback_for_caregiver"] = payload.doctor_feedback_for_caregiver
-            if payload.status:
-                a["status"] = payload.status
-            return {"status": "updated", "appointment": a}
+    updated = db.update_appointment_feedback(
+        appointment_id=appointment_id,
+        feedback=payload.doctor_feedback_for_caregiver,
+        new_status=payload.status or "Confirmed",
+    )
+    if updated:
+        return {"status": "updated", "appointment": updated}
     raise HTTPException(status_code=404, detail="Appointment not found")
 
 
-@app.patch("/api/v1/appointments/{appointment_id}/status", tags=["Appointments"], summary="Update appointment status")
+@app.patch("/api/v1/appointments/{appointment_id}/status", tags=["Appointments"], summary="Update appointment status in SQLite")
 def update_appointment_status(appointment_id: str, new_status: str):
-    for a in appointments_store:
-        if a["id"] == appointment_id:
-            a["status"] = new_status
-            return {"status": "updated", "appointment": a}
+    conn = db.get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", (new_status, appointment_id))
+    conn.commit()
+    cursor.execute("SELECT * FROM appointments WHERE id = ?", (appointment_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return {"status": "updated", "appointment": dict(row)}
     raise HTTPException(status_code=404, detail="Appointment not found")
 
 
-@app.get("/api/v1/feedback", tags=["Clinical Feedback"], summary="Get clinical feedback history")
+@app.get("/api/v1/feedback", tags=["Clinical Feedback"], summary="Get clinical feedback history from SQLite")
 def get_clinical_feedback(patient_id: str | None = None):
-    if patient_id:
-        return [f for f in clinical_feedback_store if f["patient_id"] == patient_id]
-    return clinical_feedback_store
+    return db.get_clinical_feedback(patient_id=patient_id)
 
 
-@app.post("/api/v1/feedback", status_code=status.HTTP_201_CREATED, tags=["Clinical Feedback"], summary="Submit physician clinical feedback")
+@app.post("/api/v1/feedback", status_code=status.HTTP_201_CREATED, tags=["Clinical Feedback"], summary="Submit physician clinical feedback to SQLite")
 def submit_clinical_feedback(feedback: DoctorFeedbackModel):
     fb_dict = feedback.model_dump()
-    clinical_feedback_store.insert(0, fb_dict)
-    return {"status": "recorded", "feedback": fb_dict}
+    saved = db.insert_clinical_feedback(fb_dict)
+    return {"status": "recorded", "feedback": saved}
 
 
-@app.get("/api/v1/patient/{patient_id}/notes", tags=["Medical Notes"], summary="Get doctor notes for patient")
+@app.get("/api/v1/patient/{patient_id}/notes", tags=["Medical Notes"], summary="Get doctor notes for patient from SQLite")
 def get_patient_medical_notes(patient_id: str):
-    notes = patient_medical_notes_store.get(patient_id, "")
+    p = db.get_patient_profile(patient_id)
+    notes = p.get("medical_notes", "") if p else ""
     return {"patient_id": patient_id, "medical_notes": notes}
 
 
-@app.put("/api/v1/patient/{patient_id}/notes", tags=["Medical Notes"], summary="Update doctor notes for patient")
+@app.put("/api/v1/patient/{patient_id}/notes", tags=["Medical Notes"], summary="Update doctor notes for patient in SQLite")
 def update_patient_medical_notes(patient_id: str, payload: MedicalNotesRequest):
-    patient_medical_notes_store[patient_id] = payload.medical_notes
+    db.update_patient_notes(patient_id, payload.medical_notes)
     return {"status": "saved", "patient_id": patient_id, "medical_notes": payload.medical_notes}
+
+
+@app.get("/api/v1/patients", tags=["Patient Records"], summary="Get all registered patients from SQLite")
+def get_all_patients():
+    return db.get_all_patients()
 
 
 if __name__ == "__main__":

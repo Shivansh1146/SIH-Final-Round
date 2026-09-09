@@ -558,65 +558,7 @@ class _LandingScreenState extends State<LandingScreen> {
           ),
         ),
 
-        // Floating Bottom Badge: Private by design
-        Positioned(
-          bottom: -16,
-          left: -14,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.surfaceBorder, width: 1.2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: AppTheme.sageLight,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.shield_outlined, size: 16, color: AppTheme.forestGreen),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Private by design',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12.0,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      'Works with local data',
-                      style: GoogleFonts.inter(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w400,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
+
       ],
     );
   }

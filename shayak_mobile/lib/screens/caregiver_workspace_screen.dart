@@ -2831,8 +2831,11 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 6,
                     children: [
                       Text(
                         'Scheduled Appointments (${appointments.length})',
@@ -2921,20 +2924,32 @@ class _CaregiverWorkspaceScreenState extends State<CaregiverWorkspaceScreen> {
                               ],
                             ),
                             const SizedBox(height: 10),
-                            Row(
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 4,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
-                                const Icon(Icons.access_time_rounded, size: 14, color: AppTheme.textSecondary),
-                                const SizedBox(width: 6),
-                                Text(
-                                  '${apt.scheduledDate.day}/${apt.scheduledDate.month}/${apt.scheduledDate.year} at ${apt.timeSlot}',
-                                  style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.access_time_rounded, size: 14, color: AppTheme.textSecondary),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '${apt.scheduledDate.day}/${apt.scheduledDate.month}/${apt.scheduledDate.year} at ${apt.timeSlot}',
+                                      style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 14),
-                                const Icon(Icons.phone_rounded, size: 14, color: AppTheme.textSecondary),
-                                const SizedBox(width: 6),
-                                Text(
-                                  apt.caregiverPhone,
-                                  style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.phone_rounded, size: 14, color: AppTheme.textSecondary),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      apt.caregiverPhone,
+                                      style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),

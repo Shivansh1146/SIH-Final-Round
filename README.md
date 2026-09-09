@@ -1,6 +1,24 @@
-# 🌿 SHAYAK-AI: Accessible Cognitive Health & Kinematic Stabilization Platform
+# 🌿 SAHAYAK—AI (सहायक)
+> **Cognitive & Memory Support Companion for Elderly Dementia Patients, Family Caregivers, and Clinicians**
+> 
+> *Offline-First · Multilingual · ML Biomarker Analysis & SHAP Explainability · Active Kinematic ESP32 Stabilization*
 
-> **Smart India Hackathon (SIH)** — Multimodal Early Cognitive Impairment Detection, Explainable AI (SHAP), and Active Kinematic Utensil Stabilization.
+---
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Flutter-3.24.5-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter"/>
+  <img src="https://img.shields.io/badge/FastAPI-0.109.0-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI"/>
+  <img src="https://img.shields.io/badge/SQLite3-Persistence-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite"/>
+  <img src="https://img.shields.io/badge/ESP32-FreeRTOS-000000?style=for-the-badge&logo=espressif&logoColor=white" alt="ESP32"/>
+  <img src="https://img.shields.io/badge/SHAP-Explainable_AI-FF6F00?style=for-the-badge&logo=scikit-learn&logoColor=white" alt="SHAP"/>
+  <img src="https://img.shields.io/badge/Licence-MIT-green?style=for-the-badge" alt="License"/>
+</p>
+
+---
+
+## 📌 Executive Summary
+
+**SAHAYAK—AI** is an ecosystem built to bridge the gap between elderly dementia patients, family caregivers, and clinical neurologists across India. Featuring **offline-first local persistence**, adaptive difficulty scaling, real-time kinematic tremor stabilization, and explainable ML risk assessments, SAHAYAK—AI delivers holistic care tailored to multi-generational accessibility.
 
 ---
 
@@ -8,65 +26,124 @@
 
 ```mermaid
 graph TD
-    A[ESP32 Active Stabilizer] -->|100Hz MPU6050 IMU / BLE GATT| B[Flutter Mobile & Web App]
-    B -->|Patient Assessments: Clock & Memory| C[FastAPI Clinical Backend]
-    C -->|Calibrated Ensemble + TreeExplainer| D[SHAP Waterfall & Risk Analytics]
-    D -->|Real-Time Telemetry & Insights| E[Caregiver Decision Dashboard]
+    subgraph Edge Hardware
+        HW[ESP32 Smart Utensil] -->|100Hz MPU6050 IMU / BLE GATT| APP[Sahayak Mobile & Web App]
+    end
+
+    subgraph Client Layer
+        APP -->|Patient Exercises: Clock & Memory| DB[(Local Hive & SQLite Cache)]
+        APP -->|Clinical Record Sync| API[FastAPI Clinical Backend]
+    end
+
+    subgraph Backend Core
+        API -->|Local SQLite Storage| SQL[(shayak.db)]
+        API -->|Sub-50ms Ensemble ML| ML[Calibrated Random Forest]
+        ML -->|TreeExplainer Attribution| SHAP[SHAP Explainability Engine]
+    end
+
+    subgraph Role Workspaces
+        APP --> P[Patient Mode: Calming Exercises & Schedule]
+        APP --> C[Caregiver Mode: Telemetry & Doctor Booking]
+        APP --> D[Doctor Portal: Clinical Directives & Reports]
+    end
 ```
-
-### 1. **FastAPI Clinical ML Engine (`backend/`)**
-* **Calibrated Random Forest Ensemble**: Evaluates 11 multi-modal biomarkers including clock contour circularity, drawing hesitation pauses, stroke velocity, ESP32 micro-jitter variance, and acoustic vocal features.
-* **SHAP Explainability Waterfall**: Generates mathematically grounded local feature attributions ($P(\text{Impairment}) = \text{Base} + \sum \text{SHAP}_i$) to explain risk factors directly to clinicians and caregivers.
-* **REST Endpoints**:
-  - `GET /health`: Health check and model readiness probe.
-  - `GET /api/v1/meta/features`: Catalog of biomarkers, units, and population baselines.
-  - `POST /api/v1/clinical/evaluate`: Multimodal diagnostic assessment and SHAP waterfall generation.
-  - `POST /api/v1/kinematic/telemetry`: ESP32 IMU packet ingestion and tremor severity classification.
-  - `GET /api/v1/patient/{id}/history`: Longitudinal session history and progression trends.
-  - `POST /api/v1/patient/{id}/session`: Direct session recording from mobile exercises.
-
-### 2. **Elderly & Caregiver Flutter Application (`shayak_mobile/`)**
-* **Patient Experience**:
-  - **Daily Home Hub**: Personalized greeting, audio narration ("Listen" button), quick action chips, and caregiver contact.
-  - **Games & Activities Hub**:
-    - **Memory Match Activity**: Working memory card matching with turn tracking and celebration dialogs.
-    - **Clock Contour Assessment**: High-resolution interactive canvas capturing $(x, y, t, \text{pressure})$ with real-time velocity, hesitations, and micro-jitter scoring.
-    - **Cultural Pattern Sequence**: Visual-spatial memory rhythm session.
-  - **Daily Schedule & Reminders**: Interactive checklist with audible read-aloud support.
-  - **Progress & Motor Trends**: 7-day streak tracker, completed sessions log, and motor stability indices.
-* **Caregiver Experience**:
-  - **Overview Dashboard**: Selected patient profile, 4 key metrics, 7-session cognitive performance trend chart, support notes.
-  - **AI Decisions & Interactive Simulator**: Real-time diagnostic probability badges, SHAP waterfall drivers, and **interactive live sliders** to simulate biomarker adjustments on the fly.
-  - **Care Plan & Medication Schedule**: Medication dosage management with active switches.
-  - **ESP32 Kinematic Device Telemetry**: Real-time virtual attitude indicator (Roll, Pitch, Yaw), vertical acceleration $a_z$, and active 20 kHz PWM duty cycle counter-thrust monitor.
-
-### 3. **Active Kinematic Firmware (`firmware/esp32_stabilization/`)**
-* **Dual-Core FreeRTOS Architecture**:
-  - **Core 0 (100 Hz)**: Hard real-time MPU6050 acquisition, 6-DOF complementary filter sensor fusion, and active counter-thrust PID controller ($F_{\text{net}} = 0$).
-  - **Core 1 (25 Hz)**: Non-blocking BLE GATT server streaming telemetry packets to the mobile app.
 
 ---
 
-## 🚀 Quick Start Guide
+## ✨ Key Features & Tri-Role Design System
 
-### 1. Running the FastAPI Backend
+### 🧑‍🦳 1. Patient Workspace (Serene Sage & Calming Visuals)
+* **Gentle Cognitive Exercises**:
+  * **Clock Drawing Test (CDT)**: Canvas capturing $(x, y, t, \text{velocity}, \text{hesitations})$.
+  * **Memory Match & Story Recall**: Working memory games with adaptive difficulty.
+  * **Spot the Difference & Local Language Naming**: Culturally familiar multi-lingual prompts.
+* **Routine & Reminders**: High-contrast, large-touch target checklist with voice audio read-aloud.
+* **Offline-First Resilience**: Instant response powered by local Hive & SQLite sync.
+
+### 👥 2. Caregiver Dashboard (Mint & Warm Terracotta)
+* **Clinical Appointment Booking**: Direct scheduling with choice of specialty, format (In-Person / Telehealth), preferred date, time slots, and symptom notes.
+* **Live Telemetry & Motor Trends**: Virtual 3D attitude indicator (Roll, Pitch, Yaw), vertical acceleration ($a_z$), and 20 kHz PWM counter-thrust active stabilization monitoring.
+* **Doctor Directive Sync**: Instant access to doctor prescriptions, medical feedback, and care plans.
+
+### 🩺 3. Doctor Portal (Clinical Blue)
+* **Patient Selection & Medical History**: Longitudinal tracking with persistent doctor notes.
+* **Prescribe Directives & Adaptive Difficulty**: Set custom action items (e.g., daily 15-min Memory Story, hydration targets) and lock cognitive difficulty levels.
+* **ML Risk Evaluation & SHAP Analysis**: Sub-50ms diagnostic classification with SHAP feature attribution waterfall.
+
+---
+
+## 🎨 Visual System & Tokens
+
+* **Primary Forest Green**: `#124E3C` *(Headings, primary CTAs, active indicators)*
+* **Primary Dark**: `#12302A` *(Hover and active states)*
+* **Accent Orange**: `#D87236` *(Hero highlights, used sparingly)*
+* **Page Background**: `#F0F6F0` *(Soft mint-white)*
+* **Card Surface**: `#FCFCFC` *(Clean elevated surfaces)*
+* **Clinical Accent (Doctor)**: Text `#184ED8` on `#BAD8FC` chip
+
+---
+
+## 📁 Repository Structure
+
+```
+SIH-main/
+├── backend/                        # FastAPI Backend & ML Pipeline
+│   ├── app/
+│   │   ├── main.py                 # REST API Endpoints & FastAPI App
+│   │   └── db.py                   # SQLite Schema, Repositories & Seeding
+│   ├── shayak.db                   # SQLite Persistent Database
+│   └── requirements.txt            # Python Dependencies
+├── shayak_mobile/                  # Cross-Platform Flutter Frontend
+│   ├── lib/
+│   │   ├── models/                 # Data Models & Persistence (Patient, Feedback, Appointments)
+│   │   ├── screens/                # Patient, Caregiver, Doctor & Registration Screens
+│   │   ├── services/               # API Config, Local Database Service & Session Engine
+│   │   ├── theme/                  # Design Tokens & Typography System
+│   │   └── widgets/                # Top Bar, Sidebar, Cards & Action Components
+│   └── pubspec.yaml                # Flutter Dependencies
+└── firmware/                       # Hardware Firmware
+    └── esp32_stabilization/        # Dual-Core FreeRTOS MPU6050 Stabilization Firmware
+```
+
+---
+
+## ⚡ Quick Start Guide
+
+### 1. 🐍 Backend API (FastAPI + SQLite)
 ```bash
+# Navigate to backend
 cd backend
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Start FastAPI server with live reload
 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
-* **Interactive Swagger UI**: Visit `http://127.0.0.1:8000/docs`
-* **Run Test Suite**: `python test_inference.py`
+* **Interactive API Docs (Swagger UI)**: Open `http://localhost:8000/docs`
 
-### 2. Running the Flutter Mobile / Web App
+### 2. 📱 Mobile & Web App (Flutter)
 ```bash
+# Navigate to mobile app
 cd shayak_mobile
+
+# Install packages
 flutter pub get
-flutter run -d chrome     # Run as Web App
-# OR
-flutter run               # Run on connected Android device / emulator
+
+# Run on Web (Chrome)
+flutter run -d chrome
+
+# Run on Connected Android Device
+flutter run -d <device_id>
 ```
 
-### 3. ESP32 Arduino Firmware
+### 3. 🔌 Hardware Firmware (ESP32)
 1. Open `firmware/esp32_stabilization/esp32_stabilization.ino` in Arduino IDE or PlatformIO.
-2. Select **ESP32 Dev Module** and upload via USB.
+2. Connect your **ESP32 Dev Module** with MPU6050 IMU via USB.
+3. Flash and monitor output at **115200 baud**.
+
+---
+
+## 📄 License
+
+Distributed under the **MIT License**. See `LICENSE` for details.

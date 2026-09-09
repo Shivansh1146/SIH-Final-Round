@@ -470,26 +470,24 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEFF6FF),
-                            borderRadius: BorderRadius.circular(100),
-                            border: Border.all(color: const Color(0xFFBFDBFE)),
-                          ),
-                          child: Text(
-                            'CLINICAL NEURO-GERIATRIC WORKSPACE',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF1D4ED8),
-                              letterSpacing: 0.6,
-                            ),
-                          ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        borderRadius: BorderRadius.circular(100),
+                        border: Border.all(color: const Color(0xFFBFDBFE)),
+                      ),
+                      child: Text(
+                        'CLINICAL NEURO-GERIATRIC WORKSPACE',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF1D4ED8),
+                          letterSpacing: 0.4,
                         ),
-                      ],
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -590,19 +588,27 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 4,
                     children: [
-                      const Icon(Icons.people_alt_rounded, size: 18, color: Color(0xFF1D4ED8)),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Assigned Caregiver & Contact Details',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF0F172A),
-                        ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.people_alt_rounded, size: 18, color: Color(0xFF1D4ED8)),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Assigned Caregiver & Contact Details',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                        ],
                       ),
-                      const Spacer(),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
@@ -1070,26 +1076,32 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFECFDF5),
-                              shape: BoxShape.circle,
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFECFDF5),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.event_available_rounded, size: 20, color: Color(0xFF059669)),
                             ),
-                            child: const Icon(Icons.event_available_rounded, size: 20, color: Color(0xFF059669)),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Caregiver Booked Appointments (${apts.length})',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF065F46),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Caregiver Booked Appointments (${apts.length})',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 15.0,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF065F46),
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       TextButton.icon(
                         onPressed: () => setState(() => _sidebarIndex = 2),
@@ -1161,8 +1173,11 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 12,
+                runSpacing: 8,
                 children: [
                   Text(
                     'Physician Feedback History (${feedbacks.length})',
@@ -1213,16 +1228,24 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
-                            const Icon(Icons.verified_rounded, size: 18, color: Color(0xFF1D4ED8)),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                '${f.doctorName} · ${f.hospitalOrClinic}',
-                                style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.verified_rounded, size: 18, color: Color(0xFF1D4ED8)),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    '${f.doctorName} · ${f.hospitalOrClinic}',
+                                    style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -1946,14 +1969,16 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
                           apt.patientName,
                           style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A)),
                         ),
                         if (!isCurrentPatient) ...[
-                          const SizedBox(width: 6),
                           InkWell(
                             onTap: () => _onSelectPatient(apt.patientId),
                             child: Container(
@@ -2026,20 +2051,32 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          Row(
+          Wrap(
+            spacing: 12,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              const Icon(Icons.access_time_rounded, size: 14, color: Color(0xFF64748B)),
-              const SizedBox(width: 6),
-              Text(
-                '${apt.scheduledDate.day}/${apt.scheduledDate.month}/${apt.scheduledDate.year} at ${apt.timeSlot}',
-                style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.access_time_rounded, size: 14, color: Color(0xFF64748B)),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${apt.scheduledDate.day}/${apt.scheduledDate.month}/${apt.scheduledDate.year} at ${apt.timeSlot}',
+                    style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                  ),
+                ],
               ),
-              const SizedBox(width: 14),
-              const Icon(Icons.phone_rounded, size: 14, color: Color(0xFF059669)),
-              const SizedBox(width: 6),
-              Text(
-                '${apt.caregiverName} (${apt.caregiverPhone})',
-                style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF334155)),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.phone_rounded, size: 14, color: Color(0xFF059669)),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${apt.caregiverName} (${apt.caregiverPhone})',
+                    style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF334155)),
+                  ),
+                ],
               ),
             ],
           ),
