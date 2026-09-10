@@ -458,11 +458,12 @@ class AppSidebar extends StatelessWidget {
                 ),
                 ElevatedButton.icon(
                   onPressed: () async {
-                    if (prefBox != null) {
-                      await prefBox.put('accessibility_text_scale', textScaling);
-                      await prefBox.put('accessibility_high_contrast', highContrast);
-                      await prefBox.put('accessibility_tremor_filter', tremorFilter);
-                      await prefBox.put('accessibility_voice_prompts', voicePrompts);
+                    final box = prefBox;
+                    if (box != null) {
+                      await box.put('accessibility_text_scale', textScaling);
+                      await box.put('accessibility_high_contrast', highContrast);
+                      await box.put('accessibility_tremor_filter', tremorFilter);
+                      await box.put('accessibility_voice_prompts', voicePrompts);
                     }
 
                     if (context.mounted) {
