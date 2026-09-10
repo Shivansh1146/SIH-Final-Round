@@ -1,7 +1,7 @@
 # 🌿 SAHAYAK—AI (सहायक)
-> **Cognitive & Memory Support Companion for Elderly Dementia Patients, Family Caregivers, and Clinicians**
+> **AI-Based Cognitive Gaming, Neural Conversational Companion & Memory Assistance Platform for Elderly Dementia Patients in North Eastern Region (NER)**
 > 
-> *Offline-First · Multilingual · On-Device Ollama LLM Companion · ML Biomarker Analysis & SHAP Explainability · Active Kinematic ESP32 Stabilization*
+> *Offline-First · Multilingual & NER Regional Context · Dual-Tier On-Device Knowledge Engine & Ollama LLM · ML Biomarker Analysis & SHAP Explainability · Active Kinematic ESP32 Tremor Stabilization*
 
 ---
 
@@ -17,9 +17,15 @@
 
 ---
 
-## 📌 Executive Summary
+## 📌 Problem Statement & Executive Summary
 
-**SAHAYAK—AI** is a holistic ecosystem built to bridge the gap between elderly dementia patients, family caregivers, and clinical neurologists across India. Featuring **on-device neural conversational AI (Ollama + Gemma 2B)**, **offline-first local persistence**, adaptive difficulty scaling, real-time kinematic tremor stabilization, and explainable ML risk assessments, SAHAYAK—AI delivers compassionate care tailored to multi-generational accessibility.
+In India, over **8.8 million elderly individuals** live with dementia, with over **200,000+ undiagnosed cases in the North Eastern Region (NER)** across Assam, Meghalaya, Manipur, Mizoram, Nagaland, Tripura, Arunachal Pradesh, and Sikkim. Terrain barriers, limited clinical infrastructure, and low awareness leave patients and family caregivers isolated.
+
+**SAHAYAK—AI (सहायक)** is an offline-first, tri-role healthcare platform specifically architected for dementia care management in NER and across India:
+1. **Comprehensive Dementia Clinical Knowledge Engine**: Built-in 100% offline knowledge engine answering clinical stages (Reisberg GDS 1–7), medical management (Donepezil, Memantine, Galantamine, Rivastigmine), diagnostic tools (MMSE, MoCA, CDT, GDS), non-pharmacological interventions, and caregiver safety strategies.
+2. **Tri-Role Ecosystem (Patient, Caregiver, Doctor)**: Tailored interfaces for patients (calming cognitive games, daily memory checklists, voice companion), caregivers (appointment booking, live telemetry, doctor directive sync), and clinicians (SHAP diagnostic attribution, cognitive level locking, longitudinal patient history).
+3. **Dual-Tier AI Companion ("Talk to me")**: Runs locally on mobile and backend. Combines an instant local rule & knowledge fallback engine (`companion_service.dart` / `companion_service.py`) with local Ollama + Gemma LLM neural inference, guaranteeing 100% zero-latency offline response.
+4. **Hardware-Integrated Active Tremor Stabilization**: Real-time kinematic stabilization firmware using ESP32 & MPU6050 IMU sensor delivering 20 kHz counter-thrust PWM signals for active spoon/utensil motor control.
 
 ---
 
@@ -27,55 +33,65 @@
 
 ```mermaid
 graph TD
-    subgraph Edge Hardware & Sensors
+    subgraph Edge Hardware & Kinematics
         HW[ESP32 Smart Utensil] -->|100Hz MPU6050 IMU / BLE GATT| APP[Sahayak Mobile & Web App]
     end
 
-    subgraph Client & On-Device AI
+    subgraph Client & Dual-Tier AI Engine
         APP -->|Local Patient Exercises & Hive Store| DB[(Local Hive & SQLite Cache)]
-        APP -->|Talk to me: Offline Chatbot| OLLAMA[Local Ollama / Gemma 2B Neural LLM]
-        APP -->|Clinical Sync| API[FastAPI Clinical Backend]
+        APP -->|Talk to me: On-Device Engine| DART_ENGINE[On-Device Flutter Knowledge Engine]
+        APP -->|Wi-Fi / ADB Dual-IP Fallback| API[FastAPI Clinical Backend]
     end
 
-    subgraph Backend Core Engine
+    subgraph Backend Core & Clinical Intelligence
         API -->|Local SQLite Storage| SQL[(shayak.db)]
-        API -->|Companion Service| CS[Reminiscence & Validation Engine]
+        API -->|Backend AI Service| CS[Ollama Gemma LLM + Clinical Rules Engine]
         API -->|Sub-50ms Ensemble ML| ML[Calibrated Random Forest]
         ML -->|TreeExplainer Attribution| SHAP[SHAP Explainability Engine]
     end
 
-    subgraph Role Workspaces
+    subgraph Tri-Role Workspaces
         APP --> P[Patient Workspace: Calming Exercises, Reminders & AI Companion]
-        APP --> C[Caregiver Workspace: Telemetry & Doctor Appointments]
-        APP --> D[Doctor Portal: Directives, Medical Notes & SHAP Reports]
+        APP --> C[Caregiver Workspace: Telemetry, Directives & Doctor Appointments]
+        APP --> D[Doctor Portal: Clinical Directives, Medical Notes & SHAP Reports]
     end
 ```
 
 ---
 
-## ✨ Key Features & Tri-Role Design System
+## ✨ Tri-Role Core Features & Capabilities
 
 ### 🧑‍🦳 1. Patient Workspace (Serene Sage & Calming Visuals)
-* **On-Device Real-Time AI Companion ("Talk to me")**:
-  * **Neural Conversation**: Powered locally via Ollama and Gemma 2B LLM.
-  * **Validation & Reminiscence Therapy**: Validates emotions without reality-checking or argument.
-  * **Audio Read-Aloud (TTS)**: One-tap voice playback for all conversational responses.
-  * **Zero External API Dependency**: Runs completely offline.
+* **Dual-Tier AI Companion ("Talk to me")**:
+  * **Empathetic & Validation Therapy**: Answers dementia stages, medications, daily guidance, and reminiscence prompts without reality-confrontation.
+  * **Dual-IP & Offline Resilience**: Connects to FastAPI backend over USB ADB (`127.0.0.1:8000`) or Wi-Fi (`192.168.29.29:8000`). If offline, falls back instantly to the built-in Dart Knowledge Engine.
+  * **Voice Text-To-Speech (TTS)**: One-tap audio read-aloud for all conversational responses.
 * **Gentle Cognitive Exercises**:
-  * **Clock Drawing Test (CDT)**: Canvas capturing stroke kinematics and hesitation.
-  * **Memory Match & Story Recall**: Working memory games with adaptive difficulty.
-  * **Spot the Difference & Local Language Naming**: Culturally familiar multi-lingual prompts.
-* **Routine & Reminders**: High-contrast, large-touch target checklist with voice audio read-aloud.
+  * **Clock Drawing Test (CDT)**: Interactive canvas assessing executive control and visuospatial orientation.
+  * **Memory Match & Story Recall**: Working memory training with adaptive difficulty scaling.
+  * **Spot the Difference & Local Language Naming**: Cultural context prompts tailored for NER elders.
+* **Routine & Daily Reminders**: High-contrast, large-touch checklist with clear TTS audio narration.
 
-### 👥 2. Caregiver Dashboard (Mint & Warm Terracotta)
-* **Clinical Appointment Booking**: Direct scheduling with specialty choice, format (In-Person / Telehealth), preferred date, time slots, and symptom notes.
-* **Live Telemetry & Motor Trends**: Virtual 3D attitude indicator (Roll, Pitch, Yaw), vertical acceleration ($a_z$), and 20 kHz PWM counter-thrust active stabilization monitoring.
-* **Doctor Directive Sync**: Instant access to doctor prescriptions, medical feedback, and care plans.
+### 👥 2. Caregiver Dashboard (Warm Terracotta & Mint)
+* **Clinical Appointment Booking**: Scheduling interface with specialty selection, format choice (In-Person / Telehealth), custom slot selection, and symptom notes.
+* **Live Kinematic Tremor Telemetry**: Real-time 3D attitude monitoring (Roll, Pitch, Yaw), vertical acceleration ($a_z$), and 20 kHz counter-thrust PWM feedback.
+* **Doctor Directive Sync**: Immediate viewing of doctor prescriptions, care plans, and daily cognitive activity targets.
 
 ### 🩺 3. Doctor Portal (Clinical Blue)
-* **Patient Selection & Medical History**: Longitudinal tracking with persistent doctor notes.
-* **Prescribe Directives & Adaptive Difficulty**: Set custom action items (e.g., daily 15-min Memory Story, hydration targets) and lock cognitive difficulty levels.
-* **ML Risk Evaluation & SHAP Analysis**: Sub-50ms diagnostic classification with SHAP feature attribution waterfall.
+* **Longitudinal Patient History**: Full access to cognitive scores, exercise completion trends, and clinical notes.
+* **Clinical Directives & Cognitive Locking**: Set patient daily goals and lock cognitive game difficulty levels.
+* **ML Biomarker Assessment & SHAP Explainability**: Sub-50ms diagnostic classification paired with SHAP waterfall feature attribution plots.
+
+---
+
+## 🧠 Clinical Knowledge Engine (Dementia & Project Intelligence)
+
+The chatbot (Python backend + Flutter mobile app) is trained with deep domain knowledge covering:
+* **Dementia Disease Details**: Pathophysiology, 7 stages of Reisberg Global Deterioration Scale (GDS), distinction from normal aging, and epidemiology in NER.
+* **Dementia Subtypes**: Alzheimer's Disease, Vascular Dementia, Lewy Body Dementia (LBD), Frontotemporal Dementia (FTD), Mixed Dementia, and Parkinson's Disease Dementia.
+* **Pharmacological & Clinical Management**: AChE inhibitors (Donepezil, Rivastigmine, Galantamine) and NMDA antagonists (Memantine).
+* **Caregiver & Safety Strategies**: Wandering prevention, sundowning management, communication validation rules, and burnout mitigation.
+* **ESP32 Tremor Stabilization Hardware**: ESP32 microcontroller, MPU6050 IMU sensor (100Hz sampling), and 20 kHz PWM motor stabilization.
 
 ---
 
@@ -93,32 +109,32 @@ graph TD
 ## 📁 Repository Structure
 
 ```
-SIH-main/
+SIH-Final-Round/
 ├── backend/                        # FastAPI Backend & ML Pipeline
 │   ├── app/
 │   │   ├── main.py                 # REST API Endpoints & FastAPI App
-│   │   ├── companion_service.py    # Offline Ollama + Gemma Conversational AI & Validation Engine
+│   │   ├── companion_service.py    # Offline Ollama + Gemma LLM & Knowledge Engine
 │   │   ├── db.py                   # SQLite Schema, Repositories & Seeding
 │   │   └── ml_engine.py            # Scikit-Learn ML Model & SHAP Explainability
 │   ├── shayak.db                   # SQLite Persistent Database
 │   └── requirements.txt            # Python Dependencies
 ├── shayak_mobile/                  # Cross-Platform Flutter Frontend
 │   ├── lib/
-│   │   ├── models/                 # Data Models & Persistence (Patient, Feedback, Appointments)
-│   │   ├── screens/                # Patient, Caregiver, Doctor & Registration Screens
-│   │   ├── services/               # API Config, Companion Service, Database & Audio Narration
+│   │   ├── models/                 # Data Models (Patient, Directives, Appointments)
+│   │   ├── screens/                # Patient, Caregiver, Doctor & Auth Screens
+│   │   ├── services/               # API Config, Companion Service, DB & TTS Audio
 │   │   ├── theme/                  # Design Tokens & Typography System
-│   │   └── widgets/                # Companion Modal, Top Bar, Sidebar, Cards & Action Components
+│   │   └── widgets/                # Companion Modal, Top Bar, Sidebar & Action Cards
 │   └── pubspec.yaml                # Flutter Dependencies
-└── firmware/                       # Hardware Firmware
-    └── esp32_stabilization/        # Dual-Core FreeRTOS MPU6050 Stabilization Firmware
+└── firmware/                       # Edge Hardware Firmware
+    └── esp32_stabilization/        # FreeRTOS MPU6050 IMU Stabilization Firmware
 ```
 
 ---
 
 ## ⚡ Quick Start Guide
 
-### 1. 🐍 Backend API (FastAPI + SQLite + Ollama)
+### 1. 🐍 Backend API (FastAPI + SQLite)
 ```bash
 # Navigate to backend
 cd backend
@@ -129,14 +145,14 @@ pip install -r requirements.txt
 # Start FastAPI server
 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
-* **Interactive API Docs (Swagger UI)**: Open `http://localhost:8000/docs`
+* **Interactive API Docs**: Open `http://localhost:8000/docs`
 
-### 2. 🤖 Offline Local LLM (Ollama + Gemma)
+### 2. 🤖 Local Ollama LLM Service (Optional)
 ```bash
 # Start Ollama service
 ollama serve
 
-# Pull local Gemma LLM model
+# Pull local Gemma model
 ollama pull gemma2:2b
 ```
 
@@ -145,17 +161,17 @@ ollama pull gemma2:2b
 # Navigate to mobile app
 cd shayak_mobile
 
-# Install packages
+# Install dependencies
 flutter pub get
 
 # Run on Web (Chrome)
 flutter run -d chrome
 
-# Build Debug APK for Android Phone
+# Build Debug APK for Android
 flutter build apk --debug --android-skip-build-dependency-validation
 
-# Install directly on Connected Android Device via USB Debugging
-flutter run -d <device_id>
+# Deploy directly to connected Android device
+adb install -r ../build/app/outputs/flutter-apk/app-debug.apk
 ```
 
 ---
@@ -164,22 +180,20 @@ flutter run -d <device_id>
 
 | Date | Change |
 |------|--------|
+| Sep 2026 | ✅ Fully synced **Clinical & Domain Knowledge Engine** across Python backend (`companion_service.py`) and Flutter app (`companion_service.dart`), enabling 1-click comprehensive dementia answers online & offline |
+| Sep 2026 | ✅ Built and deployed updated debug APK (`SAHAYAK_AI.apk`) to physical Android device via USB ADB (`f6c6031d`) |
 | Sep 2026 | ✅ Implemented **Instant On-Device Validation Therapy Engine** (`companion_service.dart`) with zero timeout failure; provides immediate empathetic conversational replies both online and 100% offline |
 | Sep 2026 | ✅ Added **Local Wi-Fi Network Resolution** (`192.168.29.29:8000` + ADB reverse `127.0.0.1:8000`) enabling seamless mobile app access to backend over Wi-Fi without USB cables |
 | Sep 2026 | ✅ Resolved Flutter compilation errors: updated `CardThemeData` in `app_theme.dart`, promoted box variable before awaits in `app_sidebar.dart`, and upgraded `google_fonts` to `^8.2.1` |
-| Sep 2026 | ✅ Built and packaged standalone debug APK (`SAHAYAK_AI.apk`) with NDK 25.1, Android SDK Platform 36, and CMake 3.22 |
 | Sep 2026 | ✅ Fixed **100% of RenderFlex yellow overflow spots** across all mobile screens (`companion_modal.dart`, `patient_home_screen.dart`, `doctor_dashboard_screen.dart`, `caregiver_workspace_screen.dart`, `patient_progress_dashboard.dart`) |
 | Sep 2026 | ✅ Enabled `android:usesCleartextTraffic="true"` and added **Dual-IP Fallback** (`127.0.0.1` + local Wi-Fi) for instant mobile-to-LLM communication |
 | Sep 2026 | ✅ Bound FastAPI Uvicorn backend to `0.0.0.0:8000` to serve both USB ADB bridge and Wi-Fi network requests |
-| Sep 2026 | ✅ Installed and launched native Android app on physical device (`f6c6031d`) via USB Debugging |
 | Sep 2026 | ✅ Integrated live **Ollama + Gemma 2B LLM** real-time neural conversational companion ("Talk to me") with audio narration |
-| Sep 2026 | ✅ Implemented real-time multi-turn chat UI with text-to-speech voice playback in `companion_modal.dart` |
-| Sep 2026 | ✅ Bypassed service worker caching to guarantee immediate UI updates on web |
-| Sep 2026 | ✅ Restored original **Landing Screen** design ("Support for memory. Made human.") |
 
 ---
 
 ## 📄 License
 
 Distributed under the **MIT License**. See `LICENSE` for details.
+
 
