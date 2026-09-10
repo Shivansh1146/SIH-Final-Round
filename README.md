@@ -151,6 +151,9 @@ flutter pub get
 # Run on Web (Chrome)
 flutter run -d chrome
 
+# Build Debug APK for Android Phone
+flutter build apk --debug --android-skip-build-dependency-validation
+
 # Install directly on Connected Android Device via USB Debugging
 flutter run -d <device_id>
 ```
@@ -161,11 +164,15 @@ flutter run -d <device_id>
 
 | Date | Change |
 |------|--------|
+| Sep 2026 | ✅ Implemented **Instant On-Device Validation Therapy Engine** (`companion_service.dart`) with zero timeout failure; provides immediate empathetic conversational replies both online and 100% offline |
+| Sep 2026 | ✅ Added **Local Wi-Fi Network Resolution** (`192.168.29.29:8000` + ADB reverse `127.0.0.1:8000`) enabling seamless mobile app access to backend over Wi-Fi without USB cables |
+| Sep 2026 | ✅ Resolved Flutter compilation errors: updated `CardThemeData` in `app_theme.dart`, promoted box variable before awaits in `app_sidebar.dart`, and upgraded `google_fonts` to `^8.2.1` |
+| Sep 2026 | ✅ Built and packaged standalone debug APK (`SAHAYAK_AI.apk`) with NDK 25.1, Android SDK Platform 36, and CMake 3.22 |
 | Sep 2026 | ✅ Fixed **100% of RenderFlex yellow overflow spots** across all mobile screens (`companion_modal.dart`, `patient_home_screen.dart`, `doctor_dashboard_screen.dart`, `caregiver_workspace_screen.dart`, `patient_progress_dashboard.dart`) |
-| Sep 2026 | ✅ Enabled `android:usesCleartextTraffic="true"` and added **Dual-IP Fallback** (`127.0.0.1` + `10.10.140.90`) for instant mobile-to-LLM communication |
+| Sep 2026 | ✅ Enabled `android:usesCleartextTraffic="true"` and added **Dual-IP Fallback** (`127.0.0.1` + local Wi-Fi) for instant mobile-to-LLM communication |
 | Sep 2026 | ✅ Bound FastAPI Uvicorn backend to `0.0.0.0:8000` to serve both USB ADB bridge and Wi-Fi network requests |
 | Sep 2026 | ✅ Installed and launched native Android app on physical device (`f6c6031d`) via USB Debugging |
-| Sep 2026 | ✅ Integrated live **Ollama + Gemma 2B LLM** real-time neural conversational companion ("Talk to me") |
+| Sep 2026 | ✅ Integrated live **Ollama + Gemma 2B LLM** real-time neural conversational companion ("Talk to me") with audio narration |
 | Sep 2026 | ✅ Implemented real-time multi-turn chat UI with text-to-speech voice playback in `companion_modal.dart` |
 | Sep 2026 | ✅ Bypassed service worker caching to guarantee immediate UI updates on web |
 | Sep 2026 | ✅ Restored original **Landing Screen** design ("Support for memory. Made human.") |
@@ -175,3 +182,4 @@ flutter run -d <device_id>
 ## 📄 License
 
 Distributed under the **MIT License**. See `LICENSE` for details.
+
