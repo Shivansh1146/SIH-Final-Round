@@ -247,28 +247,25 @@ async def generate_companion_reply(
     conversation_id: str,
 ) -> str:
     """
-    Executes the conversational loop using local Gemma LLM via Ollama.
+    Executes the conversational loop:
+    1. If Ollama is available, uses local Gemma LLM.
+    2. If Ollama is starting up or offline, instantly uses the on-device Reminiscence & Validation Engine.
     """
-    history = get_rolling_history(conversation_id)
-    messages = [
-        {"role": "system", "content": COMPANION_SYSTEM_PROMPT},
-        *history,
-        {"role": "user", "content": user_message},
-    ]
+    is_ollama_up = await check_ollama_availability()
+    if is_ollama_up:
+        history = get_rolling_history(conversation_id)
+        messages = [
+            {"role": "system", "content": COMPANION_SYSTEM_PROMPT},
+            *history,
+            {"role": "user", "content": user_message},
+        ]
+        candidate = await call_ollama_generate(messages)
+        if candidate and candidate.strip():
+            append_to_history(conversation_id, user_message, candidate.strip())
+            return candidate.strip()
 
-    # Call local Gemma 2B model via Ollama
-    candidate = await call_ollama_generate(messages)
-    if candidate and candidate.strip():
-        append_to_history(conversation_id, user_message, candidate.strip())
-        return candidate.strip()
+    # Intelligent On-Device Contextual Validation Therapy Fallback
+    fallback_reply = generate_contextual_validation_reply(user_message)
+    append_to_history(conversation_id, user_message, fallback_reply)
+    return fallback_reply
 
-    # Direct retry with lightweight prompt if first call was empty
-    candidate_retry = await call_ollama_generate([
-        {"role": "system", "content": "You are a warm, helpful AI companion. Answer concisely in 2-3 sentences."},
-        {"role": "user", "content": user_message}
-    ])
-    if candidate_retry and candidate_retry.strip():
-        append_to_history(conversation_id, user_message, candidate_retry.strip())
-        return candidate_retry.strip()
-
-    return "Hello! I am your local Gemma AI companion. Please ask me any question!"
