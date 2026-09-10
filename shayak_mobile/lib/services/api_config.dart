@@ -8,6 +8,7 @@ class ApiConfig {
         return 'http://$host:8000';
       }
     }
-    return 'http://127.0.0.1:8000';
+    // On physical mobile devices, default to local Wi-Fi IP (and USB reverse fallback)
+    return 'http://192.168.29.29:8000';
   }
 }
