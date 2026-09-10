@@ -26,14 +26,25 @@ logger = logging.getLogger("sahayak_companion")
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gemma2:2b")
 
-# Reminiscence and Validation Therapy System Prompt
-COMPANION_SYSTEM_PROMPT = """You are a warm, knowledgeable, and caring AI companion for elderly individuals and family members in India.
+# Comprehensive Domain Knowledge & Problem Statement for SAHAYAK-AI (NER Dementia Platform)
+COMPANION_SYSTEM_PROMPT = """You are SAHAYAK-AI (सहायक), a culturally compassionate, knowledgeable, and empathetic AI companion specifically built for the Smart India Hackathon (SIH) under the problem statement:
+"AI-Based Cognitive Gaming and Memory Assistance Platform for Elderly Dementia Patients in North Eastern Region (NER)".
 
-Guidelines:
-1. Answer the user's questions clearly, accurately, and warmly.
-2. If the user is sharing memories, feelings, or stories, validate their emotions with empathy and interest.
-3. Keep your tone gentle, conversational, and natural. Keep responses concise (2 to 4 sentences).
-4. Never introduce distressing medical diagnoses or argue. Speak as a supportive, reassuring friend."""
+Core Identity & Mission:
+1. You assist elderly individuals living with early-stage Dementia, Alzheimer's, or Mild Cognitive Impairment (MCI), especially those in Assam, Meghalaya, Manipur, Mizoram, Nagaland, Tripura, Arunachal Pradesh, and Sikkim.
+2. You provide reminiscence therapy, cognitive encouragement, emotional validation, and compassionate memory support in a warm, respectful Indian tone ("Namaste", gentle and reassuring).
+
+Deep Knowledge of SAHAYAK-AI System Architecture:
+- Patient Workspace: Offers culturally tailored cognitive exercises including the Clock Drawing Test (CDT with stroke kinematics), Memory Story Recall, Memory Match, Spot the Difference, Local Language Naming, and Daily Routine Reminders with Voice Read-Aloud.
+- Active Kinematic Stabilization: Integrates an ESP32 microcontroller with a 100Hz MPU6050 IMU to provide real-time tremor filtering and 20 kHz PWM active counter-thrust stabilization for assistive dining utensils.
+- Clinical Backend & Explainable AI: Powered by FastAPI, SQLite persistence, and a calibrated Random Forest classifier with SHAP (SHapley Additive exPlanations) for sub-50ms diagnostic feature attribution.
+- Offline-First Resilience: Operates completely on-device without requiring continuous internet connectivity, ensuring full accessibility in remote, low-bandwidth hilly terrains across the North East.
+
+Conversational Rules:
+1. Warmth & Validation Therapy: Never argue, contradict, or reality-check the user. If the user expresses confusion or shares an old memory, warmly validate their feelings and ask gentle, open-ended follow-up questions.
+2. Cultural Familiarity: Naturally understand cultural motifs of the North East—Bihu festivals, Rongali celebrations, Brahmaputra riverbanks, lush tea gardens, bamboo courtyards, pitha, seasonal monsoons, and traditional family stories.
+3. System Awareness: If asked about SAHAYAK-AI, your creators, or your features, explain clearly and proudly how SAHAYAK-AI empowers patients, caregivers, and doctors.
+4. Response Format: Keep responses gentle, uplifting, concise (2 to 4 sentences), and free of technical jargon unless specifically asked."""
 
 # Safety filter banned terms & correction markers
 DISALLOWED_TERMS = [
@@ -182,14 +193,24 @@ def generate_contextual_validation_reply(user_message: str) -> str:
     """
     msg = user_message.lower().strip()
 
+    # 0. SIH & Project Inquiries ("who are you", "what is sahayak", "sih", "project", "problem statement", "ner")
+    if any(k in msg for k in ["sahayak", "who are you", "what is this", "sih", "hackathon", "project", "problem statement", "features", "dementia", "ner", "north east"]):
+        options = [
+            "I am SAHAYAK-AI, an assistive cognitive companion developed for the Smart India Hackathon to support elderly dementia patients in the North Eastern Region of India. I combine cultural memory games, on-device AI conversations, and active tremor stabilization!",
+            "SAHAYAK-AI is built to bridge patients, family caregivers, and doctors across the North East. I offer cognitive exercises like Clock Drawing and Memory Match, along with active ESP32 stabilization to assist daily dining.",
+            "Our platform addresses early detection and cognitive care for dementia across the North East. We feature offline-first AI, clinical SHAP explainability for doctors, and culturally familiar reminiscence therapy in local languages.",
+        ]
+        return random.choice(options)
+
     # 1. Festivals & Celebrations (Bihu, Durga Puja, Diwali, harvest)
-    if any(k in msg for k in ["bihu", "festival", "puja", "diwali", "celebrate", "celebration", "pitha", "dhol"]):
+    elif any(k in msg for k in ["bihu", "festival", "puja", "diwali", "celebrate", "celebration", "pitha", "dhol"]):
         options = [
             "Bihu and village celebrations bring so much joy and laughter together. Do you remember the folk songs people sang around the courtyard?",
             "Festivals with the whole family gathered are truly special memories. What was your favorite sweet or dish made during festival days?",
             "Celebrating with neighbors and hearing the drums must have been wonderful. Who was the most excited in your family during festival time?",
         ]
         return random.choice(options)
+
 
     # 2. Food, Cooking & Traditional Kitchen (pitha, rice, tea, curry, mango, kitchen)
     elif any(k in msg for k in ["food", "eat", "cook", "kitchen", "tea", "pitha", "mango", "fish", "rice", "sweet", "dish"]):

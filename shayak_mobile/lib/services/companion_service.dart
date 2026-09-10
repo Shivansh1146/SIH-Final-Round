@@ -96,16 +96,26 @@ class CompanionService {
       return greetings[Random().nextInt(greetings.length)];
     }
 
-    if (lower.contains('festival') || lower.contains('diwali') || lower.contains('puja') || lower.contains('bihu') || lower.contains('eid')) {
-      return "Festivals with the whole family gathered and the sound of music are truly special memories. What was your favorite sweet or dish made during festival days?";
+    // 0. SIH & Project Inquiries
+    if (lower.contains('sahayak') || lower.contains('who are you') || lower.contains('what is this') || lower.contains('sih') || lower.contains('problem statement') || lower.contains('ner') || lower.contains('north east') || lower.contains('project')) {
+      final answers = [
+        "I am SAHAYAK-AI, designed for the Smart India Hackathon to support elderly dementia patients in the North Eastern Region of India! I offer cognitive games, memory support, and active tremor stabilization.",
+        "SAHAYAK-AI provides cognitive exercises (Clock Drawing, Memory Recall), active ESP32 tremor stabilization for dining, and explainable ML diagnostics for doctors across the North East.",
+        "Our platform is built specifically for early dementia care in the North East. We combine local language memory therapy, daily routine reminders, and offline-first AI companion support!",
+      ];
+      return answers[Random().nextInt(answers.length)];
     }
 
-    if (lower.contains('food') || lower.contains('eat') || lower.contains('cook') || lower.contains('tea') || lower.contains('sweet')) {
-      return "Homemade cooking from those days has a taste you never forget. What was the dish you loved watching your family prepare the most?";
+    if (lower.contains('festival') || lower.contains('diwali') || lower.contains('puja') || lower.contains('bihu') || lower.contains('eid') || lower.contains('rongali')) {
+      return "Bihu and festive celebrations with the whole family gathered are truly cherished memories. What was your favorite sweet or dish made during festival days?";
     }
 
-    if (lower.contains('garden') || lower.contains('tea') || lower.contains('river') || lower.contains('rain') || lower.contains('village') || lower.contains('tree')) {
-      return "The fresh morning air and the green landscape always bring such peace. Did you have a favorite spot where you loved to sit and watch the greenery?";
+    if (lower.contains('food') || lower.contains('eat') || lower.contains('cook') || lower.contains('tea') || lower.contains('sweet') || lower.contains('pitha')) {
+      return "Homemade pitha and fresh Assam tea have a taste that brings back such comfort. Did everyone gather around the kitchen while it was being made?";
+    }
+
+    if (lower.contains('garden') || lower.contains('tea') || lower.contains('river') || lower.contains('rain') || lower.contains('village') || lower.contains('brahmaputra')) {
+      return "The morning mist over the tea gardens and the gentle breeze near the river are so peaceful. Did you have a favorite spot where you loved to sit?";
     }
 
     if (lower.contains('family') || lower.contains('mother') || lower.contains('father') || lower.contains('child') || lower.contains('friend')) {
